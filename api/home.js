@@ -1,6 +1,6 @@
 const HEADERS = { 'User-Agent': 'MangaDL/1.0 (https://manga-dl-app.vercel.app)' };
 const BASE = 'https://api.mangadex.org';
-const COMMON = `includes[]=cover_art&availableTranslatedLanguage[]=en&hasAvailableChapters=true&contentRating[]=safe&contentRating[]=suggestive&limit=18`;
+const COMMON = `includes[]=cover_art&availableTranslatedLanguage[]=en&hasAvailableChapters=true&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&limit=18`;
 
 async function fetchSection(order) {
   try {

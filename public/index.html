@@ -1441,6 +1441,7 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
     const data = await fetch(`/api/pages?id=${chapterId}`).then(r => r.json());
     if (data.error) throw new Error(data.error);
     readerState.pages = data.pages || [];
+    readerState.pagesFallback = data.pagesFallback || [];
     if (!readerState.pages.length) throw new Error('No pages found');
 
     // Clamp page idx
@@ -1476,7 +1477,12 @@ function showPage(idx) {
     updateNextChBtn();
   };
   img.onerror = () => {
-    wrap.innerHTML = `<div class="reader-error">Failed to load page ${idx + 1}</div>`;
+    const fallback = readerState.pagesFallback?.[idx];
+    if (fallback && img.src !== proxyUrl(fallback)) {
+      img.src = proxyUrl(fallback);
+    } else {
+      wrap.innerHTML = `<div class="reader-error">Failed to load page ${idx + 1}</div>`;
+    }
   };
   img.src = url;
 
