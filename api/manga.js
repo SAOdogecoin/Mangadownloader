@@ -1,21 +1,60 @@
+const HEADERS = { 'User-Agent': 'MangaDL/1.0' };
+const BASE = 'https://api.mangadex.org';
+const FEED_PARAMS = `contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`;
+
+async function fetchAllChapters(id, lang) {
+  const limit = 500;
+  let offset = 0;
+  let all = [];
+
+  // First fetch — also tells us total count
+  const firstRes = await fetch(
+    `${BASE}/manga/${id}/feed?translatedLanguage[]=${lang}&order[volume]=asc&order[chapter]=asc&limit=${limit}&offset=0&${FEED_PARAMS}`,
+    { headers: HEADERS }
+  );
+  if (!firstRes.ok) throw new Error(`Chapter feed failed: ${firstRes.status}`);
+  const firstData = await firstRes.json();
+  all.push(...(firstData.data || []));
+
+  const total = firstData.total || 0;
+
+  // Paginate remaining pages in parallel (batches of 3 to avoid rate limit)
+  if (total > limit) {
+    const offsets = [];
+    for (let o = limit; o < total; o += limit) offsets.push(o);
+
+    // Fetch in batches of 3
+    for (let i = 0; i < offsets.length; i += 3) {
+      const batch = offsets.slice(i, i + 3).map(o =>
+        fetch(
+          `${BASE}/manga/${id}/feed?translatedLanguage[]=${lang}&order[volume]=asc&order[chapter]=asc&limit=${limit}&offset=${o}&${FEED_PARAMS}`,
+          { headers: HEADERS }
+        ).then(r => r.ok ? r.json() : { data: [] }).then(d => d.data || [])
+        .catch(() => [])
+      );
+      const results = await Promise.all(batch);
+      results.forEach(r => all.push(...r));
+      if (i + 3 < offsets.length) await new Promise(r => setTimeout(r, 300)); // small delay between batches
+    }
+  }
+
+  return all;
+}
+
 module.exports = async (req, res) => {
   const { id, lang = 'en' } = req.query;
   if (!id) return res.status(400).json({ error: 'Missing id' });
 
-  const HEADERS = { 'User-Agent': 'MangaDL/1.0' };
-
   try {
-    const [detailRes, feedRes, statsRes] = await Promise.all([
-      fetch(`https://api.mangadex.org/manga/${id}?includes[]=cover_art`, { headers: HEADERS }),
-      fetch(`https://api.mangadex.org/manga/${id}/feed?translatedLanguage[]=${lang}&order[volume]=asc&order[chapter]=asc&limit=500&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`, { headers: HEADERS }),
-      fetch(`https://api.mangadex.org/statistics/manga/${id}`, { headers: HEADERS })
+    const [detailRes, statsRes, allChapterData] = await Promise.all([
+      fetch(`${BASE}/manga/${id}?includes[]=cover_art`, { headers: HEADERS }),
+      fetch(`${BASE}/statistics/manga/${id}`, { headers: HEADERS }),
+      fetchAllChapters(id, lang)
     ]);
 
     if (!detailRes.ok) throw new Error(`Manga detail failed: ${detailRes.status}`);
-    if (!feedRes.ok) throw new Error(`Chapter feed failed: ${feedRes.status}`);
 
     const detailData = await detailRes.json();
-    const feedData = await feedRes.json();
     let statsData = null;
     try { if (statsRes.ok) statsData = await statsRes.json(); } catch (_) {}
 
@@ -47,17 +86,26 @@ module.exports = async (req, res) => {
       follows: statsData?.statistics?.[m.id]?.follows || null
     };
 
-    const chapters = (feedData.data || []).map(ch => {
-      const ca = ch.attributes || {};
-      return {
-        id: ch.id,
-        volume: ca.volume || null,
-        chapter: ca.chapter || null,
-        title: ca.title || null,
-        pages: ca.pages || 0,
-        publishAt: ca.publishAt || null
-      };
-    });
+    // Deduplicate chapters by chapter number (keep first occurrence)
+    const seen = new Set();
+    const chapters = allChapterData
+      .map(ch => {
+        const ca = ch.attributes || {};
+        return {
+          id: ch.id,
+          volume: ca.volume || null,
+          chapter: ca.chapter || null,
+          title: ca.title || null,
+          pages: ca.pages || 0,
+          publishAt: ca.publishAt || null
+        };
+      })
+      .filter(ch => {
+        const key = `${ch.volume || ''}-${ch.chapter || ch.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1200');
     res.json({ manga, chapters });
