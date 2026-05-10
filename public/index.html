@@ -167,11 +167,11 @@ button.status-pill:hover{opacity:.75}
 .btn-more-desc{display:inline;background:none;border:none;font-family:inherit;font-size:11px;color:var(--org);font-weight:700;cursor:pointer;padding:0 0 0 3px;-webkit-tap-highlight-color:transparent}
 .panel-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);-webkit-tap-highlight-color:transparent;z-index:1}
 .panel-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
-.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;margin-top:6px}
-.panel-save-btn:hover{background:var(--blk-h)}
-.panel-save-btn.saved{background:#374151;color:#fff}
-.panel-save-btn svg{width:12px;height:12px;stroke:var(--blk-text);fill:none}
-.panel-save-btn.saved svg{stroke:#fff}
+.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-save-btn:hover{border-color:var(--org);color:var(--org)}
+.panel-save-btn.saved{border-color:var(--org);color:var(--org);background:none}
+.panel-save-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
+.panel-save-btn.saved svg{stroke:currentColor}
 .panel-body{flex:1;overflow-y:auto;min-height:0}
 .ch-section-hdr{padding:12px 16px 6px;font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0;background:var(--card);z-index:1;border-bottom:1px solid var(--border)}
 .ch-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent}
@@ -406,7 +406,6 @@ button.status-pill:hover{opacity:.75}
 <!-- Manga Detail Panel -->
 <div class="panel-bg" id="panel-bg" onclick="closePanel()"></div>
 <div class="panel" id="panel">
-  <button class="panel-close" id="panel-close" onclick="closePanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   <div style="padding:12px 16px 0;flex-shrink:0">
     <div class="panel-drag"></div>
   </div>
@@ -1103,7 +1102,6 @@ async function renderPanel({ manga, chapters }) {
 
   let chHtml = chapters.length ? `<div class="ch-actions-bar">
     <span class="ch-count-label">${chapters.length} chapter${chapters.length !== 1 ? 's' : ''}</span>
-    <button class="btn-toggle-select" id="btn-toggle-select" onclick="toggleSelectMode()">Select</button>
   </div>` : '';
 
   for (const [vol, chs] of Object.entries(volumes)) {
