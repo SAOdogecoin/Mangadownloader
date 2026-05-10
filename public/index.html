@@ -167,10 +167,10 @@ button.status-pill:hover{opacity:.75}
 .btn-more-desc{display:inline;background:none;border:none;font-family:inherit;font-size:11px;color:var(--org);font-weight:700;cursor:pointer;padding:0 0 0 3px;-webkit-tap-highlight-color:transparent}
 .panel-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);-webkit-tap-highlight-color:transparent;z-index:1}
 .panel-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
-.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--sub);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.panel-save-btn:hover{border-color:var(--fg);color:var(--fg)}
-.panel-save-btn.saved{border-color:var(--org);color:var(--org);background:none}
-.panel-save-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
+.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-save-btn:hover{background:var(--org-h)}
+.panel-save-btn.saved{background:var(--org);color:#0d1117}
+.panel-save-btn svg{width:12px;height:12px;stroke:#0d1117;fill:none}
 .panel-body{flex:1;overflow-y:auto;min-height:0}
 .ch-section-hdr{padding:12px 16px 6px;font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0;background:var(--card);z-index:1;border-bottom:1px solid var(--border)}
 .ch-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent}
@@ -313,7 +313,7 @@ button.status-pill:hover{opacity:.75}
 .ch-checkbox{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:none;align-items:center;justify-content:center;transition:all .15s;background:var(--card);cursor:pointer}
 .ch-checkbox.visible{display:flex}
 .ch-checkbox.checked{background:var(--org);border-color:var(--org)}
-.ch-checkbox svg{display:none;width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3}
+.ch-checkbox svg{display:none;width:11px;height:11px;stroke:#0d1117;fill:none;stroke-width:3}
 .ch-checkbox.checked svg{display:block}
 .ch-row{cursor:pointer}
 .ch-row:active{background:#f5f4f2}
@@ -335,9 +335,9 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── PANEL ACTION ROW ─── */
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
-.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--sub);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.panel-dl-btn:hover{border-color:var(--fg);color:var(--fg)}
-.panel-dl-btn.active{border-color:var(--org);color:var(--org)}
+.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-dl-btn:hover{background:var(--org-h)}
+.panel-dl-btn.active{background:var(--surf);color:var(--fg)}
 .panel-dl-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
 
 /* ─── FORMAT TOGGLE ─── */
