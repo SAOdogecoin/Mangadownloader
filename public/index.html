@@ -300,6 +300,11 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── CHAPTER ACTIONS BAR ─── */
 .ch-actions-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;position:sticky;top:0;background:var(--card);z-index:2;border-bottom:1px solid var(--border);flex-shrink:0}
+.btn-select-all-icon{display:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;color:var(--sub);align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s;flex-shrink:0}
+.btn-select-all-icon.visible{display:flex}
+.btn-select-all-icon:hover{border-color:var(--fg);color:var(--fg)}
+.btn-select-all-icon.all-checked{border-color:var(--org);background:var(--org);color:#0d1117}
+.btn-select-all-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2}
 .ch-count-label{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.05em;text-transform:uppercase}
 .btn-toggle-select{background:none;border:1.5px solid var(--border);border-radius:99px;padding:5px 12px;font-family:inherit;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .15s}
 .btn-toggle-select.active{border-color:var(--org);color:var(--org);background:var(--org-s)}
@@ -344,8 +349,6 @@ button.status-pill:hover{opacity:.75}
 /* ─── PANEL SELECT ACTION BAR ─── */
 .panel-select-bar{padding:10px 12px;border-top:1px solid var(--border);display:none;align-items:center;gap:8px;flex-shrink:0;background:var(--card);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
 .panel-select-bar.show{display:flex}
-.btn-select-all{padding:9px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--fg);-webkit-tap-highlight-color:transparent;white-space:nowrap;transition:all .15s}
-.btn-select-all:hover{border-color:var(--org);color:var(--org)}
 .btn-dl-selected{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;white-space:nowrap}
 .btn-dl-selected svg{width:14px;height:14px;stroke:var(--blk-text);fill:none;flex-shrink:0}
 .btn-dl-selected:disabled{opacity:.45;cursor:default}
@@ -426,7 +429,6 @@ button.status-pill:hover{opacity:.75}
       <button class="fmt-btn active" data-fmt="cbz" onclick="setDlFormat('cbz')">CBZ</button>
       <button class="fmt-btn" data-fmt="epub" onclick="setDlFormat('epub')">EPUB<span class="fmt-kindle">Kindle</span></button>
     </div>
-    <button class="btn-select-all" id="btn-select-all" onclick="selectAllChapters()">Select All</button>
     <button class="btn-dl-selected" id="btn-dl-selected" onclick="downloadSelected()" disabled><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download</button>
   </div>
 </div>
@@ -1141,6 +1143,9 @@ async function renderPanel({ manga, chapters }) {
 
   let chHtml = chapters.length ? `<div class="ch-actions-bar">
     <span class="ch-count-label">${chapters.length} chapter${chapters.length !== 1 ? 's' : ''}</span>
+    <button class="btn-select-all-icon" id="btn-select-all" onclick="selectAllChapters()" title="Select all">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8.5 11 12 15 15.5 11"/></svg>
+    </button>
   </div>` : '';
 
   for (const [vol, chs] of Object.entries(volumes)) {
@@ -1311,6 +1316,8 @@ function toggleSelectMode() {
       : '<svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg> Download';
   }
   document.querySelectorAll('.ch-checkbox').forEach(cb => { cb.classList.toggle('visible', selectMode); cb.classList.remove('checked'); });
+  const saIcon = document.getElementById('btn-select-all');
+  if (saIcon) saIcon.classList.toggle('visible', selectMode);
   updateSelectBar();
 }
 
@@ -1342,9 +1349,14 @@ function updateSelectBar() {
   if (!bar) return;
   bar.classList.toggle('show', selectMode);
   if (dlBtn) { const n = selectedChIds.size; dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>${n ? ` Download ${n}` : ' Download'}`; dlBtn.disabled = n === 0; }
-  if (saBtn && selectMode) {
+  const saIcon = document.getElementById('btn-select-all');
+  if (saIcon && selectMode) {
     const allIds = [...document.querySelectorAll('.ch-checkbox')].map(cb => cb.id.replace('chk-', ''));
-    saBtn.textContent = allIds.length > 0 && allIds.every(id => selectedChIds.has(id)) ? 'Deselect All' : 'Select All';
+    const allChecked = allIds.length > 0 && allIds.every(id => selectedChIds.has(id));
+    saIcon.classList.toggle('all-checked', allChecked);
+    saIcon.innerHTML = allChecked
+      ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="15.5 13 12 9 8.5 13"/></svg>'
+      : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8.5 11 12 15 15.5 11"/></svg>';
   }
 }
 
