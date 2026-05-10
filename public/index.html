@@ -329,6 +329,12 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── THEME TOGGLE ─── (removed) ─── */
 
+/* ─── PANEL ACTION ROW ─── */
+.panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-dl-btn:hover{border-color:var(--org);color:var(--org)}
+.panel-dl-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
+
 /* ─── PANEL SELECT ACTION BAR ─── */
 .panel-select-bar{padding:12px 16px;border-top:1px solid var(--border);display:none;align-items:center;gap:8px;flex-shrink:0;background:var(--card);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
 .panel-select-bar.show{display:flex}
@@ -1069,10 +1075,16 @@ async function renderPanel({ manga, chapters }) {
       ${manga.rating ? `<div class="panel-rating">${starsHtml(manga.rating)}<span class="star-num">${manga.rating.toFixed(1)}/10</span></div>` : ''}
       <div class="panel-tags">${tagsHtml}</div>
       ${manga.description ? `<div class="panel-desc" id="panel-desc">${esc(manga.description.slice(0, 220))}${manga.description.length > 220 ? `<button class="btn-more-desc" onclick="expandDesc()" id="btn-more">More</button>` : ''}</div>` : ''}
-      <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
-        <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
-        ${isSaved ? 'Saved' : 'Add to Library'}
-      </button>
+      <div class="panel-action-row">
+        <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
+          <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
+          ${isSaved ? 'Saved' : 'Add to Library'}
+        </button>
+        <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
+          <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+          Download
+        </button>
+      </div>
     </div>`;
 
   // Group chapters by volume
@@ -1108,10 +1120,6 @@ async function renderPanel({ manga, chapters }) {
           ${ch.title ? `<div class="ch-title">${esc(ch.title)}</div>` : ''}
           ${ch.pages ? `<div class="ch-pages">${ch.pages} pages</div>` : ''}
         </div>
-        <div class="ch-btns" id="ch-btns-${chIdEsc}">
-          <button class="btn-read" onclick="event.stopPropagation();startRead('${esc(manga.id)}','${chIdEsc}','${esc(ch.chapter||'')}','${esc(ch.title||'')}')"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Read</button>
-          <button class="btn-dl-ch" title="Download CBZ" onclick="event.stopPropagation();downloadChapter('${chIdEsc}','${esc(ch.chapter||'')}','${esc(manga.title)}',this)"><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download</button>
-        </div>
         <div class="ch-checkbox" id="chk-${chIdEsc}" onclick="event.stopPropagation();toggleChSelect('${chIdEsc}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
       </div>`;
     }).join('');
@@ -1140,12 +1148,41 @@ function expandDesc() {
 }
 
 function closePanel() {
+  const panel = document.getElementById('panel');
+  panel.style.transform = '';
+  panel.style.transition = '';
   document.getElementById('panel-bg').classList.remove('open');
-  document.getElementById('panel').classList.remove('open');
+  panel.classList.remove('open');
   selectMode = false; selectedChIds.clear();
   const bar = document.getElementById('panel-select-bar');
   if (bar) bar.classList.remove('show');
 }
+
+// Swipe-down to close panel
+(function() {
+  const panel = document.getElementById('panel');
+  let startY = 0, dragging = false;
+  panel.addEventListener('touchstart', e => {
+    const body = document.getElementById('panel-body');
+    if (body && body.scrollTop > 0) return; // only when scrolled to top
+    startY = e.touches[0].clientY;
+    dragging = true;
+    panel.style.transition = 'none';
+  }, { passive: true });
+  panel.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0) panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  panel.addEventListener('touchend', e => {
+    if (!dragging) return;
+    dragging = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    panel.style.transition = '';
+    if (dy > 110) closePanel();
+    else { panel.style.transform = 'translateY(0)'; }
+  }, { passive: true });
+})();
 
 async function toggleSave() {
   if (!currentMangaData) return;
@@ -1220,10 +1257,11 @@ function handleChRowClick(chId, mangaId, chNum, chTitle) {
 function toggleSelectMode() {
   selectMode = !selectMode;
   selectedChIds.clear();
-  const btn = document.getElementById('btn-toggle-select');
-  if (btn) { btn.textContent = selectMode ? 'Cancel' : 'Select'; btn.classList.toggle('active', selectMode); }
+  const dlBtn = document.getElementById('panel-dl-btn');
+  if (dlBtn) dlBtn.innerHTML = selectMode
+    ? '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel'
+    : '<svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg> Download';
   document.querySelectorAll('.ch-checkbox').forEach(cb => { cb.classList.toggle('visible', selectMode); cb.classList.remove('checked'); });
-  document.querySelectorAll('[id^="ch-btns-"]').forEach(b => b.style.display = selectMode ? 'none' : '');
   updateSelectBar();
 }
 
