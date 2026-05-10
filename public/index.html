@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Mangaink</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23d2ff30'/><text y='72' x='50' text-anchor='middle' font-size='60' fill='%230d1117'>📚</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --org:#d2ff30;--org-h:#b8e020;--org-s:rgba(210,255,48,.15);
+  --ok:#16a34a;--err:#dc2626;--warn:#ca8a04;
+  --fg:#0d1117;--sub:#6b7280;--border:#e5e7eb;--card:#ffffff;--bg:#ffffff;--surf:#f0f0f0;
+  --blk:#0d1117;--blk-h:#1f2937;--blk-text:#fff;
+  --r:8px;
+}
+/* ─── DARK MODE ─── */
+[data-theme="dark"]{--bg:#111827;--card:#1f2937;--fg:#f0f0f0;--sub:#9ca3af;--border:#374151;--surf:#374151;--blk:#d2ff30;--blk-h:#b8e020;--blk-text:#0d1117;}
+@media(prefers-color-scheme:dark){html:not([data-theme="light"]){--bg:#111827;--card:#1f2937;--fg:#f0f0f0;--sub:#9ca3af;--border:#374151;--surf:#374151;--blk:#d2ff30;--blk-h:#b8e020;--blk-text:#0d1117;}}
+html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
+body{font-family:'Manrope',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--org);border-radius:9px;opacity:.5}
+-webkit-tap-highlight-color:transparent;
+
+/* ─── TOPBAR ─── */
+.topbar{background:var(--bg);flex-shrink:0;border-bottom:1.5px solid var(--border);position:relative}
+.topbar-r1{padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between}
+.app-title{font-size:22px;font-weight:700;color:var(--fg);letter-spacing:-.03em;font-family:'Space Grotesk',sans-serif}
+.app-title em{color:var(--org);font-style:normal}
+.ttab-group{display:flex;align-items:center;gap:2px}
+.ttab-icon{width:44px;height:44px;border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:color .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative}
+.ttab-icon.active{color:var(--org)}
+.ttab-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.lib-badge{position:absolute;top:4px;right:4px;min-width:14px;height:14px;background:var(--org);color:#fff;font-size:8px;font-weight:800;border-radius:99px;padding:0 3px;line-height:14px;text-align:center;display:none;pointer-events:none}
+.topbar-r2{padding:0 12px 11px;display:flex;align-items:center;gap:8px}
+.r2-search{display:flex;align-items:center;gap:8px;flex:1}
+.r2-library{display:none;align-items:center;gap:8px;flex:1}
+.search-wrap{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.search-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:13px;color:var(--fg);padding:8px 36px 8px 14px;outline:none;transition:border-color .15s;min-width:0}
+.search-input:focus{border-color:var(--org);background:var(--bg)}
+.search-input::placeholder{color:#a8a29e}
+.btn-clear-input{position:absolute;right:8px;width:22px;height:22px;border:none;background:none;cursor:pointer;color:#aaa;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .15s;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.btn-clear-input:hover{color:var(--fg)}
+.btn-clear-input svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5}
+.btn-load-more{padding:10px 28px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;color:var(--fg);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn-load-more:hover{border-color:var(--blk);background:var(--blk);color:#fff}
+.btn-load-more:disabled{opacity:.45;cursor:default}
+.btn-search{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;white-space:nowrap;min-height:36px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn-search:hover{background:var(--blk-h)}
+.btn-search:active{background:var(--blk-h);transform:scale(.96)}
+.btn-search svg{width:13px;height:13px;stroke:var(--blk-text);fill:none}
+
+/* ─── LAYOUT ─── */
+.app-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.view{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0}
+.view.active{display:flex}
+
+/* ─── SEARCH VIEW ─── */
+.search-hint{padding:40px 20px;text-align:center;color:var(--sub);font-size:14px;font-weight:600}
+.search-loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--sub);font-size:14px;font-weight:600}
+.spin{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--org);border-radius:50%;animation:rspin .7s linear infinite;flex-shrink:0}
+@keyframes rspin{to{transform:rotate(360deg)}}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px;padding:16px}
+.result-card{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s}
+.result-card:active{transform:scale(.97)}
+.result-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;border-radius:5px;overflow:hidden;background:var(--surf)}
+.result-cover{width:100%;height:100%;object-fit:cover;display:block}
+.result-cover-ph{width:100%;height:100%;background:var(--surf);display:flex;align-items:center;justify-content:center}
+.result-cover-ph svg{width:32px;height:32px;stroke:#c8bdb8;fill:none}
+.status-pill{position:absolute;bottom:6px;left:6px;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.pill-ongoing{background:rgba(22,163,74,.9);color:#fff}
+.pill-completed{background:rgba(37,99,235,.9);color:#fff}
+.pill-hiatus{background:rgba(217,119,6,.9);color:#fff}
+.pill-cancelled{background:rgba(220,38,38,.9);color:#fff}
+.result-title{margin-top:7px;font-size:11.5px;font-weight:700;color:var(--fg);line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.result-meta{font-size:10px;color:var(--sub);margin-top:3px}
+
+/* ─── HOME / LIBRARY / DISCOVERY ─── */
+
+/* Topbar library button */
+.topbar-lib-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;background:none;border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.topbar-lib-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.topbar-lib-btn.active{border-color:var(--org);color:var(--org);background:var(--org-s)}
+.topbar-lib-btn:hover{border-color:var(--blk);color:var(--blk)}
+
+/* Library page */
+.lib-page-hdr{padding:20px 16px 0;flex-shrink:0}
+.lib-page-title{font-size:20px;font-weight:800;color:var(--fg);font-family:'Space Grotesk',sans-serif}
+.lib-empty{padding:60px 20px;text-align:center;color:var(--sub);font-size:14px;font-weight:600;line-height:1.6}
+
+/* Unified section wrapper */
+.home-section{padding:16px 16px 0;flex-shrink:0}
+.home-section-label{font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px}
+
+/* Unified manga card — used everywhere on home */
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:12px;padding-bottom:4px}
+.mc-card{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s}
+.mc-card:active{transform:scale(.96)}
+.mc-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;border-radius:5px;overflow:hidden;background:var(--surf);flex-shrink:0}
+.mc-cover{width:100%;height:100%;object-fit:cover;display:block}
+.mc-ph{width:100%;height:100%;background:var(--surf);display:flex;align-items:center;justify-content:center}
+.mc-ph svg{width:24px;height:24px;stroke:#c8bdb8;fill:none}
+.mc-ch-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.72);color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:3px;white-space:nowrap}
+.mc-title{margin-top:5px;font-size:11px;font-weight:700;color:var(--fg);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.mc-sub{font-size:9.5px;color:var(--fg);font-weight:700;margin-top:1px}
+
+/* Discovery horizontal strip */
+.disc-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:12px}
+.disc-strip::-webkit-scrollbar{display:none}
+.disc-card{flex-shrink:0;width:88px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s}
+.disc-card:active{transform:scale(.96)}
+.disc-cover-wrap{position:relative;width:88px;aspect-ratio:2/3;border-radius:5px;overflow:hidden;background:var(--surf)}
+.disc-cover{width:100%;height:100%;object-fit:cover;display:block}
+.disc-ph{width:100%;height:100%;background:var(--surf);display:flex;align-items:center;justify-content:center}
+.disc-ph svg{width:20px;height:20px;stroke:#c8bdb8;fill:none}
+.disc-rating-row{display:flex;align-items:center;gap:2px;margin-top:2px}
+.disc-rating-row .star{font-size:9px}
+.disc-rating-num{font-size:9.5px;font-weight:700;color:var(--sub);margin-left:1px}
+.disc-title{margin-top:5px;font-size:11px;font-weight:700;color:var(--fg);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.disc-loading{padding:20px;text-align:center;color:var(--sub);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* ─── LIBRARY VIEW (legacy — unused but kept for safety) ─── */
+.lib-grid-section{padding:14px 16px;flex:1}
+.lib-search{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:13px;color:var(--fg);padding:7px 14px;outline:none;transition:all .15s;min-width:0}
+.lib-search:focus{border-color:var(--org);box-shadow:0 0 0 3px var(--org-s)}
+.lib-search::placeholder{color:#a8a29e}
+.manga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
+.manga-card{cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.manga-card-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;border-radius:9px;overflow:hidden;background:var(--surf);transition:transform .18s,box-shadow .18s}
+.manga-card:active .manga-card-cover-wrap{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.15)}
+.manga-card-cover{width:100%;height:100%;object-fit:cover;display:block}
+.manga-card-ph{width:100%;height:100%;background:var(--surf);display:flex;align-items:center;justify-content:center}
+.manga-card-ph svg{width:28px;height:28px;stroke:#c8bdb8;fill:none}
+.ch-badge{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.75);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:99px}
+.del-btn{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:2;-webkit-tap-highlight-color:transparent}
+.del-btn svg{width:10px;height:10px;stroke:#fff;fill:none}
+@media(hover:hover){.manga-card:hover .del-btn{opacity:1}}
+@media(hover:none){.del-btn{opacity:.8}}
+.manga-card-title{margin-top:6px;font-size:11px;font-weight:700;color:var(--fg);line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px;text-align:center}
+.empty-icon svg{width:44px;height:44px;stroke:#d6d3d1;fill:none}
+.empty-title{font-size:15px;font-weight:700;color:var(--fg)}
+.empty-sub{font-size:13px;color:var(--sub);max-width:260px;line-height:1.5}
+
+/* ─── MANGA DETAIL PANEL ─── */
+.panel-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:none}
+.panel-bg.open{display:block}
+.panel{position:fixed;bottom:0;left:0;right:0;height:85vh;background:var(--card);border-radius:20px 20px 0 0;z-index:41;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.panel.open{transform:translateY(0)}
+.panel-hdr{display:flex;align-items:flex-start;gap:14px;padding:16px 16px 12px;flex-shrink:0}
+.panel-drag{width:36px;height:4px;background:#e0dcd8;border-radius:99px;margin:0 auto 12px;flex-shrink:0}
+.panel-cover{width:80px;height:120px;border-radius:5px;object-fit:cover;background:var(--surf);flex-shrink:0}
+.panel-cover-ph{width:80px;height:120px;border-radius:5px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.panel-cover-ph svg{width:30px;height:30px;stroke:#c8bdb8;fill:none}
+.panel-info{flex:1;min-width:0;padding-top:2px}
+.panel-title{font-size:15px;font-weight:800;color:var(--fg);line-height:1.3;margin-bottom:5px}
+.panel-meta{font-size:11px;color:var(--sub);margin-bottom:8px}
+.panel-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.tag-pill{padding:2px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--sub);font-weight:600}
+button.tag-pill{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
+button.tag-pill:hover{border-color:var(--org);color:var(--org);background:var(--org-s)}
+button.status-pill{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+button.status-pill:hover{opacity:.75}
+.panel-desc{font-size:12px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.panel-desc.expanded{display:block;-webkit-line-clamp:unset}
+.btn-more-desc{display:inline;background:none;border:none;font-family:inherit;font-size:11px;color:var(--org);font-weight:700;cursor:pointer;padding:0 0 0 3px;-webkit-tap-highlight-color:transparent}
+.panel-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);-webkit-tap-highlight-color:transparent;z-index:1}
+.panel-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;margin-top:6px}
+.panel-save-btn:hover{background:var(--blk-h)}
+.panel-save-btn.saved{background:#374151;color:#fff}
+.panel-save-btn svg{width:12px;height:12px;stroke:var(--blk-text);fill:none}
+.panel-save-btn.saved svg{stroke:#fff}
+.panel-body{flex:1;overflow-y:auto;min-height:0}
+.ch-section-hdr{padding:12px 16px 6px;font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0;background:var(--card);z-index:1;border-bottom:1px solid var(--border)}
+.ch-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent}
+.ch-row:last-child{border-bottom:none}
+.ch-row.current-ch{background:var(--org-s)}
+.ch-row-info{flex:1;min-width:0}
+.ch-num{font-size:13px;font-weight:700;color:var(--fg)}
+.ch-row.current-ch .ch-num{color:var(--org)}
+.ch-title{font-size:11px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-pages{font-size:10px;color:#a8a29e;margin-top:2px}
+.ch-btns{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-read{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s;min-height:36px;white-space:nowrap}
+.btn-read:hover{background:var(--blk-h)}
+.btn-read svg{width:11px;height:11px;stroke:var(--blk-text);fill:var(--blk-text);flex-shrink:0}
+.btn-dl-ch{display:inline-flex;align-items:center;gap:4px;padding:7px 11px;height:36px;border:1.5px solid var(--border);border-radius:99px;background:var(--card);cursor:pointer;font-family:inherit;font-size:11px;font-weight:800;color:var(--fg);-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .15s;white-space:nowrap;letter-spacing:.02em}
+.btn-dl-ch:hover{border-color:var(--blk);background:var(--blk);color:#fff}
+.btn-dl-ch:hover svg{stroke:#fff}
+.btn-dl-ch svg{width:13px;height:13px;stroke:currentColor;fill:none;flex-shrink:0}
+.btn-dl-ch.dl-loading svg{animation:rspin .7s linear infinite}
+.panel-loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--sub);font-size:14px;font-weight:600}
+
+/* ─── READER ─── */
+.reader-overlay{position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column}
+.reader-overlay.hidden{display:none}
+.reader-top{height:50px;background:rgba(0,0,0,.85);display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;position:absolute;top:0;left:0;right:0;z-index:2;transition:opacity .2s}
+.reader-top.hide{opacity:0;pointer-events:none}
+.reader-back{display:flex;align-items:center;gap:4px;background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;color:#fff;cursor:pointer;padding:6px 10px;border-radius:99px;transition:background .15s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.reader-back:hover{background:rgba(255,255,255,.1)}
+.reader-back svg{width:14px;height:14px;stroke:#fff;fill:none}
+.reader-meta{flex:1;min-width:0;text-align:center}
+.reader-title-txt{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reader-ch-txt{font-size:10px;color:rgba(255,255,255,.6)}
+.reader-loc-btn{background:rgba(255,255,255,.15);border:none;color:#fff;font-family:inherit;font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.reader-loc-btn:active{background:rgba(255,255,255,.25)}
+
+/* Reader area */
+.reader-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;cursor:pointer}
+.reader-img-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.reader-img{max-width:100%;max-height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none}
+.reader-page-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600}
+.reader-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--org);border-radius:50%;animation:rspin .75s linear infinite}
+.reader-error{color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:13px}
+
+/* Progress bar */
+.reader-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1);z-index:2}
+.reader-progress-fill{height:100%;background:var(--org);transition:width .2s}
+
+/* Touch zones (invisible) */
+.tap-zone{position:absolute;top:50px;bottom:3px;width:30%;z-index:3}
+.tap-left{left:0}
+.tap-right{right:0}
+.tap-center{left:30%;right:30%;cursor:default}
+
+/* Next chapter button */
+.next-ch-btn{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 22px;background:var(--org);color:#fff;border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:4;display:none;box-shadow:0 4px 16px rgba(244,98,42,.5)}
+.next-ch-btn:hover{background:var(--org-h)}
+
+/* ─── TOC PANEL ─── */
+.toc-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:110;display:none}
+.toc-bg.open{display:block}
+.toc-panel{position:fixed;bottom:0;left:0;right:0;max-height:72vh;background:var(--card);border-radius:18px 18px 0 0;z-index:111;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.toc-panel.open{transform:translateY(0)}
+.toc-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.toc-title-label{font-size:13px;font-weight:800;color:var(--fg)}
+.toc-close{background:none;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);-webkit-tap-highlight-color:transparent}
+.toc-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+.toc-list{flex:1;overflow-y:auto;padding:6px 0}
+.toc-item{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .1s}
+.toc-item:active{background:var(--bg)}
+.toc-item.cur{background:var(--org-s)}
+.toc-num{font-size:10px;font-weight:700;color:var(--sub);min-width:36px;flex-shrink:0}
+.toc-name{font-size:13px;color:var(--fg);flex:1}
+.toc-pages{font-size:10px;color:var(--sub);flex-shrink:0}
+.toc-item.cur .toc-num,.toc-item.cur .toc-name{color:var(--org);font-weight:700}
+
+/* ─── FAB ─── */
+.fab{display:none;position:fixed;bottom:22px;right:18px;width:54px;height:54px;border-radius:50%;background:var(--blk);border:none;color:var(--org);cursor:pointer;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.35);z-index:30;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s,box-shadow .15s}
+.fab svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.8}
+.fab:active{transform:scale(.92);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;font-size:13px;font-weight:700;padding:10px 20px;border-radius:99px;z-index:200;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── MOBILE ─── */
+@media(max-width:700px){
+  .results-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;padding:12px}
+  .manga-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px}
+  .fab{display:flex}
+}
+
+/* ─── SEARCH DROPDOWN ─── */
+.search-dropdown{position:fixed;top:108px;left:8px;right:8px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.15);display:none;overflow:hidden;max-height:70vh;overflow-y:auto}
+.search-dropdown.open{display:block}
+.sdrop-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent;transition:background .1s;touch-action:manipulation}
+.sdrop-item:last-child{border-bottom:none}
+.sdrop-item:hover,.sdrop-item:active{background:var(--bg)}
+.sdrop-cover{width:34px;height:50px;border-radius:3px;object-fit:cover;flex-shrink:0;background:#e8e8e8}
+.sdrop-cover-ph{width:34px;height:50px;border-radius:3px;flex-shrink:0;background:var(--org-s);display:flex;align-items:center;justify-content:center}
+.sdrop-cover-ph svg{width:13px;height:13px;stroke:#aaa;fill:none}
+.sdrop-info{flex:1;min-width:0}
+.sdrop-title{font-size:13px;font-weight:700;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sdrop-meta{font-size:10px;color:var(--sub);margin-top:3px;display:flex;align-items:center;gap:5px}
+.sdrop-pill{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.sdrop-loading{display:flex;justify-content:center;padding:18px}
+.sdrop-empty{text-align:center;padding:18px;font-size:13px;color:var(--sub);font-weight:600}
+
+/* ─── PREDICTIVE SEARCH RESULT DESCRIPTION ─── */
+.result-desc{font-size:10px;color:var(--sub);margin-top:3px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* ─── STAR RATING ─── */
+.star-row{display:flex;align-items:center;gap:3px;margin-top:4px}
+.stars{display:flex;align-items:center;gap:1px;line-height:1}
+.star{font-size:10px;color:#d4d0cc}
+.star.on{color:#f59e0b}
+.star.half{position:relative;color:#d4d0cc}
+.star.half::before{content:'★';position:absolute;left:0;width:50%;overflow:hidden;color:#f59e0b}
+.star-num{font-size:10px;font-weight:700;color:var(--sub);margin-left:2px}
+/* panel rating — slightly bigger */
+.panel-rating{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.panel-rating .stars .star{font-size:13px}
+.panel-rating .star-num{font-size:12px;font-weight:700;color:var(--sub)}
+/* dropdown rating */
+.sdrop-rating{display:flex;align-items:center;gap:2px;margin-top:2px}
+.sdrop-rating .star{font-size:9px}
+.sdrop-rating .star-num{font-size:9px;font-weight:700;color:var(--sub);margin-left:1px}
+
+/* ─── CHAPTER ACTIONS BAR ─── */
+.ch-actions-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;position:sticky;top:0;background:var(--card);z-index:2;border-bottom:1px solid var(--border);flex-shrink:0}
+.ch-count-label{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.05em;text-transform:uppercase}
+.btn-toggle-select{background:none;border:1.5px solid var(--border);border-radius:99px;padding:5px 12px;font-family:inherit;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .15s}
+.btn-toggle-select.active{border-color:var(--org);color:var(--org);background:var(--org-s)}
+
+/* ─── CHAPTER CHECKBOX ─── */
+.ch-checkbox{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:none;align-items:center;justify-content:center;transition:all .15s;background:var(--card);cursor:pointer}
+.ch-checkbox.visible{display:flex}
+.ch-checkbox.checked{background:var(--org);border-color:var(--org)}
+.ch-checkbox svg{display:none;width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3}
+.ch-checkbox.checked svg{display:block}
+.ch-row{cursor:pointer}
+.ch-row:active{background:#f5f4f2}
+
+/* ─── NAV TABS ─── */
+.topbar-r3{display:none}
+.nav-tabs-row{display:flex;gap:12px;align-items:center}
+.nav-pill{border:none;background:none;font-family:inherit;font-size:13px;font-weight:700;color:#fff;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;transition:color .15s;white-space:nowrap;line-height:1}
+.nav-pill:hover{color:var(--org)}
+.nav-pill.active{color:var(--org)}
+
+/* ─── GENRE PAGE ─── */
+.genre-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding:16px}
+.genre-card{padding:14px 10px;border:1.5px solid var(--border);border-radius:12px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--fg);background:var(--card);-webkit-tap-highlight-color:transparent;transition:all .15s;font-family:inherit}
+.genre-card:hover{border-color:var(--org);color:var(--org);background:var(--org-s)}
+.genre-card:active{transform:scale(.96)}
+
+/* ─── THEME TOGGLE ─── (removed) ─── */
+
+/* ─── PANEL SELECT ACTION BAR ─── */
+.panel-select-bar{padding:12px 16px;border-top:1px solid var(--border);display:none;align-items:center;gap:8px;flex-shrink:0;background:var(--card);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.panel-select-bar.show{display:flex}
+.btn-select-all{padding:9px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--fg);-webkit-tap-highlight-color:transparent;white-space:nowrap;transition:all .15s}
+.btn-select-all:hover{border-color:var(--org);color:var(--org)}
+.btn-dl-selected{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;white-space:nowrap}
+.btn-dl-selected svg{width:14px;height:14px;stroke:var(--blk-text);fill:none;flex-shrink:0}
+.btn-dl-selected:disabled{opacity:.45;cursor:default}
+.btn-dl-selected:not(:disabled):hover{background:var(--blk-h)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-r1">
+    <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Manga<em>ink</em></span>
+    <div class="nav-tabs-row" id="nav-pills">
+      <button class="nav-pill active" data-route="home" onclick="navigate('home')">Home</button>
+      <button class="nav-pill" data-route="library" onclick="navigate('library')">Library</button>
+      <button class="nav-pill" data-route="genres" onclick="navigate('genres')">Genres</button>
+    </div>
+  </div>
+  <div class="topbar-r2">
+    <div class="search-wrap">
+      <input class="search-input" id="search-input" placeholder="Search manga, manhwa…" oninput="scheduleSearch()" onkeydown="if(event.key==='Enter'){clearTimeout(_searchTimer);doSearch()}"/>
+      <button class="btn-clear-input" id="btn-clear-input" onclick="clearSearch()" style="display:none" aria-label="Clear">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <button class="btn-search" onclick="doSearch()">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search
+    </button>
+  </div>
+  <div class="topbar-r3" id="nav-pills-old"></div>
+</div>
+
+<div class="search-dropdown" id="search-dropdown"></div>
+
+<div class="app-body">
+  <!-- Home -->
+  <div class="view active" id="v-home">
+    <div id="discover-wrap"></div>
+  </div>
+  <!-- Library -->
+  <div class="view" id="v-library">
+    <div class="lib-page-hdr">
+      <span class="lib-page-title">My Library</span>
+    </div>
+    <div id="cr-wrap"></div>
+    <div id="lib-page-wrap"></div>
+  </div>
+  <!-- Genres -->
+  <div class="view" id="v-genres">
+    <div class="genre-grid" id="genre-grid"></div>
+  </div>
+  <!-- Search results -->
+  <div class="view" id="v-search">
+    <div class="search-loading" id="search-loading" style="display:none">
+      <div class="spin"></div> Searching…
+    </div>
+    <div class="results-grid" id="results-grid"></div>
+    <div id="load-more-wrap" style="display:none;padding:8px 16px 20px;text-align:center">
+      <button class="btn-load-more" id="btn-load-more" onclick="loadMore()">Load more</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manga Detail Panel -->
+<div class="panel-bg" id="panel-bg" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <button class="panel-close" id="panel-close" onclick="closePanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div style="padding:12px 16px 0;flex-shrink:0">
+    <div class="panel-drag"></div>
+  </div>
+  <div class="panel-hdr" id="panel-hdr">
+    <div class="panel-loading">
+      <div class="spin"></div> Loading…
+    </div>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+  <div class="panel-select-bar" id="panel-select-bar">
+    <button class="btn-dl-selected" id="btn-dl-selected" onclick="downloadSelected()" disabled><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download</button>
+    <button class="btn-select-all" id="btn-select-all" onclick="selectAllChapters()">Select All</button>
+  </div>
+</div>
+
+<!-- Reader -->
+<div class="reader-overlay hidden" id="reader-overlay">
+  <div class="reader-top" id="reader-top">
+    <button class="reader-back" onclick="closeReader()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="reader-meta">
+      <div class="reader-title-txt" id="reader-title"></div>
+      <div class="reader-ch-txt" id="reader-ch"></div>
+    </div>
+    <button class="reader-loc-btn" id="reader-loc-btn" onclick="openToc()">p.1/1</button>
+  </div>
+
+  <div class="reader-area" id="reader-area">
+    <div class="reader-img-wrap" id="reader-img-wrap">
+      <div class="reader-page-loading" id="reader-pg-loading">
+        <div class="reader-spin"></div>
+        Loading page…
+      </div>
+    </div>
+  </div>
+
+  <!-- Tap zones -->
+  <div class="tap-zone tap-left" id="tap-left" onclick="pageNav('prev')"></div>
+  <div class="tap-zone tap-center" id="tap-center" onclick="toggleTopBar()"></div>
+  <div class="tap-zone tap-right" id="tap-right" onclick="pageNav('next')"></div>
+
+  <!-- Progress bar -->
+  <div class="reader-progress"><div class="reader-progress-fill" id="progress-fill"></div></div>
+
+  <!-- Next chapter -->
+  <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter →</button>
+</div>
+
+<!-- TOC -->
+<div class="toc-bg" id="toc-bg" onclick="closeToc()"></div>
+<div class="toc-panel" id="toc-panel">
+  <div class="toc-hdr">
+    <span class="toc-title-label" id="toc-label">Chapters</span>
+    <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="toc-list" id="toc-list"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// IndexedDB
+// ═══════════════════════════════════════════════════════════════════
+const IDB = {
+  db: null,
+  async init() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('manga-dl', 1);
+      r.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('manga')) db.createObjectStore('manga', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('handles')) db.createObjectStore('handles');
+      };
+      r.onsuccess = e => { this.db = e.target.result; res(); };
+      r.onerror = e => rej(e.target.error);
+    });
+  },
+  _s(s, m) { return this.db.transaction(s, m).objectStore(s); },
+  save(b) { return new Promise((res, rej) => { const r = this._s('manga', 'readwrite').put(b); r.onsuccess = res; r.onerror = e => rej(e.target.error); }); },
+  getAll() { return new Promise((res, rej) => { const r = this._s('manga', 'readonly').getAll(); r.onsuccess = e => res(e.target.result || []); r.onerror = e => rej(e.target.error); }); },
+  get(id) { return new Promise((res, rej) => { const r = this._s('manga', 'readonly').get(id); r.onsuccess = e => res(e.target.result || null); r.onerror = e => rej(e.target.error); }); },
+  del(id) { return new Promise((res, rej) => { const r = this._s('manga', 'readwrite').delete(id); r.onsuccess = res; r.onerror = e => rej(e.target.error); }); },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// Utils
+// ═══════════════════════════════════════════════════════════════════
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function proxyUrl(url) { return `/api/proxy?url=${encodeURIComponent(url)}`; }
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), dur);
+}
+function isMob() { return window.innerWidth <= 700; }
+function statusPillClass(s) {
+  return { ongoing: 'pill-ongoing', completed: 'pill-completed', hiatus: 'pill-hiatus', cancelled: 'pill-cancelled' }[s] || 'pill-ongoing';
+}
+
+// rating: 0–10 bayesian score → 5 stars
+function starsHtml(rating, cls = '') {
+  if (!rating) return '';
+  const out5 = rating / 2; // convert to 5-star
+  let html = '<span class="stars' + (cls ? ' ' + cls : '') + '">';
+  for (let i = 1; i <= 5; i++) {
+    if (out5 >= i) html += '<span class="star on">★</span>';
+    else if (out5 >= i - 0.5) html += '<span class="star half">★</span>';
+    else html += '<span class="star">★</span>';
+  }
+  html += '</span>';
+  return html;
+}
+function ratingRowHtml(rating, wrapCls = 'star-row') {
+  if (!rating) return '';
+  return `<div class="${wrapCls}">${starsHtml(rating)}<span class="star-num">${rating.toFixed(1)}</span></div>`;
+}
+
+// (no tabs — single view)
+
+// ═══════════════════════════════════════════════════════════════════
+// Search
+// ═══════════════════════════════════════════════════════════════════
+// Status filters + all genre tags (verified UUIDs from MangaDex API)
+const GENRES = [
+  // ── Status ──
+  { name: 'Completed',      type: 'status', value: 'completed' },
+  { name: 'Ongoing',        type: 'status', value: 'ongoing' },
+  { name: 'Hiatus',         type: 'status', value: 'hiatus' },
+  // ── Genres ──
+  { name: 'Award Winning',  type: 'tag', id: '0a39b5a1-b235-4886-a747-1d05d216532d' },
+  { name: 'Action',         type: 'tag', id: '391b0423-d847-456f-aff0-8b0cfc03066b' },
+  { name: 'Adventure',      type: 'tag', id: '87cc87cd-a395-47af-b27a-93258283bbc6' },
+  { name: 'Comedy',         type: 'tag', id: '4d32cc48-9f00-4cca-9b5a-a839f0764984' },
+  { name: 'Drama',          type: 'tag', id: 'b9af3a63-f058-46de-a9a0-e0c13906197a' },
+  { name: 'Fantasy',        type: 'tag', id: 'cdc58593-87dd-415e-bbc0-2ec27bf404cc' },
+  { name: 'Horror',         type: 'tag', id: 'cdad7e68-1419-41dd-bdce-27753074a640' },
+  { name: 'Mystery',        type: 'tag', id: 'ee968100-4191-4968-93d3-f82d72be7e46' },
+  { name: 'Romance',        type: 'tag', id: '423e2eae-a7a2-4a8b-ac03-a8351462d71d' },
+  { name: 'Sci-Fi',         type: 'tag', id: '256c8bd9-4904-4360-bf4f-508a76d67183' },
+  { name: 'Slice of Life',  type: 'tag', id: 'e5301a23-ebd9-49dd-a0cb-2add944c7fe9' },
+  { name: 'Thriller',       type: 'tag', id: '07251805-a27e-4d59-b488-f0bfbec15168' },
+  { name: 'Supernatural',   type: 'tag', id: 'eabc5b4c-6aff-42f3-b657-3e90cbd00b75' },
+  { name: 'Psychological',  type: 'tag', id: '3b60b75c-a2d7-4860-ab56-05f391bb889c' },
+  { name: 'Historical',     type: 'tag', id: '33771934-028e-4cb3-8744-691e866a923e' },
+  { name: 'Isekai',         type: 'tag', id: 'ace04997-f6bd-436e-b261-779182193d3d' },
+  { name: 'Martial Arts',   type: 'tag', id: '799c202e-7daa-44eb-9cf7-8a3c0441531e' },
+  { name: 'Sports',         type: 'tag', id: '69964a64-2f90-4d33-beeb-f3ed2875eb4c' },
+  { name: 'Mecha',          type: 'tag', id: '50880a9d-5440-4732-9afb-8f457127e836' },
+  { name: 'School Life',    type: 'tag', id: 'caaa44eb-cd40-4177-b930-79d3ef2afe87' },
+  { name: 'Magic',          type: 'tag', id: 'a1f53773-c69a-4ce5-8cab-fffcd90b1565' },
+  { name: 'Reincarnation',  type: 'tag', id: '0bc90acb-ccc1-44ca-a34a-b9f3a73259d0' },
+  { name: 'Boys\' Love',    type: 'tag', id: '5920b825-4181-4a17-beeb-9918b0ff7a30' },
+  { name: 'Girls\' Love',   type: 'tag', id: 'a3c67850-4684-404e-9b7f-c69850ee5da6' },
+  { name: 'Harem',          type: 'tag', id: 'aafb99c1-7f60-43fa-b75f-fc9502ce29c7' },
+  { name: 'Reverse Harem',  type: 'tag', id: '65761a2a-415e-47f3-bef2-a9dababba7a6' },
+  { name: 'Military',       type: 'tag', id: 'ac72833b-c4e9-4878-b9db-6c8a4a99444a' },
+  { name: 'Post-Apocalyptic',type:'tag', id: '9467335a-1b83-4497-9231-765337a00b96' },
+  { name: 'Survival',       type: 'tag', id: '5fff9cde-849c-4d78-aab0-0d52b2ee1d25' },
+  { name: 'Crime',          type: 'tag', id: '5ca48985-9a9d-4bd8-be29-80dc0303db72' },
+  { name: 'Tragedy',        type: 'tag', id: 'f8f62932-27da-4fe4-8ee1-6779a8c5edba' },
+  { name: 'Villainess',     type: 'tag', id: 'd14322ac-4d6f-4e9b-afd9-629d5f4d8a41' },
+  { name: 'Magical Girls',  type: 'tag', id: '81c836c9-914a-4eca-981a-560dad663e73' },
+  { name: 'Vampires',       type: 'tag', id: 'd7d1730f-6eb0-4ba6-9437-602cac38664c' },
+  { name: 'Zombies',        type: 'tag', id: '631ef465-9aba-4afb-b0fc-ea10efe274a8' },
+  { name: 'Superhero',      type: 'tag', id: '7064a261-a137-4d3a-8848-2d385de3a99c' },
+  { name: 'Samurai',        type: 'tag', id: '81183756-1453-4c81-aa9e-f6e1b63be016' },
+  { name: 'Wuxia',          type: 'tag', id: 'acc803a4-c95a-4c22-86fc-eb6b582d82a2' },
+  { name: 'Time Travel',    type: 'tag', id: '292e862b-2d17-4062-90a2-0356caa4ae27' },
+  { name: 'Philosophical',  type: 'tag', id: 'b1e97889-25b4-4258-b28b-cd7f4d28ea9b' },
+  { name: 'Cooking',        type: 'tag', id: 'ea2bc92d-1c26-4930-9b7c-d5c0dc1b6869' },
+  { name: 'Medical',        type: 'tag', id: 'c8cbe35b-1b2b-4a3f-9c37-db84c4514856' },
+  { name: 'Music',          type: 'tag', id: 'f42fbf9e-188a-447b-9fdc-f19dc1e4d685' },
+  { name: 'Delinquents',    type: 'tag', id: 'da2d50ca-3018-4cc0-ac7a-6b7d472a29ea' },
+  { name: 'Office Workers', type: 'tag', id: '92d6d951-ca5e-429c-ac78-451071cbf064' },
+  { name: 'Video Games',    type: 'tag', id: '9438db5a-7e2a-4ac0-b39e-e0d95a34b8a8' },
+  { name: 'Full Color',     type: 'tag', id: 'f5ba408b-0e7a-484d-8d49-4e9125ac96de' },
+  { name: 'Long Strip',     type: 'tag', id: '3e2b8dae-350e-4ab8-a8ce-016e844b9f0d' },
+  { name: 'Monsters',       type: 'tag', id: '36fd93ea-e8b8-445e-b836-358f02b3d33d' },
+  { name: 'Animals',        type: 'tag', id: '3de8c75d-8ee3-48ff-98ee-e20a65c86451' },
+  { name: '4-Koma',         type: 'tag', id: 'b11fda93-8f1d-4bef-b2ed-8803d3733170' },
+];
+
+let activeTagId = '';
+let activeStatus = '';
+let lastQuery = '';
+let lastTagId = '';
+let lastStatus = '';
+let lastOffset = 0;
+let _searchTimer;
+let _predictCtrl = null;
+const _previewCache = {};
+const _dropCache = {}; // query+tag → results for instant re-render
+const SEARCH_LIMIT = 20;
+
+function renderGenrePage() {
+  const grid = document.getElementById('genre-grid');
+  if (!grid || grid.children.length) return;
+  const statusItems = GENRES.filter(g => g.type === 'status');
+  const tagItems = GENRES.filter(g => g.type === 'tag');
+  const statusHtml = `<div style="grid-column:1/-1;font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px">Status</div>`
+    + statusItems.map(g => `<button class="genre-card" onclick="selectStatusSearch('${g.value}')">${esc(g.name)}</button>`).join('')
+    + `<div style="grid-column:1/-1;font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;padding:8px 0 2px">Genres</div>`;
+  const tagHtml = tagItems.map(g => `<button class="genre-card" onclick="selectGenreAndSearch('${g.id}')">${esc(g.name)}</button>`).join('');
+  grid.innerHTML = statusHtml + tagHtml;
+}
+
+function selectGenreAndSearch(id) {
+  activeTagId = id;
+  activeStatus = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('btn-clear-input').style.display = 'none';
+  closeDropdown();
+  doSearch();
+}
+
+function selectStatusSearch(status) {
+  activeStatus = status;
+  activeTagId = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('btn-clear-input').style.display = 'none';
+  closeDropdown();
+  closePanel();
+  doSearch();
+}
+
+function scheduleSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  clearTimeout(_searchTimer);
+  document.getElementById('btn-clear-input').style.display = q ? 'flex' : 'none';
+  if (!q.length && !activeTagId) {
+    closeDropdown();
+    if (_currentRoute === 'search') navigate('home');
+    return;
+  }
+  if (q.length) _searchTimer = setTimeout(doPredict, 50); // 50ms debounce for snappy feel
+}
+
+function clearSearchResults() {
+  document.getElementById('results-grid').innerHTML = '';
+  document.getElementById('load-more-wrap').style.display = 'none';
+  lastQuery = '';
+  lastTagId = '';
+  lastStatus = '';
+  lastOffset = 0;
+  activeTagId = '';
+  activeStatus = '';
+  navigate('home');
+}
+
+function clearSearch() {
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  const clr = document.getElementById('btn-clear-input');
+  if (clr) clr.style.display = 'none';
+  closeDropdown();
+  clearSearchResults();
+}
+
+function closeDropdown() {
+  const dd = document.getElementById('search-dropdown');
+  dd.classList.remove('open');
+  if (_predictCtrl) { _predictCtrl.abort(); _predictCtrl = null; }
+}
+
+// Open panel instantly using cached search preview data, then fetch full details
+function openPanelFromDropdown(id) {
+  closeDropdown();
+  const preview = _previewCache[id];
+  currentMangaData = null;
+  selectMode = false; selectedChIds.clear();
+  document.getElementById('panel-bg').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+
+  if (preview) {
+    // Render header immediately with search data
+    const pillCls = statusPillClass(preview.status);
+    const covHtml = preview.coverUrl
+      ? `<img class="panel-cover" src="${esc(proxyUrl(preview.coverUrl))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
+      : `<div class="panel-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
+    const tagsHtml = (preview.tags || []).slice(0,4).map(t => `<span class="tag-pill">${esc(t.name || t)}</span>`).join('');
+    document.getElementById('panel-hdr').innerHTML = `
+      ${covHtml}
+      <div class="panel-info">
+        <div class="panel-title">${esc(preview.title)}</div>
+        <div class="panel-meta"><span class="status-pill ${pillCls}" style="position:static;display:inline-block;margin-bottom:4px">${esc(preview.status)}</span>${preview.year ? ' · ' + preview.year : ''}</div>
+        ${preview.rating ? `<div class="panel-rating">${starsHtml(preview.rating)}<span class="star-num">${preview.rating.toFixed(1)}/10</span></div>` : ''}
+        <div class="panel-tags">${tagsHtml}</div>
+        ${preview.description ? `<div class="panel-desc">${esc(preview.description)}</div>` : ''}
+      </div>`;
+    document.getElementById('panel-body').innerHTML = '<div class="panel-loading"><div class="spin"></div> Loading chapters…</div>';
+  } else {
+    document.getElementById('panel-hdr').innerHTML = '<div class="panel-loading"><div class="spin"></div> Loading…</div>';
+    document.getElementById('panel-body').innerHTML = '';
+  }
+
+  // Fetch full data and re-render
+  fetch(`/api/manga?id=${id}`).then(r => r.json()).then(data => {
+    if (data.error) throw new Error(data.error);
+    currentMangaData = data;
+    renderPanel(data);
+  }).catch(e => {
+    document.getElementById('panel-hdr').innerHTML = `<div style="padding:20px;color:var(--err);font-weight:700">Error: ${esc(e.message)}</div>`;
+  });
+}
+
+function positionDropdown() {
+  const tb = document.querySelector('.topbar');
+  const dd = document.getElementById('search-dropdown');
+  if (tb && dd) dd.style.top = (tb.getBoundingClientRect().bottom + 4) + 'px';
+}
+
+function renderDropdownItems(results) {
+  const dd = document.getElementById('search-dropdown');
+  positionDropdown();
+  if (!results.length) { dd.innerHTML = '<div class="sdrop-empty">No results</div>'; dd.classList.add('open'); return; }
+  results.forEach(r => { _previewCache[r.id] = r; });
+  dd.innerHTML = results.map(r => {
+    const pillCls = statusPillClass(r.status);
+    const img = r.coverUrl
+      ? `<img class="sdrop-cover" src="${esc(proxyUrl(r.coverUrl))}" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="sdrop-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
+    return `<div class="sdrop-item" onclick="openPanelFromDropdown('${esc(r.id)}')">
+      ${img}
+      <div class="sdrop-info">
+        <div class="sdrop-title">${esc(r.title)}</div>
+        <div class="sdrop-meta"><button class="sdrop-pill ${pillCls}" style="border:none;cursor:pointer;font-family:inherit" onclick="event.stopPropagation();closeDropdown();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>${r.year ? ' · ' + r.year : ''}${r.lastChapter ? ` · <span style="color:var(--org);font-weight:700">Ch.${esc(r.lastChapter)}</span>` : ''}</div>
+        ${r.rating ? `<div class="sdrop-rating">${starsHtml(r.rating)}<span class="star-num">${r.rating.toFixed(1)}</span></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+
+async function doPredict() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q.length) { closeDropdown(); return; }
+  const dd = document.getElementById('search-dropdown');
+
+  // Instant cache hit — exact match
+  const cacheKey = q + '|' + activeTagId;
+  if (_dropCache[cacheKey]) { renderDropdownItems(_dropCache[cacheKey]); return; }
+
+  // Partial cache — prefix match: filter cached results immediately
+  let showed = false;
+  for (const key of Object.keys(_dropCache)) {
+    const [cachedQ] = key.split('|');
+    if (q.startsWith(cachedQ) && _dropCache[key].length) {
+      const filtered = _dropCache[key].filter(r => r.title.toLowerCase().includes(q.toLowerCase()));
+      if (filtered.length) { renderDropdownItems(filtered); showed = true; break; }
+    }
+  }
+  if (!showed) {
+    dd.innerHTML = '<div class="sdrop-loading"><div class="spin" style="width:18px;height:18px;border-width:2px"></div></div>';
+    positionDropdown();
+    dd.classList.add('open');
+  }
+
+  // Cancel previous in-flight, fetch fresh
+  if (_predictCtrl) _predictCtrl.abort();
+  _predictCtrl = new AbortController();
+  const signal = _predictCtrl.signal;
+  try {
+    let url = `/api/search?q=${encodeURIComponent(q)}&limit=8`;
+    if (activeTagId) url += `&tagId=${activeTagId}`;
+    const resp = await fetch(url, { signal });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    const results = data.results || [];
+    _dropCache[cacheKey] = results;
+    renderDropdownItems(results);
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    dd.innerHTML = `<div class="sdrop-empty">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function doSearch() {
+  document.getElementById('search-input').blur();
+  closeDropdown();
+  const q = document.getElementById('search-input').value.trim();
+  if (!q && !activeTagId && !activeStatus) return;
+  lastQuery = q;
+  lastTagId = activeTagId;
+  lastStatus = activeStatus;
+  lastOffset = 0;
+  navigate('search');
+  document.getElementById('search-loading').style.display = 'flex';
+  document.getElementById('results-grid').innerHTML = '';
+  document.getElementById('load-more-wrap').style.display = 'none';
+  try {
+    let url = `/api/search?limit=${SEARCH_LIMIT}&offset=0`;
+    if (q) url += `&q=${encodeURIComponent(q)}`;
+    if (activeTagId) url += `&tagId=${activeTagId}`;
+    if (activeStatus) url += `&status=${activeStatus}`;
+    const data = await fetch(url).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    renderResults(data.results || [], false);
+  } catch (e) {
+    showToast('Search failed: ' + e.message);
+  } finally {
+    document.getElementById('search-loading').style.display = 'none';
+  }
+}
+
+async function loadMore() {
+  if (!lastQuery && !lastTagId) return;
+  const btn = document.getElementById('btn-load-more');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  const nextOffset = lastOffset + SEARCH_LIMIT;
+  try {
+    let url = `/api/search?limit=${SEARCH_LIMIT}&offset=${nextOffset}`;
+    if (lastQuery) url += `&q=${encodeURIComponent(lastQuery)}`;
+    if (lastTagId) url += `&tagId=${lastTagId}`;
+    if (lastStatus) url += `&status=${lastStatus}`;
+    const data = await fetch(url).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    const results = data.results || [];
+    if (results.length) {
+      lastOffset = nextOffset;
+      renderResults(results, true);
+    } else {
+      document.getElementById('load-more-wrap').style.display = 'none';
+    }
+  } catch (e) {
+    showToast('Load more failed: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Load more';
+  }
+}
+
+function resultCardHtml(r) {
+  const pillCls = statusPillClass(r.status);
+  const imgHtml = r.coverUrl
+    ? `<img class="result-cover" src="${esc(proxyUrl(r.coverUrl))}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=result-cover-ph><svg viewBox=\\'0 0 24 24\\'><path d=\\'M4 19.5A2.5 2.5 0 0 1 6.5 17H20\\'/><path d=\\'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\\'/></svg></div>'">`
+    : `<div class="result-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
+  _previewCache[r.id] = r;
+  const tagBtns = r.tags.slice(0, 2).map(t =>
+    `<button class="tag-pill" onclick="event.stopPropagation();selectGenreAndSearch('${esc(t.id)}')">${esc(t.name)}</button>`
+  ).join('');
+  return `<div class="result-card" onclick="openPanel('${esc(r.id)}')">
+    <div class="result-cover-wrap">
+      ${imgHtml}
+      <button class="status-pill ${pillCls}" onclick="event.stopPropagation();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>
+    </div>
+    <div class="result-title">${esc(r.title)}</div>
+    ${r.year ? `<div class="result-meta">${r.year}</div>` : ''}
+    <div class="panel-tags" style="margin-top:4px;margin-bottom:0">${tagBtns}</div>
+    ${ratingRowHtml(r.rating)}
+    ${r.lastChapter ? `<div class="result-meta" style="color:var(--org);font-weight:700;margin-top:2px">Ch.${esc(r.lastChapter)}</div>` : ''}
+  </div>`;
+}
+
+function renderResults(results, append = false) {
+  const grid = document.getElementById('results-grid');
+  const lmw = document.getElementById('load-more-wrap');
+  const btn = document.getElementById('btn-load-more');
+  if (!append && !results.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--sub);font-weight:600">No results found</div>';
+    lmw.style.display = 'none';
+    return;
+  }
+  const html = results.map(resultCardHtml).join('');
+  if (append) {
+    grid.insertAdjacentHTML('beforeend', html);
+  } else {
+    grid.innerHTML = html;
+  }
+  // Show load more if a full page came back
+  if (results.length >= SEARCH_LIMIT) {
+    lmw.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Load more';
+  } else {
+    lmw.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Library
+// ═══════════════════════════════════════════════════════════════════
+let allManga = [];
+async function loadLibrary() {
+  allManga = (await IDB.getAll()).sort((a, b) => b.addedAt - a.addedAt);
+  renderHomeState();
+}
+
+const SVG_BOOK = `<svg viewBox="0 0 24 24" fill="none" stroke="#c8bdb8" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+
+function mcCardHtml(m, badge) {
+  const img = m.coverUrl
+    ? `<img class="mc-cover" src="${esc(proxyUrl(m.coverUrl))}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="mc-ph">${SVG_BOOK}</div>`;
+  const badgeHtml = badge ? `<div class="mc-ch-badge">${esc(badge)}</div>` : '';
+  return `<div class="mc-card" data-id="${esc(m.id)}">
+    <div class="mc-cover-wrap">${img}${badgeHtml}</div>
+    <div class="mc-title">${esc(m.title)}</div>
+    ${m.lastReadChapter ? `<div class="mc-sub">Ch.${esc(m.lastReadChapter)}</div>` : ''}
+  </div>`;
+}
+
+let _currentRoute = 'home';
+
+function navigate(route, { pushState = true } = {}) {
+  _currentRoute = route;
+  const viewMap = { home: 'v-home', library: 'v-library', genres: 'v-genres', search: 'v-search' };
+  const viewId = viewMap[route] || 'v-home';
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.toggle('active', p.dataset.route === route));
+  if (pushState) history.pushState(null, '', '#' + route);
+  if (route === 'library') renderLibraryPage(); // renderLibraryPage calls renderContinueReading
+  if (route === 'genres') renderGenrePage();
+  if (route === 'home') {
+    const dw = document.getElementById('discover-wrap');
+    if (dw && !dw.children.length) loadDiscoverySections();
+  }
+}
+
+function goHome() {
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  const clr = document.getElementById('btn-clear-input');
+  if (clr) clr.style.display = 'none';
+  closeDropdown();
+  activeTagId = '';
+  activeStatus = '';
+  lastQuery = '';
+  lastTagId = '';
+  lastStatus = '';
+  navigate('home');
+}
+
+function renderHomeState() {
+  // CR now lives on the Library page
+}
+
+function renderContinueReading() {
+  const wrap = document.getElementById('cr-wrap');
+  if (!wrap) return;
+  const recent = allManga.filter(m => m.lastReadChapterId).slice(0, 12);
+  if (!recent.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `<div class="home-section">
+    <div class="home-section-label">Continue Reading</div>
+    <div class="mc-grid">${recent.map(m => mcCardHtml(m, m.lastReadChapter ? `Ch.${m.lastReadChapter}` : null)).join('')}</div>
+  </div>`;
+  // CR items open the reader directly at last read position
+  wrap.querySelectorAll('.mc-card').forEach(el => {
+    const m = allManga.find(x => x.id === el.dataset.id);
+    el.addEventListener('click', () => {
+      if (m && m.lastReadChapterId) {
+        startRead(m.id, m.lastReadChapterId, m.lastReadChapter || '', '');
+      } else {
+        openPanel(el.dataset.id);
+      }
+    });
+  });
+}
+
+function renderLibraryPage() {
+  renderContinueReading();
+  const wrap = document.getElementById('lib-page-wrap');
+  if (!wrap) return;
+  const saved = allManga;
+  if (!saved.length) {
+    wrap.innerHTML = `<div class="lib-empty">No manga saved yet.<br>Search and tap "Add to Library".</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="home-section">
+    <div class="home-section-label">Saved</div>
+    <div class="mc-grid">${saved.map(m => mcCardHtml(m)).join('')}</div>
+  </div>`;
+  wrap.querySelectorAll('.mc-card').forEach(el =>
+    el.addEventListener('click', () => openPanel(el.dataset.id)));
+}
+
+// ─── Discovery sections ─────────────────────────────────────────────
+function discCardHtml(m) {
+  const img = m.coverUrl
+    ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl))}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="disc-ph">${SVG_BOOK}</div>`;
+  const stars = m.rating ? starsHtml(m.rating) : '';
+  return `<div class="disc-card" data-id="${esc(m.id)}">
+    <div class="disc-cover-wrap">${img}</div>
+    <div class="disc-title">${esc(m.title)}</div>
+    ${m.rating ? `<div class="disc-rating-row">${stars}<span class="disc-rating-num">${m.rating.toFixed(1)}</span></div>` : ''}
+    ${m.lastChapter ? `<div style="font-size:9.5px;font-weight:700;color:var(--org);margin-top:1px">Ch.${esc(m.lastChapter)}</div>` : ''}
+  </div>`;
+}
+
+function renderDiscSection(label, items, container) {
+  if (!items || !items.length) return;
+  const sec = document.createElement('div');
+  sec.className = 'home-section';
+  sec.innerHTML = `<div class="home-section-label">${label}</div>
+    <div class="disc-strip">${items.map(discCardHtml).join('')}</div>`;
+  sec.querySelectorAll('.disc-card').forEach(el =>
+    el.addEventListener('click', () => openPanel(el.dataset.id)));
+  container.appendChild(sec);
+}
+
+async function loadDiscoverySections() {
+  const wrap = document.getElementById('discover-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `<div class="disc-loading"><div class="spin" style="width:16px;height:16px;border-width:2px"></div> Loading…</div>`;
+  try {
+    const data = await fetch('/api/home').then(r => r.json());
+    wrap.innerHTML = '';
+    renderDiscSection('Trending', data.trending, wrap);
+    renderDiscSection('Top Rated', data.topRated, wrap);
+    renderDiscSection('New Releases', data.newManga, wrap);
+    renderDiscSection('Latest Updates', data.updated, wrap);
+  } catch (e) {
+    wrap.innerHTML = '';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Manga Detail Panel
+// ═══════════════════════════════════════════════════════════════════
+let currentMangaData = null;
+
+async function openPanel(id) {
+  currentMangaData = null;
+  document.getElementById('panel-hdr').innerHTML = '<div class="panel-loading"><div class="spin"></div> Loading…</div>';
+  document.getElementById('panel-body').innerHTML = '';
+  document.getElementById('panel-bg').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+
+  try {
+    const data = await fetch(`/api/manga?id=${id}`).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    currentMangaData = data;
+    renderPanel(data);
+  } catch (e) {
+    document.getElementById('panel-hdr').innerHTML = `<div style="padding:20px;color:var(--err);font-weight:700">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function renderPanel({ manga, chapters }) {
+  const saved = await IDB.get(manga.id);
+  const isSaved = !!saved;
+
+  const covHtml = manga.coverUrl
+    ? `<img class="panel-cover" src="${esc(proxyUrl(manga.coverUrl))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
+    : `<div class="panel-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
+
+  const tagsHtml = manga.tags.slice(0, 8).map(t =>
+    `<button class="tag-pill" onclick="closePanel();selectGenreAndSearch('${esc(t.id)}')">${esc(t.name)}</button>`
+  ).join('');
+  const pillCls = statusPillClass(manga.status);
+
+  document.getElementById('panel-hdr').innerHTML = `
+    ${covHtml}
+    <div class="panel-info">
+      <div class="panel-title">${esc(manga.title)}</div>
+      <div class="panel-meta">
+        <button class="status-pill ${pillCls}" style="position:static;display:inline-block;margin-bottom:4px" onclick="closePanel();selectStatusSearch('${esc(manga.status)}')">${esc(manga.status)}</button>
+        ${manga.year ? ' · ' + manga.year : ''}${manga.originalLanguage ? ' · ' + manga.originalLanguage.toUpperCase() : ''}
+      </div>
+      ${manga.rating ? `<div class="panel-rating">${starsHtml(manga.rating)}<span class="star-num">${manga.rating.toFixed(1)}/10</span></div>` : ''}
+      <div class="panel-tags">${tagsHtml}</div>
+      ${manga.description ? `<div class="panel-desc" id="panel-desc">${esc(manga.description.slice(0, 220))}${manga.description.length > 220 ? `<button class="btn-more-desc" onclick="expandDesc()" id="btn-more">More</button>` : ''}</div>` : ''}
+      <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
+        <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
+        ${isSaved ? 'Saved' : 'Add to Library'}
+      </button>
+    </div>`;
+
+  // Group chapters by volume
+  const volumes = {};
+  for (const ch of chapters) {
+    const vol = ch.volume || 'No Volume';
+    if (!volumes[vol]) volumes[vol] = [];
+    volumes[vol].push(ch);
+  }
+
+  const savedData = await IDB.get(manga.id);
+  const lastChId = savedData?.lastReadChapterId;
+
+  // Reset select mode when panel re-renders
+  selectMode = false; selectedChIds.clear();
+
+  let chHtml = chapters.length ? `<div class="ch-actions-bar">
+    <span class="ch-count-label">${chapters.length} chapter${chapters.length !== 1 ? 's' : ''}</span>
+    <button class="btn-toggle-select" id="btn-toggle-select" onclick="toggleSelectMode()">Select</button>
+  </div>` : '';
+
+  for (const [vol, chs] of Object.entries(volumes)) {
+    if (Object.keys(volumes).length > 1 || vol !== 'No Volume') {
+      chHtml += `<div class="ch-section-hdr">${vol === 'No Volume' ? 'Chapters' : `Volume ${esc(vol)}`}</div>`;
+    }
+    chHtml += chs.map(ch => {
+      const chLabel = ch.chapter ? `Ch.${ch.chapter}` : 'Oneshot';
+      const isCur = ch.id === lastChId;
+      const chIdEsc = esc(ch.id);
+      return `<div class="ch-row${isCur ? ' current-ch' : ''}" data-chid="${chIdEsc}" onclick="handleChRowClick('${chIdEsc}','${esc(manga.id)}','${esc(ch.chapter||'')}','${esc(ch.title||'')}')">
+        <div class="ch-row-info">
+          <div class="ch-num">${chLabel}</div>
+          ${ch.title ? `<div class="ch-title">${esc(ch.title)}</div>` : ''}
+          ${ch.pages ? `<div class="ch-pages">${ch.pages} pages</div>` : ''}
+        </div>
+        <div class="ch-btns" id="ch-btns-${chIdEsc}">
+          <button class="btn-read" onclick="event.stopPropagation();startRead('${esc(manga.id)}','${chIdEsc}','${esc(ch.chapter||'')}','${esc(ch.title||'')}')"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Read</button>
+          <button class="btn-dl-ch" title="Download CBZ" onclick="event.stopPropagation();downloadChapter('${chIdEsc}','${esc(ch.chapter||'')}','${esc(manga.title)}',this)"><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download</button>
+        </div>
+        <div class="ch-checkbox" id="chk-${chIdEsc}" onclick="event.stopPropagation();toggleChSelect('${chIdEsc}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>`;
+    }).join('');
+  }
+
+  if (!chapters.length) chHtml = '<div style="padding:30px;text-align:center;color:var(--sub);font-size:13px;font-weight:600">No English chapters available</div>';
+
+  document.getElementById('panel-body').innerHTML = chHtml;
+  updateSelectBar();
+
+  // Scroll to current chapter
+  if (lastChId) {
+    setTimeout(() => {
+      const cur = document.querySelector(`.ch-row[data-chid="${lastChId}"]`);
+      if (cur) cur.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 100);
+  }
+}
+
+function expandDesc() {
+  const d = document.getElementById('panel-desc');
+  const btn = document.getElementById('btn-more');
+  if (!d || !currentMangaData) return;
+  d.textContent = currentMangaData.manga.description;
+  if (btn) btn.style.display = 'none';
+}
+
+function closePanel() {
+  document.getElementById('panel-bg').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+  selectMode = false; selectedChIds.clear();
+  const bar = document.getElementById('panel-select-bar');
+  if (bar) bar.classList.remove('show');
+}
+
+async function toggleSave() {
+  if (!currentMangaData) return;
+  const { manga } = currentMangaData;
+  const existing = await IDB.get(manga.id);
+  if (existing) {
+    await IDB.del(manga.id);
+    showToast('Removed from library');
+  } else {
+    await IDB.save({
+      id: manga.id,
+      title: manga.title,
+      coverUrl: manga.coverUrl,
+      status: manga.status,
+      description: manga.description,
+      tags: manga.tags,
+      originalLanguage: manga.originalLanguage,
+      addedAt: Date.now(),
+      lastReadChapterId: null,
+      lastReadPage: 0,
+      lastReadChapter: null
+    });
+    showToast('Added to library');
+  }
+  await loadLibrary();
+  // Re-render save button
+  const newSaved = await IDB.get(manga.id);
+  const btn = document.getElementById('panel-save-btn');
+  if (btn) {
+    btn.className = `panel-save-btn${newSaved ? ' saved' : ''}`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24">${newSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>${newSaved ? 'Saved' : 'Add to Library'}`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Download Chapter as CBZ
+// ═══════════════════════════════════════════════════════════════════
+async function downloadChapter(chapterId, chapterNum, mangaTitle, btnEl) {
+  if (btnEl.classList.contains('dl-loading')) return;
+  btnEl.classList.add('dl-loading');
+  showToast('Building CBZ…', 60000);
+  try {
+    const url = `/api/download?id=${chapterId}&mangaTitle=${encodeURIComponent(mangaTitle)}&chapterNum=${encodeURIComponent(chapterNum)}`;
+    const r = await fetch(url);
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `HTTP ${r.status}`); }
+    const buf = await r.arrayBuffer();
+    const blob = new Blob([buf], { type: 'application/x-cbz' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${mangaTitle.replace(/[^\w\s-]/g, '').slice(0, 50)}_Ch${chapterNum || 'x'}.cbz`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('CBZ downloaded!');
+  } catch (e) {
+    showToast('Download failed: ' + e.message);
+  } finally {
+    btnEl.classList.remove('dl-loading');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Chapter Select Mode
+// ═══════════════════════════════════════════════════════════════════
+let selectMode = false;
+let selectedChIds = new Set();
+
+function handleChRowClick(chId, mangaId, chNum, chTitle) {
+  if (selectMode) toggleChSelect(chId);
+  else startRead(mangaId, chId, chNum, chTitle);
+}
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedChIds.clear();
+  const btn = document.getElementById('btn-toggle-select');
+  if (btn) { btn.textContent = selectMode ? 'Cancel' : 'Select'; btn.classList.toggle('active', selectMode); }
+  document.querySelectorAll('.ch-checkbox').forEach(cb => { cb.classList.toggle('visible', selectMode); cb.classList.remove('checked'); });
+  document.querySelectorAll('[id^="ch-btns-"]').forEach(b => b.style.display = selectMode ? 'none' : '');
+  updateSelectBar();
+}
+
+function toggleChSelect(chId) {
+  if (selectedChIds.has(chId)) selectedChIds.delete(chId);
+  else selectedChIds.add(chId);
+  const cb = document.getElementById('chk-' + chId);
+  if (cb) cb.classList.toggle('checked', selectedChIds.has(chId));
+  updateSelectBar();
+}
+
+function selectAllChapters() {
+  const allIds = [...document.querySelectorAll('.ch-checkbox')].map(cb => cb.id.replace('chk-', ''));
+  const allSelected = allIds.length > 0 && allIds.every(id => selectedChIds.has(id));
+  if (allSelected) {
+    selectedChIds.clear();
+    document.querySelectorAll('.ch-checkbox').forEach(cb => cb.classList.remove('checked'));
+  } else {
+    allIds.forEach(id => selectedChIds.add(id));
+    document.querySelectorAll('.ch-checkbox').forEach(cb => cb.classList.add('checked'));
+  }
+  updateSelectBar();
+}
+
+function updateSelectBar() {
+  const bar = document.getElementById('panel-select-bar');
+  const dlBtn = document.getElementById('btn-dl-selected');
+  const saBtn = document.getElementById('btn-select-all');
+  if (!bar) return;
+  bar.classList.toggle('show', selectMode);
+  if (dlBtn) { dlBtn.textContent = selectedChIds.size ? `Download ${selectedChIds.size}` : 'Download'; dlBtn.disabled = selectedChIds.size === 0; }
+  if (saBtn && selectMode) {
+    const allIds = [...document.querySelectorAll('.ch-checkbox')].map(cb => cb.id.replace('chk-', ''));
+    saBtn.textContent = allIds.length > 0 && allIds.every(id => selectedChIds.has(id)) ? 'Deselect All' : 'Select All';
+  }
+}
+
+async function downloadSelected() {
+  if (!selectedChIds.size || !currentMangaData) return;
+  const { manga, chapters } = currentMangaData;
+  const toDownload = chapters.filter(ch => selectedChIds.has(ch.id));
+  if (!toDownload.length) return;
+  const dlBtn = document.getElementById('btn-dl-selected');
+  if (dlBtn) dlBtn.disabled = true;
+  let failed = 0;
+  for (let i = 0; i < toDownload.length; i++) {
+    const ch = toDownload[i];
+    showToast(`Downloading ${i + 1}/${toDownload.length}…`, 60000);
+    try {
+      const url = `/api/download?id=${ch.id}&mangaTitle=${encodeURIComponent(manga.title)}&chapterNum=${encodeURIComponent(ch.chapter || '')}`;
+      const r = await fetch(url);
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `HTTP ${r.status}`); }
+      const buf = await r.arrayBuffer();
+      const blob = new Blob([buf], { type: 'application/x-cbz' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${manga.title.replace(/[^\w\s-]/g, '').slice(0, 50)}_Ch${ch.chapter || 'x'}.cbz`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      if (i < toDownload.length - 1) await new Promise(res => setTimeout(res, 700));
+    } catch (e) {
+      failed++;
+      showToast(`Ch.${ch.chapter || '?'} failed: ${e.message}`, 3000);
+      await new Promise(res => setTimeout(res, 1200));
+    }
+  }
+  const ok = toDownload.length - failed;
+  showToast(failed ? `${ok} downloaded, ${failed} failed` : `${ok} chapter${ok > 1 ? 's' : ''} downloaded!`);
+  if (dlBtn) { dlBtn.disabled = selectedChIds.size === 0; }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Reader
+// ═══════════════════════════════════════════════════════════════════
+let readerState = {
+  mangaId: null,
+  mangaTitle: '',
+  chapterId: null,
+  chapterNum: '',
+  chapterTitle: '',
+  pages: [],
+  pageIdx: 0,
+  isRTL: false,
+  chapters: [],         // full chapter list for navigation
+  chapterListIdx: 0,    // index in chapters array
+  topBarVisible: true,
+  topBarTimer: null
+};
+
+async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
+  // Only read saved data — never auto-save. User must click "Add to Library" manually.
+  const saved = await IDB.get(mangaId);
+
+  readerState.mangaId = mangaId;
+  readerState.mangaTitle = saved?.title || currentMangaData?.manga?.title || '';
+  readerState.chapterId = chapterId;
+  readerState.chapterNum = chapterNum;
+  readerState.chapterTitle = chapterTitle;
+  readerState.pages = [];
+  readerState.pageIdx = saved?.lastReadChapterId === chapterId ? (saved.lastReadPage || 0) : 0;
+  readerState.isRTL = (saved?.originalLanguage || currentMangaData?.manga?.originalLanguage || 'ja') === 'ja';
+  readerState.chapters = currentMangaData?.chapters || [];
+  readerState.chapterListIdx = readerState.chapters.findIndex(c => c.id === chapterId);
+
+  // Show overlay
+  document.getElementById('reader-overlay').classList.remove('hidden');
+  document.getElementById('reader-title').textContent = readerState.mangaTitle;
+  document.getElementById('reader-ch').textContent = `Ch.${chapterNum}${chapterTitle ? ' — ' + chapterTitle : ''}`;
+  showPageLoading();
+  autoHideTopBar();
+
+  // Fetch pages
+  try {
+    const data = await fetch(`/api/pages?id=${chapterId}`).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    readerState.pages = data.pages || [];
+    if (!readerState.pages.length) throw new Error('No pages found');
+
+    // Clamp page idx
+    if (readerState.pageIdx >= readerState.pages.length) readerState.pageIdx = 0;
+    showPage(readerState.pageIdx);
+  } catch (e) {
+    document.getElementById('reader-img-wrap').innerHTML = `<div class="reader-error">Failed to load chapter: ${esc(e.message)}</div>`;
+  }
+}
+
+function showPageLoading() {
+  document.getElementById('reader-img-wrap').innerHTML = `<div class="reader-page-loading"><div class="reader-spin"></div>Loading page…</div>`;
+}
+
+function showPage(idx) {
+  const { pages, isRTL } = readerState;
+  if (!pages.length) return;
+  idx = Math.max(0, Math.min(idx, pages.length - 1));
+  readerState.pageIdx = idx;
+
+  const url = proxyUrl(pages[idx]);
+  const wrap = document.getElementById('reader-img-wrap');
+
+  // Show spinner while loading
+  wrap.innerHTML = `<div class="reader-page-loading"><div class="reader-spin"></div>Loading…</div>`;
+
+  const img = new Image();
+  img.className = 'reader-img';
+  img.alt = '';
+  img.onload = () => {
+    wrap.innerHTML = '';
+    wrap.appendChild(img);
+    updateNextChBtn();
+  };
+  img.onerror = () => {
+    wrap.innerHTML = `<div class="reader-error">Failed to load page ${idx + 1}</div>`;
+  };
+  img.src = url;
+
+  // Preload next 2 pages
+  for (let i = 1; i <= 2; i++) {
+    const ni = isRTL ? idx - i : idx + i;
+    if (ni >= 0 && ni < pages.length) {
+      const preload = new Image();
+      preload.src = proxyUrl(pages[ni]);
+    }
+  }
+
+  // Update UI
+  const total = pages.length;
+  document.getElementById('reader-loc-btn').textContent = `${idx + 1}/${total}`;
+  const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Save progress
+  saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
+}
+
+async function saveProgress(mangaId, chapterId, chapterNum, pageIdx) {
+  const saved = await IDB.get(mangaId);
+  if (!saved) return;
+  saved.lastReadChapterId = chapterId;
+  saved.lastReadPage = pageIdx;
+  saved.lastReadChapter = chapterNum;
+  await IDB.save(saved);
+}
+
+function pageNav(dir) {
+  const { pages, pageIdx, isRTL } = readerState;
+  if (!pages.length) return;
+  // RTL: left = next, right = prev
+  let next;
+  if (dir === 'next') next = isRTL ? pageIdx - 1 : pageIdx + 1;
+  else next = isRTL ? pageIdx + 1 : pageIdx - 1;
+
+  if (next < 0 || next >= pages.length) {
+    if (next >= pages.length || (isRTL && next < 0)) updateNextChBtn(true);
+    return;
+  }
+  showPage(next);
+  resetTopBarTimer();
+}
+
+function updateNextChBtn(forceShow = false) {
+  const { pages, pageIdx, isRTL, chapterListIdx, chapters } = readerState;
+  const atEnd = isRTL ? pageIdx === 0 : pageIdx === pages.length - 1;
+  const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
+  const btn = document.getElementById('next-ch-btn');
+  btn.style.display = (atEnd || forceShow) && hasNext ? 'block' : 'none';
+}
+
+async function goNextChapter() {
+  const { chapters, chapterListIdx, mangaId } = readerState;
+  const nextCh = chapters[chapterListIdx + 1];
+  if (!nextCh) return;
+  document.getElementById('next-ch-btn').style.display = 'none';
+  await startRead(mangaId, nextCh.id, nextCh.chapter || '', nextCh.title || '');
+}
+
+function closeReader() {
+  document.getElementById('reader-overlay').classList.add('hidden');
+  document.getElementById('reader-img-wrap').innerHTML = '';
+  clearTimeout(readerState.topBarTimer);
+  document.getElementById('next-ch-btn').style.display = 'none';
+  document.getElementById('reader-top').classList.remove('hide');
+  // Refresh panel chapter highlights
+  if (currentMangaData) renderPanel(currentMangaData);
+}
+
+function toggleTopBar() {
+  const bar = document.getElementById('reader-top');
+  readerState.topBarVisible = !readerState.topBarVisible;
+  bar.classList.toggle('hide', !readerState.topBarVisible);
+  if (readerState.topBarVisible) resetTopBarTimer();
+}
+
+function autoHideTopBar() {
+  readerState.topBarVisible = true;
+  document.getElementById('reader-top').classList.remove('hide');
+  resetTopBarTimer();
+}
+
+function resetTopBarTimer() {
+  clearTimeout(readerState.topBarTimer);
+  readerState.topBarTimer = setTimeout(() => {
+    document.getElementById('reader-top').classList.add('hide');
+    readerState.topBarVisible = false;
+  }, 3500);
+}
+
+// Swipe detection on reader area
+let touchStartX = 0, touchStartY = 0, touchStartT = 0;
+document.getElementById('reader-area').addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchStartT = Date.now();
+}, { passive: true });
+document.getElementById('reader-area').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const dt = Date.now() - touchStartT;
+  if (dt < 400 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    pageNav(dx < 0 ? 'next' : 'prev');
+  }
+}, { passive: true });
+
+// Keyboard support
+document.addEventListener('keydown', e => {
+  if (document.getElementById('reader-overlay').classList.contains('hidden')) return;
+  if (e.key === 'Escape') { if (document.getElementById('toc-panel').classList.contains('open')) closeToc(); else closeReader(); return; }
+  if (e.key === 'ArrowRight') pageNav('next');
+  if (e.key === 'ArrowLeft') pageNav('prev');
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// TOC (Chapter list in reader)
+// ═══════════════════════════════════════════════════════════════════
+function openToc() {
+  const { chapters, chapterId, mangaTitle } = readerState;
+  if (!chapters.length) return;
+  document.getElementById('toc-label').textContent = mangaTitle || 'Chapters';
+  const list = document.getElementById('toc-list');
+  list.innerHTML = chapters.map((ch, i) => {
+    const label = ch.chapter ? `Ch.${ch.chapter}` : `Ch.${i + 1}`;
+    const isCur = ch.id === chapterId;
+    return `<div class="toc-item${isCur ? ' cur' : ''}" onclick="jumpChapter('${esc(ch.id)}','${esc(ch.chapter||'')}','${esc(ch.title||'')}',${i})">
+      <span class="toc-num">${label}</span>
+      <span class="toc-name">${esc(ch.title || label)}</span>
+      ${ch.pages ? `<span class="toc-pages">${ch.pages}p</span>` : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('toc-bg').classList.add('open');
+  document.getElementById('toc-panel').classList.add('open');
+  setTimeout(() => {
+    const cur = list.querySelector('.toc-item.cur');
+    if (cur) cur.scrollIntoView({ block: 'center', behavior: 'instant' });
+  }, 50);
+}
+
+async function jumpChapter(chId, chNum, chTitle, idx) {
+  closeToc();
+  readerState.chapterListIdx = idx;
+  await startRead(readerState.mangaId, chId, chNum, chTitle);
+}
+
+function closeToc() {
+  document.getElementById('toc-bg').classList.remove('open');
+  document.getElementById('toc-panel').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Boot
+// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// Dark mode
+// ═══════════════════════════════════════════════════════════════════
+function toggleTheme() {}
+function updateThemeIcon() {}
+
+// Close dropdown on outside tap/click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.topbar') && !e.target.closest('.search-dropdown')) closeDropdown();
+});
+
+// Hash routing
+window.addEventListener('hashchange', () => {
+  const route = location.hash.replace('#', '') || 'home';
+  if (['home','library','genres'].includes(route)) navigate(route, { pushState: false });
+});
+
+// Reader swipe to turn pages
+(function() {
+  let _sx = 0, _sy = 0;
+  const ro = document.getElementById('reader-overlay');
+  ro.addEventListener('touchstart', e => {
+    _sx = e.touches[0].clientX;
+    _sy = e.touches[0].clientY;
+  }, { passive: true });
+  ro.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - _sx;
+    const dy = e.changedTouches[0].clientY - _sy;
+    // Only register horizontal swipes (dx dominates and > 40px threshold)
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      pageNav(dx < 0 ? 'next' : 'prev');
+    }
+  }, { passive: true });
+})();
+
+(async () => {
+  await IDB.init();
+  await loadLibrary();
+  updateThemeIcon();
+  const initialRoute = location.hash.replace('#', '') || 'home';
+  navigate(initialRoute, { pushState: false });
+  if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+{
+  "functions": {"api/download.js": {"maxDuration": 60}},
+  "rewrites": [{"source": "/", "destination": "/public/index.html"}]
+}
