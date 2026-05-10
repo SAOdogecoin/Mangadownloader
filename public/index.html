@@ -335,8 +335,14 @@ button.status-pill:hover{opacity:.75}
 .panel-dl-btn:hover{border-color:var(--org);color:var(--org)}
 .panel-dl-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
 
+/* ─── FORMAT TOGGLE ─── */
+.fmt-toggle{display:flex;background:var(--surf);border-radius:8px;overflow:hidden;flex-shrink:0;padding:2px;gap:2px}
+.fmt-btn{background:none;border:none;padding:5px 9px;font-family:inherit;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;border-radius:6px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.fmt-btn.active{background:var(--org);color:#0d1117}
+.fmt-kindle{font-size:8px;font-weight:800;background:rgba(0,0,0,.15);border-radius:3px;padding:1px 4px;letter-spacing:.03em}
+
 /* ─── PANEL SELECT ACTION BAR ─── */
-.panel-select-bar{padding:12px 16px;border-top:1px solid var(--border);display:none;align-items:center;gap:8px;flex-shrink:0;background:var(--card);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.panel-select-bar{padding:10px 12px;border-top:1px solid var(--border);display:none;align-items:center;gap:8px;flex-shrink:0;background:var(--card);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
 .panel-select-bar.show{display:flex}
 .btn-select-all{padding:9px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--fg);-webkit-tap-highlight-color:transparent;white-space:nowrap;transition:all .15s}
 .btn-select-all:hover{border-color:var(--org);color:var(--org)}
@@ -416,8 +422,12 @@ button.status-pill:hover{opacity:.75}
   </div>
   <div class="panel-body" id="panel-body"></div>
   <div class="panel-select-bar" id="panel-select-bar">
-    <button class="btn-dl-selected" id="btn-dl-selected" onclick="downloadSelected()" disabled><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download</button>
+    <div class="fmt-toggle">
+      <button class="fmt-btn active" data-fmt="cbz" onclick="setDlFormat('cbz')">CBZ</button>
+      <button class="fmt-btn" data-fmt="epub" onclick="setDlFormat('epub')">EPUB<span class="fmt-kindle">Kindle</span></button>
+    </div>
     <button class="btn-select-all" id="btn-select-all" onclick="selectAllChapters()">Select All</button>
+    <button class="btn-dl-selected" id="btn-dl-selected" onclick="downloadSelected()" disabled><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download</button>
   </div>
 </div>
 
@@ -1216,24 +1226,33 @@ async function toggleSave() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// Download Chapter as CBZ
+// Download
 // ═══════════════════════════════════════════════════════════════════
+let _dlFormat = 'cbz';
+
+function setDlFormat(fmt) {
+  _dlFormat = fmt;
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
+}
+
 async function downloadChapter(chapterId, chapterNum, mangaTitle, btnEl) {
   if (btnEl.classList.contains('dl-loading')) return;
   btnEl.classList.add('dl-loading');
-  showToast('Building CBZ…', 60000);
+  const fmt = _dlFormat;
+  showToast(`Building ${fmt.toUpperCase()}…`, 60000);
   try {
-    const url = `/api/download?id=${chapterId}&mangaTitle=${encodeURIComponent(mangaTitle)}&chapterNum=${encodeURIComponent(chapterNum)}`;
+    const url = `/api/download?id=${chapterId}&mangaTitle=${encodeURIComponent(mangaTitle)}&chapterNum=${encodeURIComponent(chapterNum)}&format=${fmt}`;
     const r = await fetch(url);
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `HTTP ${r.status}`); }
     const buf = await r.arrayBuffer();
-    const blob = new Blob([buf], { type: 'application/x-cbz' });
+    const mime = fmt === 'epub' ? 'application/epub+zip' : 'application/x-cbz';
+    const blob = new Blob([buf], { type: mime });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `${mangaTitle.replace(/[^\w\s-]/g, '').slice(0, 50)}_Ch${chapterNum || 'x'}.cbz`;
+    a.download = `${mangaTitle.replace(/[^\w\s-]/g, '').slice(0, 50)}_Ch${chapterNum || 'x'}.${fmt}`;
     a.click();
     URL.revokeObjectURL(a.href);
-    showToast('CBZ downloaded!');
+    showToast(`${fmt.toUpperCase()} downloaded!`);
   } catch (e) {
     showToast('Download failed: ' + e.message);
   } finally {
@@ -1290,7 +1309,7 @@ function updateSelectBar() {
   const saBtn = document.getElementById('btn-select-all');
   if (!bar) return;
   bar.classList.toggle('show', selectMode);
-  if (dlBtn) { dlBtn.textContent = selectedChIds.size ? `Download ${selectedChIds.size}` : 'Download'; dlBtn.disabled = selectedChIds.size === 0; }
+  if (dlBtn) { const n = selectedChIds.size; dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>${n ? ` Download ${n}` : ' Download'}`; dlBtn.disabled = n === 0; }
   if (saBtn && selectMode) {
     const allIds = [...document.querySelectorAll('.ch-checkbox')].map(cb => cb.id.replace('chk-', ''));
     saBtn.textContent = allIds.length > 0 && allIds.every(id => selectedChIds.has(id)) ? 'Deselect All' : 'Select All';
@@ -1309,14 +1328,16 @@ async function downloadSelected() {
     const ch = toDownload[i];
     showToast(`Downloading ${i + 1}/${toDownload.length}…`, 60000);
     try {
-      const url = `/api/download?id=${ch.id}&mangaTitle=${encodeURIComponent(manga.title)}&chapterNum=${encodeURIComponent(ch.chapter || '')}`;
+      const fmt = _dlFormat;
+      const url = `/api/download?id=${ch.id}&mangaTitle=${encodeURIComponent(manga.title)}&chapterNum=${encodeURIComponent(ch.chapter || '')}&format=${fmt}`;
       const r = await fetch(url);
       if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `HTTP ${r.status}`); }
       const buf = await r.arrayBuffer();
-      const blob = new Blob([buf], { type: 'application/x-cbz' });
+      const mime = fmt === 'epub' ? 'application/epub+zip' : 'application/x-cbz';
+      const blob = new Blob([buf], { type: mime });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `${manga.title.replace(/[^\w\s-]/g, '').slice(0, 50)}_Ch${ch.chapter || 'x'}.cbz`;
+      a.download = `${manga.title.replace(/[^\w\s-]/g, '').slice(0, 50)}_Ch${ch.chapter || 'x'}.${fmt}`;
       a.click();
       URL.revokeObjectURL(a.href);
       if (i < toDownload.length - 1) await new Promise(res => setTimeout(res, 700));
