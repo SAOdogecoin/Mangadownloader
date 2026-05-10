@@ -167,11 +167,10 @@ button.status-pill:hover{opacity:.75}
 .btn-more-desc{display:inline;background:none;border:none;font-family:inherit;font-size:11px;color:var(--org);font-weight:700;cursor:pointer;padding:0 0 0 3px;-webkit-tap-highlight-color:transparent}
 .panel-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);-webkit-tap-highlight-color:transparent;z-index:1}
 .panel-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
-.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.panel-save-btn:hover{border-color:var(--org);color:var(--org)}
+.panel-save-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--sub);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-save-btn:hover{border-color:var(--fg);color:var(--fg)}
 .panel-save-btn.saved{border-color:var(--org);color:var(--org);background:none}
 .panel-save-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
-.panel-save-btn.saved svg{stroke:currentColor}
 .panel-body{flex:1;overflow-y:auto;min-height:0}
 .ch-section-hdr{padding:12px 16px 6px;font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0;background:var(--card);z-index:1;border-bottom:1px solid var(--border)}
 .ch-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent}
@@ -331,8 +330,9 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── PANEL ACTION ROW ─── */
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
-.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.panel-dl-btn:hover{border-color:var(--org);color:var(--org)}
+.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:none;color:var(--sub);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-dl-btn:hover{border-color:var(--fg);color:var(--fg)}
+.panel-dl-btn.active{border-color:var(--org);color:var(--org)}
 .panel-dl-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
 
 /* ─── FORMAT TOGGLE ─── */
@@ -934,10 +934,7 @@ function navigate(route, { pushState = true } = {}) {
   if (pushState) history.pushState(null, '', '#' + route);
   if (route === 'library') renderLibraryPage(); // renderLibraryPage calls renderContinueReading
   if (route === 'genres') renderGenrePage();
-  if (route === 'home') {
-    const dw = document.getElementById('discover-wrap');
-    if (dw && !dw.children.length) loadDiscoverySections();
-  }
+  if (route === 'home') loadDiscoverySections();
 }
 
 function goHome() {
@@ -1022,17 +1019,49 @@ function renderDiscSection(label, items, container) {
   container.appendChild(sec);
 }
 
-async function loadDiscoverySections() {
+const HOME_CACHE_TTL = 20 * 60 * 1000; // 20 min
+let _homeCache = null;
+
+function getHomeCache() {
+  if (_homeCache && Date.now() - _homeCache.ts < HOME_CACHE_TTL) return _homeCache.data;
+  try {
+    const raw = sessionStorage.getItem('homeCache');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.ts < HOME_CACHE_TTL) { _homeCache = parsed; return parsed.data; }
+    }
+  } catch (_) {}
+  return null;
+}
+
+function setHomeCache(data) {
+  _homeCache = { data, ts: Date.now() };
+  try { sessionStorage.setItem('homeCache', JSON.stringify(_homeCache)); } catch (_) {}
+}
+
+function renderHomeData(data, wrap) {
+  wrap.innerHTML = '';
+  renderDiscSection('Trending', data.trending, wrap);
+  renderDiscSection('Top Rated', data.topRated, wrap);
+  renderDiscSection('New Releases', data.newManga, wrap);
+  renderDiscSection('Latest Updates', data.updated, wrap);
+}
+
+async function loadDiscoverySections({ forceRefresh = false } = {}) {
   const wrap = document.getElementById('discover-wrap');
   if (!wrap) return;
+  const cached = getHomeCache();
+  if (cached && !forceRefresh) {
+    renderHomeData(cached, wrap);
+    // silent background refresh
+    fetch('/api/home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
+    return;
+  }
   wrap.innerHTML = `<div class="disc-loading"><div class="spin" style="width:16px;height:16px;border-width:2px"></div> Loading…</div>`;
   try {
     const data = await fetch('/api/home').then(r => r.json());
-    wrap.innerHTML = '';
-    renderDiscSection('Trending', data.trending, wrap);
-    renderDiscSection('Top Rated', data.topRated, wrap);
-    renderDiscSection('New Releases', data.newManga, wrap);
-    renderDiscSection('Latest Updates', data.updated, wrap);
+    setHomeCache(data);
+    renderHomeData(data, wrap);
   } catch (e) {
     wrap.innerHTML = '';
   }
@@ -1275,9 +1304,12 @@ function toggleSelectMode() {
   selectMode = !selectMode;
   selectedChIds.clear();
   const dlBtn = document.getElementById('panel-dl-btn');
-  if (dlBtn) dlBtn.innerHTML = selectMode
-    ? '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel'
-    : '<svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg> Download';
+  if (dlBtn) {
+    dlBtn.classList.toggle('active', selectMode);
+    dlBtn.innerHTML = selectMode
+      ? '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel'
+      : '<svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg> Download';
+  }
   document.querySelectorAll('.ch-checkbox').forEach(cb => { cb.classList.toggle('visible', selectMode); cb.classList.remove('checked'); });
   updateSelectBar();
 }
