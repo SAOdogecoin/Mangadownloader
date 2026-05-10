@@ -10,10 +10,13 @@ module.exports = async (req, res) => {
     'uploads.mangadex.org',
     'mangadex.network',
     'cmdxd98umbmalmqdzmbmbkqml.mangadex.network',
+    'meo.comick.pictures',
+    'meo2.comick.pictures',
   ];
   const isAllowed = allowed.some(d => hostname === d || hostname.endsWith('.' + d))
     || hostname.endsWith('.mangadex.network')
-    || hostname.endsWith('.mangadex.org');
+    || hostname.endsWith('.mangadex.org')
+    || hostname.endsWith('.comick.pictures');
 
   if (!isAllowed) {
     return res.status(403).json({ error: `Domain not allowed: ${hostname}` });
