@@ -1172,23 +1172,6 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
 // ═══════════════════════════════════════════════════════════════════
 let currentMangaData = null;
 
-async function openPanel(id) {
-  currentMangaData = null;
-  document.getElementById('panel-hdr').innerHTML = '<div class="panel-loading"><div class="spin"></div> Loading…</div>';
-  document.getElementById('panel-body').innerHTML = '';
-  document.getElementById('panel-bg').classList.add('open');
-  document.getElementById('panel').classList.add('open');
-
-  try {
-    const data = await fetch(`/api/manga?id=${id}`).then(r => r.json());
-    if (data.error) throw new Error(data.error);
-    currentMangaData = data;
-    renderPanel(data);
-  } catch (e) {
-    document.getElementById('panel-hdr').innerHTML = `<div style="padding:20px;color:var(--err);font-weight:700">Error: ${esc(e.message)}</div>`;
-  }
-}
-
 async function renderPanel({ manga, chapters }) {
   const saved = await IDB.get(manga.id);
   const isSaved = !!saved;
