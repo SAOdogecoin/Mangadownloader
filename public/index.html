@@ -254,6 +254,16 @@ button.status-pill:hover{opacity:.75}
 .reader-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;cursor:pointer}
 .reader-img-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 .reader-img{max-width:100%;max-height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none}
+/* Vertical (webtoon/manhua) infinite-scroll mode */
+.reader-area.vertical{display:block;overflow-y:auto;overflow-x:hidden;cursor:default;align-items:stretch;justify-content:flex-start;scroll-behavior:smooth}
+.reader-area.vertical .reader-img-wrap{display:block;height:auto;min-height:100%;padding:0;max-width:720px;margin:0 auto}
+.reader-area.vertical .reader-vpage{display:block;width:100%;background:#000;position:relative}
+.reader-area.vertical .reader-vpage img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.reader-area.vertical .reader-vpage.loading::before{content:'';display:block;width:100%;aspect-ratio:4/5;background:linear-gradient(180deg,#0a0a0a,#1a1a1a)}
+.reader-area.vertical .reader-vpage-num{position:absolute;top:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.06em;pointer-events:none;mix-blend-mode:difference}
+.reader-area.vertical .reader-vend{padding:48px 20px 80px;text-align:center;color:rgba(255,255,255,.55);font-family:'Fraunces',serif;font-size:18px;font-weight:500;letter-spacing:-.02em}
+.reader-area.vertical .reader-vend button{margin-top:14px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;cursor:pointer}
+.reader-area.vertical .tap-zone{display:none}
 .reader-page-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600}
 .reader-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--org);border-radius:50%;animation:rspin .75s linear infinite}
 .reader-error{color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:13px}
@@ -1559,11 +1569,22 @@ let readerState = {
   pages: [],
   pageIdx: 0,
   isRTL: false,
+  isVertical: false,    // webtoon/manhua scroll mode
   chapters: [],         // full chapter list for navigation
   chapterListIdx: 0,    // index in chapters array
   topBarVisible: true,
   topBarTimer: null
 };
+
+// Detect long-strip / webtoon / manhua reading mode from manga metadata
+function detectVerticalMode(manga) {
+  if (!manga) return false;
+  const tags = (manga.tags || []).map(t => (t.name || t || '').toLowerCase()).join(' ');
+  if (/long.?strip|webtoon|manhua|manhwa/.test(tags)) return true;
+  const lang = (manga.originalLanguage || '').toLowerCase();
+  if (lang === 'ko' || lang === 'zh' || lang === 'zh-hk') return true;
+  return false;
+}
 
 async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   // Only read saved data — never auto-save. User must click "Add to Library" manually.
@@ -1577,8 +1598,12 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   readerState.pages = [];
   readerState.pageIdx = saved?.lastReadChapterId === chapterId ? (saved.lastReadPage || 0) : 0;
   readerState.isRTL = (saved?.originalLanguage || currentMangaData?.manga?.originalLanguage || 'ja') === 'ja';
+  readerState.isVertical = detectVerticalMode(currentMangaData?.manga);
   readerState.chapters = currentMangaData?.chapters || [];
   readerState.chapterListIdx = readerState.chapters.findIndex(c => c.id === chapterId);
+
+  // Toggle vertical class on reader-area
+  document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
 
   // Show overlay
   document.getElementById('reader-overlay').classList.remove('hidden');
@@ -1646,10 +1671,12 @@ function showPageLoading() {
 }
 
 function showPage(idx) {
-  const { pages, isRTL } = readerState;
+  const { pages, isRTL, isVertical } = readerState;
   if (!pages.length) return;
   idx = Math.max(0, Math.min(idx, pages.length - 1));
   readerState.pageIdx = idx;
+
+  if (isVertical) return showVertical(idx);
 
   const url = proxyUrl(pages[idx]); // proxy handles referer inference from hostname
   const wrap = document.getElementById('reader-img-wrap');
@@ -1695,6 +1722,58 @@ function showPage(idx) {
   saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
 }
 
+// ─── Vertical (webtoon/manhua) reader ─────────────────────────────────
+let _vertObserver = null;
+function showVertical(startIdx) {
+  const { pages, pagesFallback } = readerState;
+  const area = document.getElementById('reader-area');
+  const wrap = document.getElementById('reader-img-wrap');
+  const total = pages.length;
+
+  // Build stacked DOM
+  const pagesHtml = pages.map((p, i) => {
+    const url = esc(proxyUrl(p));
+    const fb = pagesFallback?.[i] ? esc(proxyUrl(pagesFallback[i])) : '';
+    return `<div class="reader-vpage" data-idx="${i}">
+      <img loading="lazy" decoding="async" src="${url}" alt="" ${fb ? `onerror="if(this.dataset.fb){return}this.dataset.fb=1;this.src='${fb}'"` : ''}>
+      <span class="reader-vpage-num">${String(i+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</span>
+    </div>`;
+  }).join('');
+  const hasNext = readerState.chapterListIdx >= 0 && readerState.chapterListIdx < readerState.chapters.length - 1;
+  const endHtml = `<div class="reader-vend">End of chapter${hasNext ? `<br><button onclick="goNextChapter()">Next Chapter →</button>` : ''}</div>`;
+  wrap.innerHTML = pagesHtml + endHtml;
+
+  // Jump to saved page
+  requestAnimationFrame(() => {
+    const target = wrap.querySelector(`.reader-vpage[data-idx="${startIdx}"]`);
+    if (target && startIdx > 0) target.scrollIntoView({ block: 'start', behavior: 'auto' });
+  });
+
+  // Track current page via IntersectionObserver
+  if (_vertObserver) _vertObserver.disconnect();
+  _vertObserver = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting && e.intersectionRatio > 0.4) {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        if (!isNaN(idx) && idx !== readerState.pageIdx) {
+          readerState.pageIdx = idx;
+          document.getElementById('reader-loc-btn').textContent = `${idx + 1}/${total}`;
+          const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
+          document.getElementById('progress-fill').style.width = pct + '%';
+          saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
+        }
+      }
+    }
+  }, { root: area, threshold: [0.4, 0.6] });
+  wrap.querySelectorAll('.reader-vpage').forEach(el => _vertObserver.observe(el));
+
+  // Update progress bar initial state
+  document.getElementById('reader-loc-btn').textContent = `${startIdx + 1}/${total}`;
+  const pct = total > 1 ? (startIdx / (total - 1)) * 100 : 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  updateNextChBtn();
+}
+
 async function saveProgress(mangaId, chapterId, chapterNum, pageIdx) {
   const saved = await IDB.get(mangaId);
   if (!saved) return;
@@ -1705,8 +1784,9 @@ async function saveProgress(mangaId, chapterId, chapterNum, pageIdx) {
 }
 
 function pageNav(dir) {
-  const { pages, pageIdx, isRTL } = readerState;
+  const { pages, pageIdx, isRTL, isVertical } = readerState;
   if (!pages.length) return;
+  if (isVertical) return; // vertical mode uses scroll, not tap/swipe nav
   // RTL: left = next, right = prev
   let next;
   if (dir === 'next') next = isRTL ? pageIdx - 1 : pageIdx + 1;
@@ -1739,6 +1819,8 @@ async function goNextChapter() {
 function closeReader() {
   document.getElementById('reader-overlay').classList.add('hidden');
   document.getElementById('reader-img-wrap').innerHTML = '';
+  document.getElementById('reader-area').classList.remove('vertical');
+  if (_vertObserver) { _vertObserver.disconnect(); _vertObserver = null; }
   clearTimeout(readerState.topBarTimer);
   document.getElementById('next-ch-btn').style.display = 'none';
   document.getElementById('reader-top').classList.remove('hide');
