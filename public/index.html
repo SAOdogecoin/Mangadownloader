@@ -10,7 +10,7 @@
 <link rel="dns-prefetch" href="https://uploads.mangadex.org"/>
 <link rel="dns-prefetch" href="https://lovely-quietude-javatooloptions-xmx512m.up.railway.app"/>
 <!-- Kick off home API fetch ASAP, before JS even parses -->
-<link rel="preload" as="fetch" href="/api/sw-home" crossorigin/>
+<link rel="preload" as="fetch" href="/api/sw-home?srcIdx=0" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -360,6 +360,9 @@ button.status-pill:hover{opacity:.75}
 @keyframes skelShim{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .sdrop-search-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--sub);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px 2px;display:flex;align-items:center;gap:6px}
 .sdrop-search-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--org);animation:pulse 1.2s ease-in-out infinite}
+.sdrop-more-btn{display:block;width:calc(100% - 24px);margin:8px 12px 12px;padding:10px 14px;background:transparent;border:1px dashed var(--border);border-radius:99px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--sub);cursor:pointer;letter-spacing:.04em;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.sdrop-more-btn:hover{border-color:var(--org);color:var(--org);background:rgba(210,255,48,.05)}
+.sdrop-empty-btn{display:inline-block;margin-top:10px;padding:8px 16px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
 @keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
 .sdrop-empty{text-align:center;padding:18px;font-size:13px;color:var(--sub);font-weight:600}
 
@@ -421,6 +424,9 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── PANEL ACTION ROW ─── */
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.panel-altsrc-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:transparent;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-altsrc-btn:hover{border-color:var(--org);color:var(--org)}
+.panel-altsrc-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .panel-dl-btn:hover{background:var(--org-h)}
 .panel-dl-btn.active{background:var(--surf);color:var(--fg)}
@@ -890,27 +896,29 @@ function positionDropdown() {
   if (tb && dd) dd.style.top = (tb.getBoundingClientRect().bottom + 4) + 'px';
 }
 
-function renderDropdownItems(results) {
+function renderDropdownItems(results, meta) {
   const dd = document.getElementById('search-dropdown');
   positionDropdown();
-  if (!results.length) { dd.innerHTML = '<div class="sdrop-empty">No results</div>'; dd.classList.add('open'); return; }
-  const snapSrc = _searchSource; // capture at render time
   results.forEach(r => { _previewCache[r.id] = r; });
-  dd.innerHTML = results.map(r => {
-    const pillCls = statusPillClass(r.status);
-    const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
-    const img = covSrc
-      ? `<img class="sdrop-cover" src="${esc(covSrc)}" loading="lazy" onerror="this.style.display='none'">`
-      : `<div class="sdrop-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
-    return `<div class="sdrop-item" onmouseenter="prefetchManga('${esc(r.id)}','${snapSrc}')" ontouchstart="prefetchManga('${esc(r.id)}','${snapSrc}')" onclick="openPanelFromDropdown('${esc(r.id)}','${snapSrc}')">
-      ${img}
-      <div class="sdrop-info">
-        <div class="sdrop-title">${esc(r.title)}</div>
-        <div class="sdrop-meta"><button class="sdrop-pill ${pillCls}" style="border:none;cursor:pointer;font-family:inherit" onclick="event.stopPropagation();closeDropdown();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>${r.year ? ' · ' + r.year : ''}${r.lastChapter ? ` · <span style="color:var(--org);font-weight:700">Ch.${esc(r.lastChapter)}</span>` : ''}</div>
-        ${r.rating ? `<div class="sdrop-rating">${starsHtml(r.rating)}<span class="star-num">${r.rating.toFixed(1)}</span></div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+
+  let html = '';
+  // Source label kicker
+  if (meta?.sourceName) {
+    html += `<div class="sdrop-search-label">${esc(meta.sourceName)} — ${results.length} result${results.length===1?'':'s'}</div>`;
+  }
+  if (!results.length) {
+    if (meta?.hasMore) {
+      html += `<div class="sdrop-empty">No results in ${esc(meta.sourceName)}.<br><button class="sdrop-empty-btn" onclick="loadNextSource('${esc(meta.q).replace(/'/g,"\\'")}',${meta.sourceIdx+1})">Search next source →</button></div>`;
+    } else {
+      html += '<div class="sdrop-empty">No results</div>';
+    }
+  } else {
+    html += results.map(renderDropItem).join('');
+    if (meta?.hasMore) {
+      html += moreSourcesBtnHtml(meta.q, meta.sourceIdx + 1);
+    }
+  }
+  dd.innerHTML = html;
   dd.classList.add('open');
 }
 
@@ -954,7 +962,7 @@ async function doPredict() {
   try {
     let url;
     if (_searchSource === 'alt') {
-      url = `/api/sw-search?q=${encodeURIComponent(q)}`;
+      url = `/api/sw-search?q=${encodeURIComponent(q)}&srcIdx=0`;
     } else {
       url = `/api/search?q=${encodeURIComponent(q)}&limit=8`;
       if (activeTagId) url += `&tagId=${activeTagId}`;
@@ -964,11 +972,53 @@ async function doPredict() {
     if (data.error) throw new Error(data.error);
     const results = data.results || [];
     _dropCache[cacheKey] = results;
-    renderDropdownItems(results);
+    _dropMeta[cacheKey] = { sourceName: data.sourceName, sourceIdx: data.sourceIdx, hasMore: data.hasMore, q };
+    renderDropdownItems(results, _dropMeta[cacheKey]);
   } catch (e) {
     if (e.name === 'AbortError') return;
     dd.innerHTML = `<div class="sdrop-empty">Error: ${esc(e.message)}</div>`;
   }
+}
+
+const _dropMeta = {};
+// Load next source results, append to dropdown
+async function loadNextSource(q, nextIdx) {
+  const dd = document.getElementById('search-dropdown');
+  const footer = document.getElementById('sdrop-more-btn');
+  if (footer) footer.textContent = 'Searching…';
+  try {
+    const data = await fetch(`/api/sw-search?q=${encodeURIComponent(q)}&srcIdx=${nextIdx}`).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    const newItems = data.results || [];
+    newItems.forEach(r => { _previewCache[r.id] = r; });
+    // Build new HTML for these items + remove old footer
+    const labelHtml = `<div class="sdrop-search-label">${esc(data.sourceName)} — ${newItems.length} result${newItems.length===1?'':'s'}</div>`;
+    const itemsHtml = newItems.map(r => renderDropItem(r)).join('');
+    if (footer) footer.remove();
+    dd.insertAdjacentHTML('beforeend', labelHtml + itemsHtml);
+    if (data.hasMore) {
+      dd.insertAdjacentHTML('beforeend', moreSourcesBtnHtml(q, data.sourceIdx + 1));
+    }
+  } catch (e) {
+    if (footer) footer.textContent = 'Error — tap to retry';
+  }
+}
+function moreSourcesBtnHtml(q, nextIdx) {
+  return `<button id="sdrop-more-btn" class="sdrop-more-btn" onclick="loadNextSource('${esc(q).replace(/'/g,"\\'")}',${nextIdx})">+ Try source ${nextIdx + 1}</button>`;
+}
+function renderDropItem(r) {
+  const pillCls = statusPillClass(r.status);
+  const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
+  const img = covSrc
+    ? `<img class="sdrop-cover" src="${esc(covSrc)}" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="sdrop-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
+  return `<div class="sdrop-item" onmouseenter="prefetchManga('${esc(r.id)}','alt')" ontouchstart="prefetchManga('${esc(r.id)}','alt')" onclick="openPanelFromDropdown('${esc(r.id)}','alt')">
+    ${img}
+    <div class="sdrop-info">
+      <div class="sdrop-title">${esc(r.title)}</div>
+      <div class="sdrop-meta"><span class="sdrop-pill ${pillCls}">${esc(r.status)}</span></div>
+    </div>
+  </div>`;
 }
 
 async function doSearch() {
@@ -1284,12 +1334,12 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
   if (cached && !forceRefresh) {
     renderHomeData(cached, wrap);
     // silent background refresh
-    fetch('/api/sw-home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
+    fetch('/api/sw-home?srcIdx=0').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
     return;
   }
   renderHomeSkeleton(wrap);
   try {
-    const data = await fetch('/api/sw-home').then(r => r.json());
+    const data = await fetch('/api/sw-home?srcIdx=0').then(r => r.json());
     setHomeCache(data);
     renderHomeData(data, wrap);
     // Preload first 6 covers from data for snappy initial paint
@@ -1338,6 +1388,10 @@ async function renderPanel({ manga, chapters }) {
         <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
           <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
           Download
+        </button>
+        <button class="panel-altsrc-btn" onclick="findOnOtherSources()" title="Find this manga on other sources">
+          <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          Other Sources
         </button>
       </div>
     </div>`;
@@ -1445,6 +1499,62 @@ function closePanel() {
     else { panel.style.transform = 'translateY(0)'; }
   }, { passive: true });
 })();
+
+// Find current manga on OTHER sources — searches title across all configured sources
+async function findOnOtherSources() {
+  if (!currentMangaData?.manga) return;
+  const title = currentMangaData.manga.title;
+  const currentSrcIdx = currentMangaData.manga.sourceIdx ?? -1;
+  const body = document.getElementById('panel-body');
+  // Preserve existing chapter list above, append results below
+  const existing = body.innerHTML;
+  body.innerHTML = existing + `<div id="other-src-results" style="border-top:1px solid var(--border);margin-top:8px">
+    <div class="sdrop-search-label">Searching other sources for "${esc(title)}"…</div>
+  </div>`;
+
+  try {
+    // Probe each source (except the current one) in parallel
+    const resp = await fetch(`/api/sw-search?q=${encodeURIComponent(title)}&srcIdx=0`).then(r => r.json());
+    const totalSources = resp.totalSources || 1;
+    const promises = [];
+    for (let i = 0; i < totalSources; i++) {
+      if (i === currentSrcIdx) continue;
+      promises.push(
+        fetch(`/api/sw-search?q=${encodeURIComponent(title)}&srcIdx=${i}`)
+          .then(r => r.json())
+          .catch(() => null)
+      );
+    }
+    const all = await Promise.all(promises);
+    const container = document.getElementById('other-src-results');
+    if (!container) return;
+    let html = '<div class="sdrop-search-label">Results from other sources</div>';
+    let anyResults = false;
+    for (const d of all) {
+      if (!d?.results?.length) continue;
+      anyResults = true;
+      html += `<div style="padding:6px 16px 4px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--sub);letter-spacing:.1em;text-transform:uppercase">${esc(d.sourceName)}</div>`;
+      const top = d.results.slice(0, 3);
+      top.forEach(r => { _previewCache[r.id] = r; });
+      html += top.map(r => {
+        const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
+        const img = covSrc ? `<img style="width:42px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" src="${esc(covSrc)}" onerror="this.style.display='none'">` : '';
+        return `<div onclick="closePanel();openPanel('${esc(r.id)}','alt')" style="display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border)">
+          ${img}
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--fg)">${esc(r.title)}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${esc(r.status)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    if (!anyResults) html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No matches on other sources.</div>';
+    container.innerHTML = html;
+  } catch (e) {
+    const container = document.getElementById('other-src-results');
+    if (container) container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--err);font-size:13px">Error: ${esc(e.message)}</div>`;
+  }
+}
 
 // Search alt source by title, show results inline in panel body
 async function searchAltForManga(title) {

@@ -1,10 +1,9 @@
-// Suwayomi-backed manga search — fans out to multiple sources in parallel
+// Suwayomi-backed search — single source by default, cascadable via srcIdx
 const SUWAYOMI = process.env.SUWAYOMI_URL || '';
-// Accept either SUWAYOMI_SOURCE_IDS (comma-separated) or single SUWAYOMI_SOURCE_ID
 const SOURCE_IDS = (process.env.SUWAYOMI_SOURCE_IDS || process.env.SUWAYOMI_SOURCE_ID || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
-function mapItem(m) {
+function mapItem(m, srcIdx) {
   const thumb = m.thumbnailUrl
     ? (m.thumbnailUrl.startsWith('http') ? m.thumbnailUrl : `${SUWAYOMI}${m.thumbnailUrl}`)
     : null;
@@ -18,20 +17,29 @@ function mapItem(m) {
     rating: null,
     tags: [],
     lastChapter: null,
+    sourceIdx: srcIdx,
     source: 'alt'
   };
 }
 
-async function searchOne(sourceId, q) {
+async function searchOne(sourceId, q, srcIdx) {
   try {
     const r = await fetch(`${SUWAYOMI}/api/v1/source/${sourceId}/search?searchTerm=${encodeURIComponent(q)}&pageNum=1`);
     if (!r.ok) return [];
     const text = await r.text();
-    // Suwayomi sometimes returns plaintext error like "Cloudflare bypass currently disabled"
     if (!text.startsWith('{')) return [];
     const data = JSON.parse(text);
-    return (data.mangaList || []).map(mapItem);
+    return (data.mangaList || []).map(m => mapItem(m, srcIdx));
   } catch { return []; }
+}
+
+async function getSourceName(sourceId) {
+  try {
+    const r = await fetch(`${SUWAYOMI}/api/v1/source/${sourceId}`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.name || d.displayName || null;
+  } catch { return null; }
 }
 
 module.exports = async (req, res) => {
@@ -39,27 +47,23 @@ module.exports = async (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Missing q' });
 
-  try {
-    // Fan out across all configured sources
-    const allResults = await Promise.all(SOURCE_IDS.map(sid => searchOne(sid, q)));
+  const srcIdx = Math.max(0, Math.min(parseInt(req.query.srcIdx || '0', 10), SOURCE_IDS.length - 1));
+  const sourceId = SOURCE_IDS[srcIdx];
 
-    // Merge + dedupe by lowercase title
-    const merged = [];
-    const seen = new Set();
-    // Interleave results from each source so user sees variety
-    const maxLen = Math.max(...allResults.map(r => r.length), 0);
-    for (let i = 0; i < maxLen; i++) {
-      for (const list of allResults) {
-        if (!list[i]) continue;
-        const key = list[i].title.toLowerCase().trim();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        merged.push(list[i]);
-      }
-    }
+  try {
+    const [results, sourceName] = await Promise.all([
+      searchOne(sourceId, q, srcIdx),
+      getSourceName(sourceId)
+    ]);
 
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    res.json({ results: merged });
+    res.json({
+      results,
+      sourceName: sourceName || `Source ${srcIdx + 1}`,
+      sourceIdx: srcIdx,
+      totalSources: SOURCE_IDS.length,
+      hasMore: srcIdx < SOURCE_IDS.length - 1
+    });
   } catch (e) {
     console.error('[sw-search]', e.message);
     res.status(502).json({ error: e.message });
