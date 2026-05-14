@@ -43,6 +43,9 @@ body{font-family:'Manrope',system-ui,sans-serif;color:var(--fg);background:var(-
 .btn-clear-input{position:absolute;right:8px;width:22px;height:22px;border:none;background:none;cursor:pointer;color:#aaa;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .15s;-webkit-tap-highlight-color:transparent;flex-shrink:0}
 .btn-clear-input:hover{color:var(--fg)}
 .btn-clear-input svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5}
+.btn-src-toggle{flex-shrink:0;border:1.5px solid var(--border);background:none;border-radius:99px;font-family:inherit;font-size:11px;font-weight:800;color:var(--sub);padding:5px 10px;cursor:pointer;transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent;letter-spacing:.02em}
+.btn-src-toggle.alt-active{border-color:var(--org);color:var(--org);background:color-mix(in srgb,var(--org) 12%,transparent)}
+.alt-source-badge{font-size:9px;font-weight:800;background:var(--org);color:#0d1117;border-radius:4px;padding:1px 4px;margin-left:4px;letter-spacing:.04em;vertical-align:middle}
 .btn-load-more{padding:10px 28px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;color:var(--fg);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .btn-load-more:hover{border-color:var(--blk);background:var(--blk);color:#fff}
 .btn-load-more:disabled{opacity:.45;cursor:default}
@@ -377,6 +380,7 @@ button.status-pill:hover{opacity:.75}
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Search
     </button>
+    <button class="btn-src-toggle" id="btn-src-toggle" onclick="toggleSearchSource()" title="Toggle source: MangaDex / Alt">MDex</button>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
@@ -510,7 +514,11 @@ const IDB = {
 // Utils
 // ═══════════════════════════════════════════════════════════════════
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-function proxyUrl(url) { return `/api/proxy?url=${encodeURIComponent(url)}`; }
+function proxyUrl(url, referer) {
+  let u = `/api/proxy?url=${encodeURIComponent(url)}`;
+  if (referer) u += `&referer=${encodeURIComponent(referer)}`;
+  return u;
+}
 function showToast(msg, dur = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -617,6 +625,21 @@ let _predictCtrl = null;
 const _previewCache = {};
 const _dropCache = {}; // query+tag → results for instant re-render
 const SEARCH_LIMIT = 20;
+let _searchSource = 'mdex'; // 'mdex' | 'alt'
+let _panelSource = 'mdex';  // source of currently open panel
+
+function toggleSearchSource() {
+  _searchSource = _searchSource === 'mdex' ? 'alt' : 'mdex';
+  const btn = document.getElementById('btn-src-toggle');
+  if (_searchSource === 'alt') {
+    btn.textContent = 'Alt'; btn.classList.add('alt-active');
+  } else {
+    btn.textContent = 'MDex'; btn.classList.remove('alt-active');
+  }
+  closeDropdown();
+  const q = document.getElementById('search-input').value.trim();
+  if (q) setTimeout(doPredict, 50);
+}
 
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
@@ -689,19 +712,25 @@ function closeDropdown() {
 }
 
 // Open panel instantly using cached search preview data, then fetch full details
-function openPanelFromDropdown(id) {
+function openPanelFromDropdown(id, source) {
   closeDropdown();
-  const preview = _previewCache[id];
+  _panelSource = source || _searchSource;
+  openPanel(id, _panelSource);
+}
+
+async function openPanel(id, source) {
+  source = source || 'mdex';
+  _panelSource = source;
   currentMangaData = null;
   selectMode = false; selectedChIds.clear();
   document.getElementById('panel-bg').classList.add('open');
   document.getElementById('panel').classList.add('open');
 
+  const preview = _previewCache[id];
   if (preview) {
-    // Render header immediately with search data
     const pillCls = statusPillClass(preview.status);
     const covHtml = preview.coverUrl
-      ? `<img class="panel-cover" src="${esc(proxyUrl(preview.coverUrl))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
+      ? `<img class="panel-cover" src="${esc(proxyUrl(preview.coverUrl, preview.coverReferer))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
       : `<div class="panel-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
     const tagsHtml = (preview.tags || []).slice(0,4).map(t => `<span class="tag-pill">${esc(t.name || t)}</span>`).join('');
     document.getElementById('panel-hdr').innerHTML = `
@@ -719,14 +748,17 @@ function openPanelFromDropdown(id) {
     document.getElementById('panel-body').innerHTML = '';
   }
 
-  // Fetch full data and re-render
-  fetch(`/api/manga?id=${id}`).then(r => r.json()).then(data => {
+  try {
+    const apiUrl = source === 'alt'
+      ? `/api/sw-manga?id=${encodeURIComponent(id)}`
+      : `/api/manga?id=${id}`;
+    const data = await fetch(apiUrl).then(r => r.json());
     if (data.error) throw new Error(data.error);
     currentMangaData = data;
     renderPanel(data);
-  }).catch(e => {
+  } catch (e) {
     document.getElementById('panel-hdr').innerHTML = `<div style="padding:20px;color:var(--err);font-weight:700">Error: ${esc(e.message)}</div>`;
-  });
+  }
 }
 
 function positionDropdown() {
@@ -739,16 +771,19 @@ function renderDropdownItems(results) {
   const dd = document.getElementById('search-dropdown');
   positionDropdown();
   if (!results.length) { dd.innerHTML = '<div class="sdrop-empty">No results</div>'; dd.classList.add('open'); return; }
+  const snapSrc = _searchSource; // capture at render time
   results.forEach(r => { _previewCache[r.id] = r; });
   dd.innerHTML = results.map(r => {
     const pillCls = statusPillClass(r.status);
-    const img = r.coverUrl
-      ? `<img class="sdrop-cover" src="${esc(proxyUrl(r.coverUrl))}" loading="lazy" onerror="this.style.display='none'">`
+    const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
+    const img = covSrc
+      ? `<img class="sdrop-cover" src="${esc(covSrc)}" loading="lazy" onerror="this.style.display='none'">`
       : `<div class="sdrop-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
-    return `<div class="sdrop-item" onclick="openPanelFromDropdown('${esc(r.id)}')">
+    const altBadge = snapSrc === 'alt' ? `<span class="alt-source-badge">ALT</span>` : '';
+    return `<div class="sdrop-item" onclick="openPanelFromDropdown('${esc(r.id)}','${snapSrc}')">
       ${img}
       <div class="sdrop-info">
-        <div class="sdrop-title">${esc(r.title)}</div>
+        <div class="sdrop-title">${esc(r.title)}${altBadge}</div>
         <div class="sdrop-meta"><button class="sdrop-pill ${pillCls}" style="border:none;cursor:pointer;font-family:inherit" onclick="event.stopPropagation();closeDropdown();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>${r.year ? ' · ' + r.year : ''}${r.lastChapter ? ` · <span style="color:var(--org);font-weight:700">Ch.${esc(r.lastChapter)}</span>` : ''}</div>
         ${r.rating ? `<div class="sdrop-rating">${starsHtml(r.rating)}<span class="star-num">${r.rating.toFixed(1)}</span></div>` : ''}
       </div>
@@ -762,15 +797,15 @@ async function doPredict() {
   if (!q.length) { closeDropdown(); return; }
   const dd = document.getElementById('search-dropdown');
 
-  // Instant cache hit — exact match
-  const cacheKey = q + '|' + activeTagId;
+  // Instant cache hit — exact match (keyed by source too)
+  const cacheKey = _searchSource + '|' + q + '|' + activeTagId;
   if (_dropCache[cacheKey]) { renderDropdownItems(_dropCache[cacheKey]); return; }
 
-  // Partial cache — prefix match: filter cached results immediately
+  // Partial cache — prefix match (same source only)
   let showed = false;
   for (const key of Object.keys(_dropCache)) {
-    const [cachedQ] = key.split('|');
-    if (q.startsWith(cachedQ) && _dropCache[key].length) {
+    const [src, cachedQ] = key.split('|');
+    if (src === _searchSource && q.startsWith(cachedQ) && _dropCache[key].length) {
       const filtered = _dropCache[key].filter(r => r.title.toLowerCase().includes(q.toLowerCase()));
       if (filtered.length) { renderDropdownItems(filtered); showed = true; break; }
     }
@@ -786,8 +821,13 @@ async function doPredict() {
   _predictCtrl = new AbortController();
   const signal = _predictCtrl.signal;
   try {
-    let url = `/api/search?q=${encodeURIComponent(q)}&limit=8`;
-    if (activeTagId) url += `&tagId=${activeTagId}`;
+    let url;
+    if (_searchSource === 'alt') {
+      url = `/api/sw-search?q=${encodeURIComponent(q)}`;
+    } else {
+      url = `/api/search?q=${encodeURIComponent(q)}&limit=8`;
+      if (activeTagId) url += `&tagId=${activeTagId}`;
+    }
     const resp = await fetch(url, { signal });
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
@@ -1096,7 +1136,7 @@ async function renderPanel({ manga, chapters }) {
   const isSaved = !!saved;
 
   const covHtml = manga.coverUrl
-    ? `<img class="panel-cover" src="${esc(proxyUrl(manga.coverUrl))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
+    ? `<img class="panel-cover" src="${esc(proxyUrl(manga.coverUrl, manga.coverReferer))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
     : `<div class="panel-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
 
   const tagsHtml = manga.tags.slice(0, 8).map(t =>
@@ -1167,13 +1207,17 @@ async function renderPanel({ manga, chapters }) {
     }).join('');
   }
 
-  if (!chapters.length) chHtml = `<div style="padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">
-    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--sub)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><line x1="12" y1="8" x2="12" y2="12"/><dot cx="12" cy="16" r="1"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/>
-    </svg>
-    <div style="color:var(--fg);font-size:15px;font-weight:700">No chapters found</div>
-    <div style="color:var(--sub);font-size:12px;line-height:1.6;max-width:260px">This manga has no English chapters on MangaDex.<br>Try searching on another site or check back later.</div>
-  </div>`;
+  if (!chapters.length) {
+    const mangaTitle = manga.title || '';
+    chHtml = `<div style="padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--sub)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2.5"/>
+      </svg>
+      <div style="color:var(--fg);font-size:15px;font-weight:700">No chapters found</div>
+      <div style="color:var(--sub);font-size:12px;line-height:1.6;max-width:260px">No English chapters on MangaDex for this title.</div>
+      <button onclick="searchAltForManga(${JSON.stringify(mangaTitle)})" style="background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:800;padding:10px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent">Search Alt Source</button>
+    </div>`;
+  }
 
   document.getElementById('panel-body').innerHTML = chHtml;
   updateSelectBar();
@@ -1231,6 +1275,36 @@ function closePanel() {
     else { panel.style.transform = 'translateY(0)'; }
   }, { passive: true });
 })();
+
+// Search alt source by title, show results inline in panel body
+async function searchAltForManga(title) {
+  document.getElementById('panel-body').innerHTML = '<div class="panel-loading"><div class="spin"></div> Searching alt source…</div>';
+  try {
+    const data = await fetch(`/api/sw-search?q=${encodeURIComponent(title)}`).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    const results = data.results || [];
+    if (!results.length) {
+      document.getElementById('panel-body').innerHTML = '<div style="padding:30px;text-align:center;color:var(--sub);font-size:13px">No results found on alt source.</div>';
+      return;
+    }
+    results.forEach(r => { _previewCache[r.id] = r; });
+    document.getElementById('panel-body').innerHTML = `
+      <div style="padding:12px 16px 4px;font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.06em;text-transform:uppercase">Alt Source Results</div>
+      ${results.map(r => {
+        const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
+        const img = covSrc ? `<img style="width:42px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" src="${esc(covSrc)}" onerror="this.style.display='none'">` : '';
+        return `<div onclick="closePanel();openPanel('${esc(r.id)}','alt')" style="display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border)">
+          ${img}
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--fg)">${esc(r.title)}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${esc(r.status)}</div>
+          </div>
+        </div>`;
+      }).join('')}`;
+  } catch (e) {
+    document.getElementById('panel-body').innerHTML = `<div style="padding:30px;text-align:center;color:var(--err);font-size:13px">Error: ${esc(e.message)}</div>`;
+  }
+}
 
 async function toggleSave() {
   if (!currentMangaData) return;
@@ -1442,9 +1516,11 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   showPageLoading();
   autoHideTopBar();
 
-  // Fetch pages
+  // Fetch pages — detect alt source by chapter ID prefix
   try {
-    const data = await fetch(`/api/pages?id=${chapterId}`).then(r => r.json());
+    const isAlt = chapterId.startsWith('sw:');
+    const pagesUrl = isAlt ? `/api/sw-pages?id=${encodeURIComponent(chapterId)}` : `/api/pages?id=${chapterId}`;
+    const data = await fetch(pagesUrl).then(r => r.json());
     if (data.error) throw new Error(data.error);
     readerState.pages = data.pages || [];
     readerState.pagesFallback = data.pagesFallback || [];
@@ -1468,7 +1544,7 @@ function showPage(idx) {
   idx = Math.max(0, Math.min(idx, pages.length - 1));
   readerState.pageIdx = idx;
 
-  const url = proxyUrl(pages[idx]);
+  const url = proxyUrl(pages[idx]); // proxy handles referer inference from hostname
   const wrap = document.getElementById('reader-img-wrap');
 
   // Show spinner while loading

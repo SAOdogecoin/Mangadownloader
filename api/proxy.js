@@ -24,6 +24,8 @@ module.exports = async (req, res) => {
     '.chapmanganato.to',
     '.mangakakalot.com',
     'i.imgur.com',
+    '.railway.app',      // Suwayomi on Railway
+    '.up.railway.app',
   ];
 
   const isAllowed = allowedExact.some(d => hostname === d || hostname.endsWith('.' + d))
