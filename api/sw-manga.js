@@ -1,7 +1,7 @@
 // Suwayomi-backed manga detail + chapters
-// Chapter IDs use format: sw:{internalId}:{chapterIndex}
+// id = internal Suwayomi manga ID (numeric string from sw-search/sw-home)
+// Chapter IDs use format: sw:{mangaId}:{chapterIndex}
 const SUWAYOMI = process.env.SUWAYOMI_URL || '';
-const SOURCE_ID = process.env.SUWAYOMI_SOURCE_ID || '';
 
 const statusMap = s => {
   if (!s) return 'ongoing';
@@ -13,34 +13,29 @@ const statusMap = s => {
 };
 
 module.exports = async (req, res) => {
-  if (!SUWAYOMI || !SOURCE_ID) return res.status(503).json({ error: 'SUWAYOMI_URL or SUWAYOMI_SOURCE_ID not set' });
-  const { id } = req.query; // id = source-relative manga URL from sw-search
+  if (!SUWAYOMI) return res.status(503).json({ error: 'SUWAYOMI_URL not set' });
+  const { id } = req.query; // internal Suwayomi manga ID
   if (!id) return res.status(400).json({ error: 'Missing id' });
 
   try {
-    // Fetch/create manga in Suwayomi DB by source + URL
-    // This endpoint creates the entry if it doesn't exist and returns the internal ID
-    const mangaRes = await fetch(
-      `${SUWAYOMI}/api/v1/manga?sourceId=${SOURCE_ID}&url=${encodeURIComponent(id)}`
-    );
-    if (!mangaRes.ok) throw new Error(`Suwayomi manga lookup ${mangaRes.status}`);
-    const mangaData = await mangaRes.json();
-    const internalId = mangaData.id;
-    if (!internalId) throw new Error('No internal ID returned from Suwayomi');
+    // Fetch manga details and chapters in parallel using internal ID
+    const [mangaRes, chapRes] = await Promise.all([
+      fetch(`${SUWAYOMI}/api/v1/manga/${id}?onlineFetch=true`),
+      fetch(`${SUWAYOMI}/api/v1/manga/${id}/chapters?onlineFetch=true`)
+    ]);
 
-    // Fetch chapters online
-    const chapRes = await fetch(
-      `${SUWAYOMI}/api/v1/manga/${internalId}/chapters?onlineFetch=true`
-    );
+    if (!mangaRes.ok) throw new Error(`Suwayomi manga ${mangaRes.status}`);
     if (!chapRes.ok) throw new Error(`Suwayomi chapters ${chapRes.status}`);
+
+    const mangaData = await mangaRes.json();
     const chapData = await chapRes.json();
 
     const manga = {
-      id: String(internalId),
+      id: String(id),
       title: mangaData.title || 'Untitled',
       description: (mangaData.description || '').replace(/\[.*?\]/g, '').trim(),
       coverUrl: mangaData.thumbnailUrl || null,
-      coverReferer: 'https://readmanganato.com/',
+      coverReferer: null,
       status: statusMap(mangaData.status),
       year: null,
       tags: (mangaData.genre || '').split(',').map(g => g.trim()).filter(Boolean).map(g => ({ name: g, id: g })),
@@ -53,12 +48,11 @@ module.exports = async (req, res) => {
     // Suwayomi returns chapters newest-first; reverse for asc order
     const rawChapters = Array.isArray(chapData) ? chapData.slice().reverse() : [];
     const chapters = rawChapters.map(ch => {
-      // Parse chapter number from name or chapterNumber field
       const chNum = ch.chapterNumber != null && ch.chapterNumber >= 0
         ? String(ch.chapterNumber)
         : (ch.name?.match(/chapter[\s-]*([\d.]+)/i)?.[1] || String(ch.index + 1));
       return {
-        id: `sw:${internalId}:${ch.index}`,   // sw: prefix + internal manga ID + chapter index
+        id: `sw:${id}:${ch.index}`,
         volume: null,
         chapter: chNum,
         title: ch.name || null,

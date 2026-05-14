@@ -1025,10 +1025,10 @@ function renderLibraryPage() {
 // ─── Discovery sections ─────────────────────────────────────────────
 function discCardHtml(m) {
   const img = m.coverUrl
-    ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl))}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl, m.coverReferer))}" alt="" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="disc-ph">${SVG_BOOK}</div>`;
   const stars = m.rating ? starsHtml(m.rating) : '';
-  return `<div class="disc-card" data-id="${esc(m.id)}">
+  return `<div class="disc-card" data-id="${esc(m.id)}" data-source="${esc(m.source || 'mdex')}">
     <div class="disc-cover-wrap">${img}</div>
     <div class="disc-title">${esc(m.title)}</div>
     ${m.rating ? `<div class="disc-rating-row">${stars}<span class="disc-rating-num">${m.rating.toFixed(1)}</span></div>` : ''}
@@ -1043,7 +1043,7 @@ function renderDiscSection(label, items, container) {
   sec.innerHTML = `<div class="home-section-label">${label}</div>
     <div class="disc-strip">${items.map(discCardHtml).join('')}</div>`;
   sec.querySelectorAll('.disc-card').forEach(el =>
-    el.addEventListener('click', () => openPanel(el.dataset.id)));
+    el.addEventListener('click', () => openPanel(el.dataset.id, el.dataset.source || 'mdex')));
   container.appendChild(sec);
 }
 
@@ -1082,12 +1082,12 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
   if (cached && !forceRefresh) {
     renderHomeData(cached, wrap);
     // silent background refresh
-    fetch('/api/home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
+    fetch('/api/sw-home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
     return;
   }
   wrap.innerHTML = `<div class="disc-loading"><div class="spin" style="width:16px;height:16px;border-width:2px"></div> Loading…</div>`;
   try {
-    const data = await fetch('/api/home').then(r => r.json());
+    const data = await fetch('/api/sw-home').then(r => r.json());
     setHomeCache(data);
     renderHomeData(data, wrap);
   } catch (e) {

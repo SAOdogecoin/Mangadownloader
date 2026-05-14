@@ -1,4 +1,4 @@
-// Suwayomi-backed manga search
+// Suwayomi-backed manga search — returns internal Suwayomi IDs
 const SUWAYOMI = process.env.SUWAYOMI_URL || '';
 const SOURCE_ID = process.env.SUWAYOMI_SOURCE_ID || '';
 
@@ -15,10 +15,10 @@ module.exports = async (req, res) => {
     const data = await r.json();
 
     const results = (data.mangaList || []).map(m => ({
-      id: m.url,   // source-relative URL used as ID for sw-manga
+      id: String(m.id),          // internal Suwayomi DB ID
       title: m.title || 'Untitled',
       coverUrl: m.thumbnailUrl || null,
-      coverReferer: 'https://readmanganato.com/',
+      coverReferer: null,
       status: (m.status || 'ongoing').toLowerCase(),
       year: null,
       rating: null,
