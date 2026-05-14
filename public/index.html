@@ -262,6 +262,10 @@ button.status-pill:hover{opacity:.75}
 .reader-ch-txt{font-size:10px;color:rgba(255,255,255,.6)}
 .reader-loc-btn{background:rgba(255,255,255,.15);border:none;color:#fff;font-family:inherit;font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .reader-loc-btn:active{background:rgba(255,255,255,.25)}
+.reader-mode-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s;margin-right:6px}
+.reader-mode-btn:active{background:rgba(255,255,255,.25)}
+.reader-mode-btn.active{background:var(--org);color:#0d1117}
+.reader-mode-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* Reader area */
 .reader-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;cursor:pointer}
@@ -526,6 +530,9 @@ button.status-pill:hover{opacity:.75}
       <div class="reader-title-txt" id="reader-title"></div>
       <div class="reader-ch-txt" id="reader-ch"></div>
     </div>
+    <button class="reader-mode-btn" id="reader-mode-btn" onclick="toggleReadMode()" title="Toggle reading mode" aria-label="Toggle reading mode">
+      <svg id="reader-mode-icon" viewBox="0 0 24 24"></svg>
+    </button>
     <button class="reader-loc-btn" id="reader-loc-btn" onclick="openToc()">p.1/1</button>
   </div>
 
@@ -1661,11 +1668,58 @@ let readerState = {
 // Detect long-strip / webtoon / manhua reading mode from manga metadata
 function detectVerticalMode(manga) {
   if (!manga) return false;
+  // 1. User preference override (per-manga)
+  const pref = getReadModePref(manga.id);
+  if (pref === 'vertical') return true;
+  if (pref === 'horizontal') return false;
+  // 2. Auto-detect from tags
   const tags = (manga.tags || []).map(t => (t.name || t || '').toLowerCase()).join(' ');
   if (/long.?strip|webtoon|manhua|manhwa/.test(tags)) return true;
+  // 3. Auto-detect from language
   const lang = (manga.originalLanguage || '').toLowerCase();
   if (lang === 'ko' || lang === 'zh' || lang === 'zh-hk') return true;
+  // 4. Source = alt (Suwayomi) is mostly webtoons/manhwa → default to vertical
+  if (manga.source === 'alt') return true;
   return false;
+}
+
+// Per-manga reading mode preference (vertical | horizontal | null=auto)
+function getReadModePref(mangaId) {
+  try { return localStorage.getItem('readMode_' + mangaId); } catch { return null; }
+}
+function setReadModePref(mangaId, mode) {
+  try { localStorage.setItem('readMode_' + mangaId, mode); } catch {}
+}
+
+// SVG icons for mode toggle button
+const SVG_MODE_VERT = '<rect x="6" y="3" width="12" height="3" rx="1"/><rect x="6" y="10" width="12" height="3" rx="1"/><rect x="6" y="17" width="12" height="3" rx="1"/>';
+const SVG_MODE_HORZ = '<rect x="3" y="6" width="3" height="12" rx="1"/><rect x="10" y="6" width="3" height="12" rx="1"/><rect x="17" y="6" width="3" height="12" rx="1"/>';
+
+function updateModeIcon() {
+  const btn = document.getElementById('reader-mode-btn');
+  const icon = document.getElementById('reader-mode-icon');
+  if (readerState.isVertical) {
+    icon.innerHTML = SVG_MODE_VERT;
+    btn.classList.add('active');
+    btn.title = 'Vertical (webtoon) — tap to switch';
+  } else {
+    icon.innerHTML = SVG_MODE_HORZ;
+    btn.classList.remove('active');
+    btn.title = 'Horizontal (pages) — tap to switch';
+  }
+}
+
+function toggleReadMode() {
+  readerState.isVertical = !readerState.isVertical;
+  setReadModePref(readerState.mangaId, readerState.isVertical ? 'vertical' : 'horizontal');
+
+  // Toggle classes
+  document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
+  document.getElementById('reader-overlay').classList.toggle('vmode', readerState.isVertical);
+  updateModeIcon();
+
+  // Re-render at current page
+  showPage(readerState.pageIdx);
 }
 
 async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
@@ -1687,6 +1741,7 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   // Toggle vertical class on reader-area AND overlay (tap-zones are overlay children)
   document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
   document.getElementById('reader-overlay').classList.toggle('vmode', readerState.isVertical);
+  updateModeIcon();
 
   // Show overlay
   document.getElementById('reader-overlay').classList.remove('hidden');
@@ -1708,6 +1763,23 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
     // Clamp page idx
     if (readerState.pageIdx >= readerState.pages.length) readerState.pageIdx = 0;
     showPage(readerState.pageIdx);
+
+    // Aspect-ratio sniff: if user has NO preference saved and we're currently horizontal,
+    // probe the first image. If it's very tall (webtoon-like), auto-switch to vertical.
+    if (!readerState.isVertical && !getReadModePref(readerState.mangaId) && readerState.pages[0]) {
+      const probe = new Image();
+      probe.onload = () => {
+        const ratio = probe.naturalHeight / probe.naturalWidth;
+        if (ratio > 2.2) { // webtoon strips are typically 1:3 or taller
+          readerState.isVertical = true;
+          document.getElementById('reader-area').classList.add('vertical');
+          document.getElementById('reader-overlay').classList.add('vmode');
+          updateModeIcon();
+          showPage(readerState.pageIdx);
+        }
+      };
+      probe.src = proxyUrl(readerState.pages[0]);
+    }
 
     // Aggressive chapter prefetch — fire-and-forget warm all remaining pages
     setTimeout(() => prefetchAllPages(readerState.pages, readerState.pagesFallback), 250);
