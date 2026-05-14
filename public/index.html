@@ -380,7 +380,6 @@ button.status-pill:hover{opacity:.75}
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Search
     </button>
-    <button class="btn-src-toggle" id="btn-src-toggle" onclick="toggleSearchSource()" title="Toggle source: MangaDex / Alt">MDex</button>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
@@ -625,21 +624,8 @@ let _predictCtrl = null;
 const _previewCache = {};
 const _dropCache = {}; // query+tag → results for instant re-render
 const SEARCH_LIMIT = 20;
-let _searchSource = 'mdex'; // 'mdex' | 'alt'
+let _searchSource = 'alt'; // always use alt source for search
 let _panelSource = 'mdex';  // source of currently open panel
-
-function toggleSearchSource() {
-  _searchSource = _searchSource === 'mdex' ? 'alt' : 'mdex';
-  const btn = document.getElementById('btn-src-toggle');
-  if (_searchSource === 'alt') {
-    btn.textContent = 'Alt'; btn.classList.add('alt-active');
-  } else {
-    btn.textContent = 'MDex'; btn.classList.remove('alt-active');
-  }
-  closeDropdown();
-  const q = document.getElementById('search-input').value.trim();
-  if (q) setTimeout(doPredict, 50);
-}
 
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
@@ -1208,18 +1194,13 @@ async function renderPanel({ manga, chapters }) {
   }
 
   if (!chapters.length) {
-    const mangaTitle = manga.title || '';
-    chHtml = `<div style="padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px">
-      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--sub)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2.5"/>
-      </svg>
-      <div style="color:var(--fg);font-size:15px;font-weight:700">No chapters found</div>
-      <div style="color:var(--sub);font-size:12px;line-height:1.6;max-width:260px">No English chapters on MangaDex for this title.</div>
-      <button onclick="searchAltForManga(${JSON.stringify(mangaTitle)})" style="background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:800;padding:10px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent">Search Alt Source</button>
-    </div>`;
+    chHtml = '<div class="panel-loading"><div class="spin"></div> Searching alt source…</div>';
   }
 
   document.getElementById('panel-body').innerHTML = chHtml;
+
+  // Auto-search alt source when MangaDex has no chapters
+  if (!chapters.length) searchAltForManga(manga.title || '');
   updateSelectBar();
 
   // Scroll to current chapter
