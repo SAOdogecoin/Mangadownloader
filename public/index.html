@@ -746,6 +746,28 @@ function openPanelFromDropdown(id, source) {
   openPanel(id, _panelSource);
 }
 
+// Manga data cache — populated by prefetch + openPanel
+const _mangaCache = {};
+
+// Fire-and-forget prefetch on hover/touch. Caches the manga data so click is instant.
+function prefetchManga(id, source) {
+  const key = (source || 'mdex') + ':' + id;
+  if (_mangaCache[key]) return;
+  _mangaCache[key] = 'pending';
+  const url = source === 'alt'
+    ? `/api/sw-manga?id=${encodeURIComponent(id)}`
+    : `/api/manga?id=${id}`;
+  fetch(url).then(r => r.json()).then(data => {
+    if (!data.error) _mangaCache[key] = data;
+    else delete _mangaCache[key];
+    // Also warm chapter covers
+    if (data?.manga?.coverUrl) {
+      const img = new Image();
+      img.src = proxyUrl(data.manga.coverUrl, data.manga.coverReferer);
+    }
+  }).catch(() => { delete _mangaCache[key]; });
+}
+
 async function openPanel(id, source) {
   source = source || 'mdex';
   _panelSource = source;
@@ -777,10 +799,18 @@ async function openPanel(id, source) {
   }
 
   try {
-    const apiUrl = source === 'alt'
-      ? `/api/sw-manga?id=${encodeURIComponent(id)}`
-      : `/api/manga?id=${id}`;
-    const data = await fetch(apiUrl).then(r => r.json());
+    const cacheKey = source + ':' + id;
+    let data;
+    // Use cached prefetch if available and complete
+    if (_mangaCache[cacheKey] && _mangaCache[cacheKey] !== 'pending') {
+      data = _mangaCache[cacheKey];
+    } else {
+      const apiUrl = source === 'alt'
+        ? `/api/sw-manga?id=${encodeURIComponent(id)}`
+        : `/api/manga?id=${id}`;
+      data = await fetch(apiUrl).then(r => r.json());
+      if (!data.error) _mangaCache[cacheKey] = data;
+    }
     if (data.error) throw new Error(data.error);
     currentMangaData = data;
     renderPanel(data);
@@ -807,7 +837,7 @@ function renderDropdownItems(results) {
     const img = covSrc
       ? `<img class="sdrop-cover" src="${esc(covSrc)}" loading="lazy" onerror="this.style.display='none'">`
       : `<div class="sdrop-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
-    return `<div class="sdrop-item" onclick="openPanelFromDropdown('${esc(r.id)}','${snapSrc}')">
+    return `<div class="sdrop-item" onmouseenter="prefetchManga('${esc(r.id)}','${snapSrc}')" ontouchstart="prefetchManga('${esc(r.id)}','${snapSrc}')" onclick="openPanelFromDropdown('${esc(r.id)}','${snapSrc}')">
       ${img}
       <div class="sdrop-info">
         <div class="sdrop-title">${esc(r.title)}</div>
@@ -930,7 +960,7 @@ function resultCardHtml(r) {
   const tagBtns = (r.tags || []).slice(0, 2).map(t =>
     `<button class="tag-pill" onclick="event.stopPropagation();selectGenreAndSearch('${esc(t.id)}')">${esc(t.name)}</button>`
   ).join('');
-  return `<div class="result-card" onclick="openPanel('${esc(r.id)}','${_searchSource}')">
+  return `<div class="result-card" onmouseenter="prefetchManga('${esc(r.id)}','${_searchSource}')" ontouchstart="prefetchManga('${esc(r.id)}','${_searchSource}')" onclick="openPanel('${esc(r.id)}','${_searchSource}')">
     <div class="result-cover-wrap">
       ${imgHtml}
       <button class="status-pill ${pillCls}" onclick="event.stopPropagation();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>
@@ -1102,8 +1132,13 @@ function renderDiscSection(label, items, container) {
       <div class="home-section-count">${String(items.length).padStart(2,'0')} titles</div>
     </div>
     <div class="disc-strip">${cardsHtml}</div>`;
-  sec.querySelectorAll('.disc-card').forEach(el =>
-    el.addEventListener('click', () => openPanel(el.dataset.id, el.dataset.source || 'mdex')));
+  sec.querySelectorAll('.disc-card').forEach(el => {
+    const id = el.dataset.id, src = el.dataset.source || 'mdex';
+    el.addEventListener('click', () => openPanel(id, src));
+    // Prefetch on hover (desktop) + touchstart (mobile)
+    el.addEventListener('mouseenter', () => prefetchManga(id, src), { once: true });
+    el.addEventListener('touchstart', () => prefetchManga(id, src), { once: true, passive: true });
+  });
   container.appendChild(sec);
 }
 
@@ -1565,9 +1600,45 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
     // Clamp page idx
     if (readerState.pageIdx >= readerState.pages.length) readerState.pageIdx = 0;
     showPage(readerState.pageIdx);
+
+    // Aggressive chapter prefetch — fire-and-forget warm all remaining pages
+    setTimeout(() => prefetchAllPages(readerState.pages, readerState.pagesFallback), 250);
+
+    // Prefetch next chapter's page list (not images, just the manifest) for fast chapter swap
+    const nextCh = readerState.chapters[readerState.chapterListIdx + 1];
+    if (nextCh) {
+      const isAlt = nextCh.id.startsWith('sw:');
+      const url = isAlt ? `/api/sw-pages?id=${encodeURIComponent(nextCh.id)}` : `/api/pages?id=${nextCh.id}`;
+      setTimeout(() => fetch(url).catch(() => {}), 800);
+    }
   } catch (e) {
     document.getElementById('reader-img-wrap').innerHTML = `<div class="reader-error">Failed to load chapter: ${esc(e.message)}</div>`;
   }
+}
+
+// Prefetch every page in background. Browser cache will serve them instantly when displayed.
+const _prefetched = new Set();
+function prefetchAllPages(pages, fallback) {
+  if (!pages || !pages.length) return;
+  pages.forEach((p, i) => {
+    if (!p) return;
+    const url = proxyUrl(p);
+    if (_prefetched.has(url)) return;
+    _prefetched.add(url);
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+    // Stagger slightly to avoid burst
+  });
+  // Also warm fallback for first 5
+  (fallback || []).slice(0, 5).forEach(p => {
+    if (!p) return;
+    const url = proxyUrl(p);
+    if (_prefetched.has(url)) return;
+    _prefetched.add(url);
+    const img = new Image();
+    img.src = url;
+  });
 }
 
 function showPageLoading() {
@@ -1604,11 +1675,12 @@ function showPage(idx) {
   };
   img.src = url;
 
-  // Preload next 2 pages
-  for (let i = 1; i <= 2; i++) {
+  // Preload next 5 pages (in addition to background chapter prefetch)
+  for (let i = 1; i <= 5; i++) {
     const ni = isRTL ? idx - i : idx + i;
     if (ni >= 0 && ni < pages.length) {
       const preload = new Image();
+      preload.decoding = 'async';
       preload.src = proxyUrl(pages[ni]);
     }
   }
