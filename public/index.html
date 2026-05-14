@@ -666,8 +666,8 @@ let _predictCtrl = null;
 const _previewCache = {};
 const _dropCache = {}; // query+tag → results for instant re-render
 const SEARCH_LIMIT = 20;
-let _searchSource = 'alt'; // always use alt source for search
-let _panelSource = 'mdex';  // source of currently open panel
+let _searchSource = 'alt'; // Suwayomi as primary source
+let _panelSource = 'alt';  // panel default to alt source
 
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
@@ -807,11 +807,10 @@ function renderDropdownItems(results) {
     const img = covSrc
       ? `<img class="sdrop-cover" src="${esc(covSrc)}" loading="lazy" onerror="this.style.display='none'">`
       : `<div class="sdrop-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
-    const altBadge = snapSrc === 'alt' ? `<span class="alt-source-badge">ALT</span>` : '';
     return `<div class="sdrop-item" onclick="openPanelFromDropdown('${esc(r.id)}','${snapSrc}')">
       ${img}
       <div class="sdrop-info">
-        <div class="sdrop-title">${esc(r.title)}${altBadge}</div>
+        <div class="sdrop-title">${esc(r.title)}</div>
         <div class="sdrop-meta"><button class="sdrop-pill ${pillCls}" style="border:none;cursor:pointer;font-family:inherit" onclick="event.stopPropagation();closeDropdown();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>${r.year ? ' · ' + r.year : ''}${r.lastChapter ? ` · <span style="color:var(--org);font-weight:700">Ch.${esc(r.lastChapter)}</span>` : ''}</div>
         ${r.rating ? `<div class="sdrop-rating">${starsHtml(r.rating)}<span class="star-num">${r.rating.toFixed(1)}</span></div>` : ''}
       </div>
@@ -882,10 +881,9 @@ async function doSearch() {
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
   try {
-    let url = `/api/search?limit=${SEARCH_LIMIT}&offset=0`;
-    if (q) url += `&q=${encodeURIComponent(q)}`;
-    if (activeTagId) url += `&tagId=${activeTagId}`;
-    if (activeStatus) url += `&status=${activeStatus}`;
+    const url = _searchSource === 'alt'
+      ? `/api/sw-search?q=${encodeURIComponent(q)}`
+      : `/api/search?limit=${SEARCH_LIMIT}&offset=0&q=${encodeURIComponent(q)}${activeTagId ? '&tagId=' + activeTagId : ''}${activeStatus ? '&status=' + activeStatus : ''}`;
     const data = await fetch(url).then(r => r.json());
     if (data.error) throw new Error(data.error);
     renderResults(data.results || [], false);
@@ -929,10 +927,10 @@ function resultCardHtml(r) {
     ? `<img class="result-cover" src="${esc(proxyUrl(r.coverUrl))}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=result-cover-ph><svg viewBox=\\'0 0 24 24\\'><path d=\\'M4 19.5A2.5 2.5 0 0 1 6.5 17H20\\'/><path d=\\'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\\'/></svg></div>'">`
     : `<div class="result-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
   _previewCache[r.id] = r;
-  const tagBtns = r.tags.slice(0, 2).map(t =>
+  const tagBtns = (r.tags || []).slice(0, 2).map(t =>
     `<button class="tag-pill" onclick="event.stopPropagation();selectGenreAndSearch('${esc(t.id)}')">${esc(t.name)}</button>`
   ).join('');
-  return `<div class="result-card" onclick="openPanel('${esc(r.id)}')">
+  return `<div class="result-card" onclick="openPanel('${esc(r.id)}','${_searchSource}')">
     <div class="result-cover-wrap">
       ${imgHtml}
       <button class="status-pill ${pillCls}" onclick="event.stopPropagation();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>
@@ -1115,7 +1113,7 @@ let _homeCache = null;
 function getHomeCache() {
   if (_homeCache && Date.now() - _homeCache.ts < HOME_CACHE_TTL) return _homeCache.data;
   try {
-    const raw = sessionStorage.getItem('homeCache');
+    const raw = sessionStorage.getItem('homeCache_sw2');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Date.now() - parsed.ts < HOME_CACHE_TTL) { _homeCache = parsed; return parsed.data; }
@@ -1126,7 +1124,7 @@ function getHomeCache() {
 
 function setHomeCache(data) {
   _homeCache = { data, ts: Date.now() };
-  try { sessionStorage.setItem('homeCache', JSON.stringify(_homeCache)); } catch (_) {}
+  try { sessionStorage.setItem('homeCache_sw2', JSON.stringify(_homeCache)); } catch (_) {}
 }
 
 function renderHomeData(data, wrap) {

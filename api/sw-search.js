@@ -26,6 +26,8 @@ module.exports = async (req, res) => {
         status: (m.status || 'ongoing').toLowerCase(),
         year: null,
         rating: null,
+        tags: [],
+        lastChapter: null,
         source: 'alt'
       };
     });
