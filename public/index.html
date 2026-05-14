@@ -329,7 +329,17 @@ button.status-pill:hover{opacity:.75}
 .sdrop-title{font-size:13px;font-weight:700;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sdrop-meta{font-size:10px;color:var(--sub);margin-top:3px;display:flex;align-items:center;gap:5px}
 .sdrop-pill{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
-.sdrop-loading{display:flex;justify-content:center;padding:18px}
+.sdrop-loading{display:flex;flex-direction:column;gap:4px;padding:8px 12px}
+.sdrop-skel{display:flex;gap:10px;align-items:center;padding:8px 4px;border-radius:6px;overflow:hidden;position:relative}
+.sdrop-skel-cover{width:38px;height:54px;border-radius:4px;background:linear-gradient(90deg,var(--surf) 0%,var(--border) 50%,var(--surf) 100%);background-size:200% 100%;animation:skelShim 1.4s linear infinite;flex-shrink:0}
+.sdrop-skel-lines{flex:1;display:flex;flex-direction:column;gap:6px}
+.sdrop-skel-line{height:10px;border-radius:3px;background:linear-gradient(90deg,var(--surf) 0%,var(--border) 50%,var(--surf) 100%);background-size:200% 100%;animation:skelShim 1.4s linear infinite}
+.sdrop-skel-line.short{width:60%}
+.sdrop-skel-line.tiny{width:35%;height:8px}
+@keyframes skelShim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sdrop-search-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--sub);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px 2px;display:flex;align-items:center;gap:6px}
+.sdrop-search-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--org);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
 .sdrop-empty{text-align:center;padding:18px;font-size:13px;color:var(--sub);font-weight:600}
 
 /* ─── PREDICTIVE SEARCH RESULT DESCRIPTION ─── */
@@ -710,6 +720,23 @@ function selectStatusSearch(status) {
   doSearch();
 }
 
+function showSearchSkeleton(q) {
+  const dd = document.getElementById('search-dropdown');
+  if (!dd) return;
+  const skelRow = `<div class="sdrop-skel">
+    <div class="sdrop-skel-cover"></div>
+    <div class="sdrop-skel-lines">
+      <div class="sdrop-skel-line"></div>
+      <div class="sdrop-skel-line short"></div>
+      <div class="sdrop-skel-line tiny"></div>
+    </div>
+  </div>`;
+  dd.innerHTML = `<div class="sdrop-search-label">Searching "${esc(q)}"</div>
+    <div class="sdrop-loading">${skelRow.repeat(4)}</div>`;
+  positionDropdown();
+  dd.classList.add('open');
+}
+
 function scheduleSearch() {
   const q = document.getElementById('search-input').value.trim();
   clearTimeout(_searchTimer);
@@ -719,7 +746,11 @@ function scheduleSearch() {
     if (_currentRoute === 'search') navigate('home');
     return;
   }
-  if (q.length) _searchTimer = setTimeout(doPredict, 50); // 50ms debounce for snappy feel
+  if (q.length) {
+    // Show skeleton instantly so user sees immediate response, then debounce the actual fetch
+    if (q.length >= 2) showSearchSkeleton(q);
+    _searchTimer = setTimeout(doPredict, 120);
+  }
 }
 
 function clearSearchResults() {
@@ -878,7 +909,16 @@ async function doPredict() {
     }
   }
   if (!showed) {
-    dd.innerHTML = '<div class="sdrop-loading"><div class="spin" style="width:18px;height:18px;border-width:2px"></div></div>';
+    const skelRow = `<div class="sdrop-skel">
+      <div class="sdrop-skel-cover"></div>
+      <div class="sdrop-skel-lines">
+        <div class="sdrop-skel-line"></div>
+        <div class="sdrop-skel-line short"></div>
+        <div class="sdrop-skel-line tiny"></div>
+      </div>
+    </div>`;
+    dd.innerHTML = `<div class="sdrop-search-label">Searching "${esc(q)}"</div>
+      <div class="sdrop-loading">${skelRow.repeat(4)}</div>`;
     positionDropdown();
     dd.classList.add('open');
   }
@@ -1724,18 +1764,44 @@ function showPage(idx) {
 
 // ─── Vertical (webtoon/manhua) reader ─────────────────────────────────
 let _vertObserver = null;
-function showVertical(startIdx) {
+async function showVertical(startIdx) {
   const { pages, pagesFallback } = readerState;
   const area = document.getElementById('reader-area');
   const wrap = document.getElementById('reader-img-wrap');
   const total = pages.length;
 
-  // Build stacked DOM
+  // Pre-warm ALL images with parallel fetch before rendering — guarantees smooth scroll
+  // Show loading state with progress
+  wrap.innerHTML = `<div class="reader-page-loading" id="vert-loader">
+    <div class="reader-spin"></div>
+    <div>Preparing chapter <span id="vert-prog">0</span>/${total}</div>
+  </div>`;
+
+  let loaded = 0;
+  const progEl = () => document.getElementById('vert-prog');
+  const preloadOne = (url) => new Promise(resolve => {
+    if (!url) return resolve();
+    const img = new Image();
+    img.decoding = 'async';
+    const done = () => { loaded++; if (progEl()) progEl().textContent = loaded; resolve(); };
+    img.onload = done;
+    img.onerror = done;
+    img.src = url;
+  });
+
+  // Warm first 6 pages with priority, then everything else in parallel
+  const proxied = pages.map(p => proxyUrl(p));
+  await Promise.all(proxied.slice(0, 6).map(preloadOne));
+  // Fire-and-forget the rest while we render
+  proxied.slice(6).forEach(preloadOne);
+
+  // Build stacked DOM — eager load (cache should serve instantly now)
   const pagesHtml = pages.map((p, i) => {
     const url = esc(proxyUrl(p));
     const fb = pagesFallback?.[i] ? esc(proxyUrl(pagesFallback[i])) : '';
+    const eager = i < 8 ? 'eager' : 'lazy'; // first 8 eager, rest lazy (browser cache will serve)
     return `<div class="reader-vpage" data-idx="${i}">
-      <img loading="lazy" decoding="async" src="${url}" alt="" ${fb ? `onerror="if(this.dataset.fb){return}this.dataset.fb=1;this.src='${fb}'"` : ''}>
+      <img loading="${eager}" decoding="async" src="${url}" alt="" ${fb ? `onerror="if(this.dataset.fb){return}this.dataset.fb=1;this.src='${fb}'"` : ''}>
       <span class="reader-vpage-num">${String(i+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</span>
     </div>`;
   }).join('');
