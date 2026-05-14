@@ -14,16 +14,21 @@ module.exports = async (req, res) => {
     if (!r.ok) throw new Error(`Suwayomi search ${r.status}`);
     const data = await r.json();
 
-    const results = (data.mangaList || []).map(m => ({
-      id: String(m.id),          // internal Suwayomi DB ID
-      title: m.title || 'Untitled',
-      coverUrl: m.thumbnailUrl || null,
-      coverReferer: null,
-      status: (m.status || 'ongoing').toLowerCase(),
-      year: null,
-      rating: null,
-      source: 'alt'
-    }));
+    const results = (data.mangaList || []).map(m => {
+      const thumb = m.thumbnailUrl
+        ? (m.thumbnailUrl.startsWith('http') ? m.thumbnailUrl : `${SUWAYOMI}${m.thumbnailUrl}`)
+        : null;
+      return {
+        id: String(m.id),
+        title: m.title || 'Untitled',
+        coverUrl: thumb,
+        coverReferer: null,
+        status: (m.status || 'ongoing').toLowerCase(),
+        year: null,
+        rating: null,
+        source: 'alt'
+      };
+    });
 
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     res.json({ results });
