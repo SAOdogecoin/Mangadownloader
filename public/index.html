@@ -276,7 +276,11 @@ button.status-pill:hover{opacity:.75}
 .reader-area.vertical .reader-vpage-num{position:absolute;top:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.06em;pointer-events:none;mix-blend-mode:difference}
 .reader-area.vertical .reader-vend{padding:48px 20px 80px;text-align:center;color:rgba(255,255,255,.55);font-family:'Fraunces',serif;font-size:18px;font-weight:500;letter-spacing:-.02em}
 .reader-area.vertical .reader-vend button{margin-top:14px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;cursor:pointer}
-.reader-area.vertical .tap-zone{display:none}
+/* Hide tap zones + next-ch button overlay in vertical mode (they block scroll) */
+.reader-overlay.vmode .tap-zone{display:none}
+.reader-overlay.vmode .next-ch-btn{display:none !important}
+/* Mobile momentum scroll */
+.reader-area.vertical{-webkit-overflow-scrolling:touch;touch-action:pan-y;scroll-behavior:auto}
 .reader-page-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600}
 .reader-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--org);border-radius:50%;animation:rspin .75s linear infinite}
 .reader-error{color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:13px}
@@ -1680,8 +1684,9 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   readerState.chapters = currentMangaData?.chapters || [];
   readerState.chapterListIdx = readerState.chapters.findIndex(c => c.id === chapterId);
 
-  // Toggle vertical class on reader-area
+  // Toggle vertical class on reader-area AND overlay (tap-zones are overlay children)
   document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
+  document.getElementById('reader-overlay').classList.toggle('vmode', readerState.isVertical);
 
   // Show overlay
   document.getElementById('reader-overlay').classList.remove('hidden');
@@ -1876,6 +1881,12 @@ async function showVertical(startIdx) {
   const pct = total > 1 ? (startIdx / (total - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
   updateNextChBtn();
+
+  // Tap anywhere to toggle top bar in vertical mode
+  area.onclick = (e) => {
+    if (e.target.closest('button')) return;
+    toggleTopBar();
+  };
 }
 
 async function saveProgress(mangaId, chapterId, chapterNum, pageIdx) {
@@ -1922,8 +1933,11 @@ async function goNextChapter() {
 
 function closeReader() {
   document.getElementById('reader-overlay').classList.add('hidden');
+  document.getElementById('reader-overlay').classList.remove('vmode');
   document.getElementById('reader-img-wrap').innerHTML = '';
-  document.getElementById('reader-area').classList.remove('vertical');
+  const area = document.getElementById('reader-area');
+  area.classList.remove('vertical');
+  area.onclick = null;
   if (_vertObserver) { _vertObserver.disconnect(); _vertObserver = null; }
   clearTimeout(readerState.topBarTimer);
   document.getElementById('next-ch-btn').style.display = 'none';
