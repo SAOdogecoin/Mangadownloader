@@ -7,6 +7,10 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23d2ff30'/><text y='72' x='50' text-anchor='middle' font-size='60' fill='%230d1117'>📚</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="dns-prefetch" href="https://uploads.mangadex.org"/>
+<link rel="dns-prefetch" href="https://lovely-quietude-javatooloptions-xmx512m.up.railway.app"/>
+<!-- Kick off home API fetch ASAP, before JS even parses -->
+<link rel="preload" as="fetch" href="/api/sw-home" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -144,6 +148,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .disc-card.lead{width:148px}
 .disc-card.lead .disc-cover-wrap{width:148px;border-radius:4px}
 .disc-card.lead .disc-title{font-size:13px;margin-top:10px;-webkit-line-clamp:2}
+/* Skeleton state for home cards */
+.disc-card.skel{pointer-events:none}
+.skel-shim{background:linear-gradient(90deg,var(--surf) 0%,rgba(255,255,255,.04) 50%,var(--surf) 100%);background-size:200% 100%;animation:skelShim 1.6s linear infinite;border-radius:3px}
+.disc-title-skel{margin-top:8px;height:11px;width:80%;border-radius:3px}
+.disc-card.skel:nth-child(2) .disc-title-skel{width:65%}
+.disc-card.skel:nth-child(3) .disc-title-skel{width:90%}
+.disc-card.skel:nth-child(4) .disc-title-skel{width:55%}
+.disc-card.skel:nth-child(5) .disc-title-skel{width:75%}
+.skel-section .home-section-label,.skel-section .home-section-kicker{opacity:.5}
 /* Fade-in stagger on first paint */
 @keyframes discIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .home-section{animation:discIn .55s cubic-bezier(.2,.8,.2,1) both}
@@ -1192,24 +1205,29 @@ function renderDiscSection(label, items, container) {
   container.appendChild(sec);
 }
 
-const HOME_CACHE_TTL = 20 * 60 * 1000; // 20 min
+const HOME_CACHE_TTL = 60 * 60 * 1000; // 60 min — generous, background refresh keeps it warm
 let _homeCache = null;
 
 function getHomeCache() {
   if (_homeCache && Date.now() - _homeCache.ts < HOME_CACHE_TTL) return _homeCache.data;
-  try {
-    const raw = sessionStorage.getItem('homeCache_sw2');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Date.now() - parsed.ts < HOME_CACHE_TTL) { _homeCache = parsed; return parsed.data; }
-    }
-  } catch (_) {}
+  // Try sessionStorage first (fast), then localStorage (survives tabs/sessions)
+  for (const store of [sessionStorage, localStorage]) {
+    try {
+      const raw = store.getItem('homeCache_sw2');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.ts < HOME_CACHE_TTL) { _homeCache = parsed; return parsed.data; }
+      }
+    } catch (_) {}
+  }
   return null;
 }
 
 function setHomeCache(data) {
   _homeCache = { data, ts: Date.now() };
-  try { sessionStorage.setItem('homeCache_sw2', JSON.stringify(_homeCache)); } catch (_) {}
+  const serialized = JSON.stringify(_homeCache);
+  try { sessionStorage.setItem('homeCache_sw2', serialized); } catch (_) {}
+  try { localStorage.setItem('homeCache_sw2', serialized); } catch (_) {}
 }
 
 function renderHomeData(data, wrap) {
@@ -1232,6 +1250,22 @@ function renderHomeData(data, wrap) {
   renderDiscSection('Top Rated', data.topRated, wrap);
 }
 
+function renderHomeSkeleton(wrap) {
+  const skelCards = Array.from({length: 8}, () =>
+    `<div class="disc-card skel"><div class="disc-cover-wrap skel-shim"></div><div class="disc-title-skel skel-shim"></div></div>`
+  ).join('');
+  const skelSection = (num, label) => `<div class="home-section skel-section">
+    <div class="home-section-head">
+      <div>
+        <div class="home-section-kicker">${num} / Section</div>
+        <div class="home-section-label">${label}</div>
+      </div>
+    </div>
+    <div class="disc-strip">${skelCards}</div>
+  </div>`;
+  wrap.innerHTML = skelSection('01','Trending Now') + skelSection('02','Latest Updates');
+}
+
 async function loadDiscoverySections({ forceRefresh = false } = {}) {
   const wrap = document.getElementById('discover-wrap');
   if (!wrap) return;
@@ -1242,11 +1276,15 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
     fetch('/api/sw-home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
     return;
   }
-  wrap.innerHTML = `<div class="disc-loading"><div class="spin" style="width:16px;height:16px;border-width:2px"></div> Loading…</div>`;
+  renderHomeSkeleton(wrap);
   try {
     const data = await fetch('/api/sw-home').then(r => r.json());
     setHomeCache(data);
     renderHomeData(data, wrap);
+    // Preload first 6 covers from data for snappy initial paint
+    [...(data.trending||[]), ...(data.updated||[])].slice(0,6).forEach(m => {
+      if (m.coverUrl) { const img = new Image(); img.src = proxyUrl(m.coverUrl, m.coverReferer); }
+    });
   } catch (e) {
     wrap.innerHTML = '';
   }

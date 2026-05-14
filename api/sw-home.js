@@ -66,7 +66,9 @@ module.exports = async (req, res) => {
   const popular = mergeUnique(popularLists).slice(0, 24);
   const latest = mergeUnique(latestLists).slice(0, 24);
 
-  res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+  // Edge cache 1hr, stale-while-revalidate 6hr — homepage is rarely time-sensitive
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=21600, max-age=600');
+  res.setHeader('CDN-Cache-Control', 'public, s-maxage=3600');
   res.json({
     trending: popular.slice(0, 12),
     updated: latest.slice(0, 12),
