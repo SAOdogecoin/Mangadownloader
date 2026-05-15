@@ -1,7 +1,7 @@
-// Bato.to API — forwards to Cloudflare Worker if BATO_WORKER_URL env var set
-// (CF→CF route bypasses Cloudflare bot blocks that hit Vercel/Netlify directly).
-// Falls back to direct fetch if no worker URL configured.
-const BATO_WORKER_URL = process.env.BATO_WORKER_URL || '';
+// Cloudflare Worker — fronts Bato.to API. Runs on Cloudflare network (CF→CF often whitelisted).
+// Deploy via Cloudflare dashboard: Workers & Pages → Create Worker → paste this code → Deploy.
+// Free tier: 100k req/day.
+
 const BATO_BASE = 'https://bato.to';
 const MIRRORS = ['https://bato.to', 'https://mto.to', 'https://wto.to', 'https://hto.to'];
 
@@ -13,11 +13,17 @@ const COMMON_HEADERS = {
   'Referer': BATO_BASE + '/'
 };
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type'
+};
+
 async function batoFetch(path, opts = {}) {
   let lastErr;
   for (const base of MIRRORS) {
     try {
-      const r = await fetch(base + path, { ...opts, headers: { ...COMMON_HEADERS, ...(opts.headers||{}) } });
+      const r = await fetch(base + path, { ...opts, headers: { ...COMMON_HEADERS, ...(opts.headers || {}) } });
       if (r.ok) return r;
       lastErr = new Error(`HTTP ${r.status}`);
     } catch (e) { lastErr = e; }
@@ -115,43 +121,45 @@ async function actionPages(rawId) {
   return { pages: urls, pagesFallback: [], total: urls.length };
 }
 
-module.exports = async (req, res) => {
-  const { action, q, id } = req.query;
+// ─── Cloudflare Worker entry ──────────────────────────────────────
+export default {
+  async fetch(request) {
+    if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
-  // If Cloudflare Worker URL configured, forward request there (CF→CF route)
-  if (BATO_WORKER_URL) {
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
+    const q = url.searchParams.get('q');
+    const id = url.searchParams.get('id');
+
     try {
-      const qs = new URLSearchParams(req.query).toString();
-      const r = await fetch(`${BATO_WORKER_URL}?${qs}`);
-      const data = await r.json();
-      res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1800');
-      res.status(r.status).json(data);
-      return;
+      let out;
+      if (action === 'home') out = await actionHome();
+      else if (action === 'search') {
+        if (!q) throw new Error('Missing q');
+        out = await actionSearch(q);
+      }
+      else if (action === 'manga') {
+        if (!id) throw new Error('Missing id');
+        out = await actionManga(id);
+      }
+      else if (action === 'pages') {
+        if (!id) throw new Error('Missing id');
+        out = await actionPages(id);
+      }
+      else throw new Error('Invalid action');
+
+      return new Response(JSON.stringify(out), {
+        headers: {
+          'content-type': 'application/json',
+          'cache-control': 's-maxage=600, stale-while-revalidate=1800',
+          ...CORS
+        }
+      });
     } catch (e) {
-      console.error('[bato] worker fetch failed', e.message);
-      // fall through to direct attempt
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 502,
+        headers: { 'content-type': 'application/json', ...CORS }
+      });
     }
-  }
-
-  // Direct fetch (likely blocked by Cloudflare if running on Vercel)
-  try {
-    let out;
-    if (action === 'home') out = await actionHome();
-    else if (action === 'search') {
-      if (!q) return res.status(400).json({ error: 'Missing q' });
-      out = await actionSearch(q);
-    } else if (action === 'manga') {
-      if (!id) return res.status(400).json({ error: 'Missing id' });
-      out = await actionManga(id);
-    } else if (action === 'pages') {
-      if (!id) return res.status(400).json({ error: 'Missing id' });
-      out = await actionPages(id);
-    } else return res.status(400).json({ error: 'Invalid action' });
-
-    res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1800');
-    res.json(out);
-  } catch (e) {
-    console.error('[bato]', action, e.message);
-    res.status(502).json({ error: e.message });
   }
 };

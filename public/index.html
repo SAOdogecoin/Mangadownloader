@@ -10,7 +10,7 @@
 <link rel="dns-prefetch" href="https://uploads.mangadex.org"/>
 <link rel="dns-prefetch" href="https://lovely-quietude-javatooloptions-xmx512m.up.railway.app"/>
 <!-- Kick off home API fetch ASAP, before JS even parses -->
-<link rel="preload" as="fetch" href="/api/bato?action=home" crossorigin/>
+<link rel="preload" as="fetch" href="/api/home" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -804,8 +804,8 @@ let _predictCtrl = null;
 const _previewCache = {};
 const _dropCache = {}; // query+tag → results for instant re-render
 const SEARCH_LIMIT = 20;
-let _searchSource = 'bato'; // Bato.to primary
-let _panelSource = 'bato';
+let _searchSource = 'mdex'; // MangaDex primary
+let _panelSource = 'mdex';
 
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
@@ -1058,9 +1058,9 @@ async function doPredict() {
   try {
     let url;
     if (_searchSource === 'alt') {
-      url = `/api/bato?action=search&q=${encodeURIComponent(q)}`;
+      url = `/api/search?q=${encodeURIComponent(q)}&limit=8`;
     } else {
-      url = `/api/bato?action=search&q=${encodeURIComponent(q)}`;
+      url = `/api/search?q=${encodeURIComponent(q)}&limit=8`;
       if (activeTagId) url += `&tagId=${activeTagId}`;
     }
     const resp = await fetch(url, { signal });
@@ -1083,7 +1083,7 @@ async function loadNextSource(q, nextIdx) {
   const footer = document.getElementById('sdrop-more-btn');
   if (footer) footer.textContent = 'Searching…';
   try {
-    const data = await fetch(`/api/bato?action=search&q=${encodeURIComponent(q)}`).then(r => r.json());
+    const data = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`).then(r => r.json());
     if (data.error) throw new Error(data.error);
     const newItems = data.results || [];
     newItems.forEach(r => { _previewCache[r.id] = r; });
@@ -1133,7 +1133,7 @@ async function doSearch() {
   try {
     const url = _searchSource === 'mdex'
       ? `/api/search?limit=${SEARCH_LIMIT}&offset=0&q=${encodeURIComponent(q)}${activeTagId ? '&tagId=' + activeTagId : ''}${activeStatus ? '&status=' + activeStatus : ''}`
-      : `/api/bato?action=search&q=${encodeURIComponent(q)}`;
+      : `/api/search?q=${encodeURIComponent(q)}&limit=8`;
     const data = await fetch(url).then(r => r.json());
     if (data.error) throw new Error(data.error);
     renderResults(data.results || [], false);
@@ -1320,7 +1320,7 @@ function discCardHtml(m) {
     ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl, m.coverReferer))}" alt="" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="disc-ph">${SVG_BOOK}</div>`;
   const stars = m.rating ? starsHtml(m.rating) : '';
-  return `<div class="disc-card" data-id="${esc(m.id)}" data-source="${esc(m.source || 'bato')}">
+  return `<div class="disc-card" data-id="${esc(m.id)}" data-source="${esc(m.source || 'mdex')}">
     <div class="disc-cover-wrap">${img}</div>
     <div class="disc-title">${esc(m.title)}</div>
     ${m.rating ? `<div class="disc-rating-row">${stars}<span class="disc-rating-num">${m.rating.toFixed(1)}</span></div>` : ''}
@@ -1389,9 +1389,9 @@ function renderHero(items, container) {
   // Ensure src is set (buildHeroSlide does this for idx=0)
   wrap.addEventListener('click', e => {
     if (e.target.closest('.hero-read')) return;
-    openPanel(item.id, item.source || 'bato');
+    openPanel(item.id, item.source || 'mdex');
   });
-  prefetchManga(item.id, item.source || 'bato');
+  prefetchManga(item.id, item.source || 'mdex');
 }
 
 const HOME_CACHE_TTL = 60 * 60 * 1000; // 60 min — generous, background refresh keeps it warm
@@ -1462,12 +1462,12 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
   if (cached && !forceRefresh) {
     renderHomeData(cached, wrap);
     // silent background refresh
-    fetch('/api/bato?action=home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
+    fetch('/api/home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
     return;
   }
   renderHomeSkeleton(wrap);
   try {
-    const data = await fetch('/api/bato?action=home').then(r => r.json());
+    const data = await fetch('/api/home').then(r => r.json());
     setHomeCache(data);
     renderHomeData(data, wrap);
     // Preload first 6 covers from data for snappy initial paint
