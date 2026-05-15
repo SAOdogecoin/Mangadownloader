@@ -1682,13 +1682,16 @@ function closePanel() {
 
 // Find current manga on OTHER sources — searches MangaPlus + Bato in parallel
 async function findOnOtherSources() {
-  if (!currentMangaData?.manga) return;
+  console.log('[findOnOtherSources] clicked', { currentMangaData: !!currentMangaData });
+  if (!currentMangaData?.manga) { showToast('Wait for manga to finish loading first'); return; }
   const title = currentMangaData.manga.title;
   const body = document.getElementById('panel-body');
   const existing = body.innerHTML;
   body.innerHTML = existing + `<div id="other-src-results" style="border-top:1px solid var(--border);margin-top:8px">
-    <div style="padding:10px 16px;font-size:13px;color:var(--sub);font-weight:600">Searching other sources for "${esc(title)}"…</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--sub);font-weight:600">Searching other sources for "${esc(title)}"…</div>
   </div>`;
+  // Scroll the new section into view so user sees it appear
+  setTimeout(() => document.getElementById('other-src-results')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
 
   const sources = [
     { name: 'MangaPlus (official)', url: `/api/mangaplus?action=search&q=${encodeURIComponent(title)}`, srcKey: 'mp', sub: 'Shueisha official' },
