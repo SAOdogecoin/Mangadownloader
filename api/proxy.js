@@ -26,15 +26,9 @@ module.exports = async (req, res) => {
     'i.imgur.com',
     '.railway.app',      // Suwayomi on Railway
     '.up.railway.app',
-    'bato.to',           // Bato.to + mirrors
-    'mto.to',
-    'wto.to',
-    'hto.to',
-    '.bato.to',
-    '.mto.to',
-    '.bcdn.batocdn.org',
-    '.batocdn.org',
-    '.batocdn.com',
+    '.shueisha.co.jp',   // MangaPlus
+    'mangaplus.shueisha.co.jp',
+    '.tokyo-cdn.com',
   ];
 
   const isAllowed = allowedExact.some(d => hostname === d || hostname.endsWith('.' + d))
@@ -50,7 +44,7 @@ module.exports = async (req, res) => {
     if (hostname.includes('mangadex')) ref = 'https://mangadex.org/';
     else if (hostname.includes('manganato') || hostname.includes('mangakakalot') || hostname.includes('mkklcdn')) ref = 'https://readmanganato.com/';
     else if (hostname.includes('comick')) ref = 'https://comick.io/';
-    else if (hostname.includes('bato') || hostname.includes('batocdn') || hostname === 'mto.to' || hostname === 'wto.to' || hostname === 'hto.to') ref = 'https://bato.to/';
+    else if (hostname.includes('shueisha') || hostname.includes('tokyo-cdn')) ref = 'https://mangaplus.shueisha.co.jp/';
     else ref = 'https://mangadex.org/';
   }
 
