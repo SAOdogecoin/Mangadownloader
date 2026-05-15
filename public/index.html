@@ -1378,80 +1378,19 @@ function buildHeroSlide(item, idx) {
 }
 
 function renderHero(items, container) {
-  // Stop any running carousel
-  if (_heroTimer) { clearInterval(_heroTimer); _heroTimer = null; }
   if (!items?.length) return;
-  const pick = items.filter(m => m.coverUrl).slice(0, 5);
-  if (!pick.length) return;
-  _heroLen = pick.length;
-  _heroIdx = 0;
+  const item = items.find(m => m.coverUrl) || items[0];
+  if (!item) return;
   const wrap = document.createElement('div');
   wrap.className = 'hero-card';
-  wrap.innerHTML = pick.map(buildHeroSlide).join('') +
-    `<div class="hero-dots">${pick.map((_,i)=>`<button class="hero-dot${i===0?' active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`).join('')}</div>`;
+  wrap.innerHTML = buildHeroSlide(item, 0);
   container.appendChild(wrap);
-
-  const slides = wrap.querySelectorAll('.hero-slide');
-  const dots = wrap.querySelectorAll('.hero-dot');
-
-  function showSlide(i) {
-    _heroIdx = (i + _heroLen) % _heroLen;
-    slides.forEach((s, k) => s.classList.toggle('active', k === _heroIdx));
-    dots.forEach((d, k) => d.classList.toggle('active', k === _heroIdx));
-    // Lazy-mount cover src on activation
-    const slide = slides[_heroIdx];
-    const img = slide?.querySelector('img[data-src]');
-    if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
-    // Also preload the next slide so it's ready before transition
-    const next = slides[(_heroIdx + 1) % _heroLen]?.querySelector('img[data-src]');
-    if (next) { next.src = next.dataset.src; next.removeAttribute('data-src'); }
-  }
-  function startAuto() {
-    if (_heroTimer) clearInterval(_heroTimer);
-    _heroTimer = setInterval(() => showSlide(_heroIdx + 1), 5000);
-  }
-  function stopAuto() { if (_heroTimer) { clearInterval(_heroTimer); _heroTimer = null; } }
-
-  // Dot click → jump
-  dots.forEach(d => d.addEventListener('click', e => {
-    e.stopPropagation();
-    showSlide(parseInt(d.dataset.i, 10));
-    startAuto();
-  }));
-
-  // Click slide → open panel
+  // Ensure src is set (buildHeroSlide does this for idx=0)
   wrap.addEventListener('click', e => {
-    if (e.target.closest('.hero-dot') || e.target.closest('.hero-read')) return;
-    const active = wrap.querySelector('.hero-slide.active');
-    if (!active) return;
-    openPanel(active.dataset.id, active.dataset.source || 'mdex');
+    if (e.target.closest('.hero-read')) return;
+    openPanel(item.id, item.source || 'mdex');
   });
-
-  // Pause auto on hover/touch, resume on leave
-  wrap.addEventListener('mouseenter', stopAuto);
-  wrap.addEventListener('mouseleave', startAuto);
-  wrap.addEventListener('touchstart', stopAuto, { passive: true });
-
-  // Swipe nav
-  let touchX = 0;
-  wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
-  wrap.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 50) { showSlide(_heroIdx + (dx < 0 ? 1 : -1)); startAuto(); }
-    else startAuto();
-  }, { passive: true });
-
-  // Prefetch each manga's details + force-warm all cover images
-  pick.forEach(p => {
-    prefetchManga(p.id, p.source || 'mdex');
-    if (p.coverUrl) {
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = proxyUrl(p.coverUrl, p.coverReferer);
-    }
-  });
-
-  startAuto();
+  prefetchManga(item.id, item.source || 'mdex');
 }
 
 const HOME_CACHE_TTL = 60 * 60 * 1000; // 60 min — generous, background refresh keeps it warm
@@ -1493,12 +1432,11 @@ function renderHomeData(data, wrap) {
     </div>`;
     return;
   }
-  // Hero carousel — up to 5 trending titles
+  // Static hero — top trending with a cover
   const trending = data.trending || [];
+  const featured = trending.find(m => m.coverUrl) || trending[0];
   renderHero(trending, wrap);
-  // Trending list excludes items shown in carousel
-  const featuredIds = new Set(trending.slice(0, 5).map(m => m.id));
-  const trendingRest = trending.filter(m => !featuredIds.has(m.id));
+  const trendingRest = trending.filter(m => m.id !== featured?.id);
   renderDiscSection('Latest Updates', data.updated, wrap);
   renderDiscSection('New Releases', data.newManga, wrap);
   renderDiscSection('Top Rated', data.topRated, wrap);
