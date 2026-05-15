@@ -29,6 +29,9 @@ module.exports = async (req, res) => {
     '.shueisha.co.jp',   // MangaPlus
     'mangaplus.shueisha.co.jp',
     '.tokyo-cdn.com',
+    'bato.to', 'mto.to', 'wto.to', 'hto.to',  // Bato.to + mirrors
+    '.bato.to', '.mto.to',
+    '.batocdn.org', '.batocdn.com', '.bcdn.batocdn.org',
   ];
 
   const isAllowed = allowedExact.some(d => hostname === d || hostname.endsWith('.' + d))
@@ -45,6 +48,7 @@ module.exports = async (req, res) => {
     else if (hostname.includes('manganato') || hostname.includes('mangakakalot') || hostname.includes('mkklcdn')) ref = 'https://readmanganato.com/';
     else if (hostname.includes('comick')) ref = 'https://comick.io/';
     else if (hostname.includes('shueisha') || hostname.includes('tokyo-cdn')) ref = 'https://mangaplus.shueisha.co.jp/';
+    else if (hostname.includes('bato') || hostname.includes('batocdn') || hostname === 'mto.to' || hostname === 'wto.to' || hostname === 'hto.to') ref = 'https://bato.to/';
     else ref = 'https://mangadex.org/';
   }
 

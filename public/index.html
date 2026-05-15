@@ -923,9 +923,10 @@ function prefetchManga(id, source) {
   const key = (source || 'mdex') + ':' + id;
   if (_mangaCache[key]) return;
   _mangaCache[key] = 'pending';
-  const url = source === 'mp'
-    ? `/api/mangaplus?action=manga&id=${encodeURIComponent(id)}`
-    : `/api/manga?id=${id}`;
+  const url =
+    source === 'mp'   ? `/api/mangaplus?action=manga&id=${encodeURIComponent(id)}` :
+    source === 'bato' ? `/api/bato?action=manga&id=${encodeURIComponent(id)}` :
+    `/api/manga?id=${id}`;
   fetch(url).then(r => r.json()).then(data => {
     if (!data.error) _mangaCache[key] = data;
     else delete _mangaCache[key];
@@ -974,9 +975,10 @@ async function openPanel(id, source) {
     if (_mangaCache[cacheKey] && _mangaCache[cacheKey] !== 'pending') {
       data = _mangaCache[cacheKey];
     } else {
-      const apiUrl = source === 'mp'
-        ? `/api/mangaplus?action=manga&id=${encodeURIComponent(id)}`
-        : `/api/manga?id=${id}`;
+      const apiUrl =
+        source === 'mp'   ? `/api/mangaplus?action=manga&id=${encodeURIComponent(id)}` :
+        source === 'bato' ? `/api/bato?action=manga&id=${encodeURIComponent(id)}` :
+        `/api/manga?id=${id}`;
       data = await fetch(apiUrl).then(r => r.json());
       if (!data.error) _mangaCache[cacheKey] = data;
     }
@@ -1676,42 +1678,52 @@ function closePanel() {
   }, { passive: true });
 })();
 
-// Find current manga on OTHER sources — searches title on MangaPlus (Shueisha official)
+// Find current manga on OTHER sources — searches MangaPlus + Bato in parallel
 async function findOnOtherSources() {
   if (!currentMangaData?.manga) return;
   const title = currentMangaData.manga.title;
   const body = document.getElementById('panel-body');
   const existing = body.innerHTML;
   body.innerHTML = existing + `<div id="other-src-results" style="border-top:1px solid var(--border);margin-top:8px">
-    <div class="sdrop-search-label">Searching MangaPlus for "${esc(title)}"…</div>
+    <div style="padding:10px 16px;font-size:13px;color:var(--sub);font-weight:600">Searching other sources for "${esc(title)}"…</div>
   </div>`;
 
-  try {
-    const d = await fetch(`/api/mangaplus?action=search&q=${encodeURIComponent(title)}`).then(r => r.json());
-    const container = document.getElementById('other-src-results');
-    if (!container) return;
+  const sources = [
+    { name: 'MangaPlus (official)', url: `/api/mangaplus?action=search&q=${encodeURIComponent(title)}`, srcKey: 'mp', sub: 'Shueisha official' },
+    { name: 'Bato.to', url: `/api/bato?action=search&q=${encodeURIComponent(title)}`, srcKey: 'bato', sub: 'Community scans' },
+  ];
+
+  const results = await Promise.all(sources.map(s =>
+    fetch(s.url).then(r => r.json()).catch(e => ({ error: e.message }))
+  ));
+
+  const container = document.getElementById('other-src-results');
+  if (!container) return;
+  let html = '';
+  let anyHit = false;
+  results.forEach((d, i) => {
+    const src = sources[i];
     if (d.error || !d.results?.length) {
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No matches on MangaPlus (Shueisha titles only).</div>';
+      html += `<div style="padding:10px 16px;font-size:11px;color:var(--sub)">${esc(src.name)}: ${d.error ? 'unavailable' : 'no match'}</div>`;
       return;
     }
+    anyHit = true;
     d.results.forEach(r => { _previewCache[r.id] = r; });
-    let html = '<div style="padding:8px 16px 4px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:500;color:var(--sub);letter-spacing:.1em;text-transform:uppercase">MangaPlus (official)</div>';
-    html += d.results.slice(0, 5).map(r => {
+    html += `<div style="padding:10px 16px 4px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--fg)">${esc(src.name)}</div>`;
+    html += d.results.slice(0, 4).map(r => {
       const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
       const img = covSrc ? `<img style="width:42px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" src="${esc(covSrc)}" onerror="this.style.display='none'">` : '';
-      return `<div onclick="closePanel();openPanel('${esc(r.id)}','mp')" style="display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border)">
+      return `<div onclick="closePanel();openPanel('${esc(r.id)}','${src.srcKey}')" style="display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border)">
         ${img}
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--fg)">${esc(r.title)}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">Official translation</div>
+          <div style="font-size:13px;font-weight:600;color:var(--fg)">${esc(r.title)}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px">${esc(src.sub)}</div>
         </div>
       </div>`;
     }).join('');
-    container.innerHTML = html;
-  } catch (e) {
-    const container = document.getElementById('other-src-results');
-    if (container) container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--err);font-size:13px">Error: ${esc(e.message)}</div>`;
-  }
+  });
+  if (!anyHit && !html) html = '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No matches anywhere.</div>';
+  container.innerHTML = html;
 }
 
 // Search alt source by title, show results inline in panel body
@@ -2020,8 +2032,10 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
 
   // Fetch pages — detect alt source by chapter ID prefix
   try {
-    const isMp = chapterId.startsWith('mp:');
-    const pagesUrl = isMp ? `/api/mangaplus?action=pages&id=${encodeURIComponent(chapterId)}` : `/api/pages?id=${chapterId}`;
+    const pagesUrl =
+      chapterId.startsWith('mp:')   ? `/api/mangaplus?action=pages&id=${encodeURIComponent(chapterId)}` :
+      chapterId.startsWith('bato:') ? `/api/bato?action=pages&id=${encodeURIComponent(chapterId)}` :
+      `/api/pages?id=${chapterId}`;
     const data = await fetch(pagesUrl).then(r => r.json());
     if (data.error) throw new Error(data.error);
     readerState.pages = data.pages || [];
@@ -2055,8 +2069,10 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
     // Prefetch next chapter's page list (not images, just the manifest) for fast chapter swap
     const nextCh = readerState.chapters[readerState.chapterListIdx + 1];
     if (nextCh) {
-      const isMp = nextCh.id.startsWith('mp:');
-      const url = isMp ? `/api/mangaplus?action=pages&id=${encodeURIComponent(nextCh.id)}` : `/api/pages?id=${nextCh.id}`;
+      const url =
+        nextCh.id.startsWith('mp:')   ? `/api/mangaplus?action=pages&id=${encodeURIComponent(nextCh.id)}` :
+        nextCh.id.startsWith('bato:') ? `/api/bato?action=pages&id=${encodeURIComponent(nextCh.id)}` :
+        `/api/pages?id=${nextCh.id}`;
       setTimeout(() => fetch(url).catch(() => {}), 800);
     }
   } catch (e) {
