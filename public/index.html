@@ -441,13 +441,14 @@ button.status-pill:hover{opacity:.75}
 /* ─── NAV TABS (legacy, hidden) ─── */
 .topbar-r3, .nav-tabs-row{display:none !important}
 
-/* ─── BOTTOM TAB NAV (mobile-first, icon-colored active) ─── */
+/* ─── BOTTOM TAB NAV (filled lime pill when active) ─── */
 .bnav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--border);z-index:50;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0));gap:6px}
-.bnav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 0;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--sub);font-family:'Inter',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:-.005em;transition:color .18s,transform .15s}
+.bnav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 0;background:none;border:none;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--sub);font-family:'Inter',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:-.005em;transition:background .18s,color .18s,transform .15s}
 .bnav-tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:fill .2s,stroke-width .2s}
+.bnav-tab[data-route="home"] svg{width:26px;height:26px}
 .bnav-tab:active{transform:scale(.94)}
-.bnav-tab.active{color:var(--fg);font-weight:700}
-.bnav-tab.active svg{stroke:var(--org-text);fill:none;stroke-width:2.2}
+.bnav-tab.active{background:var(--org);color:#0a0a0a;font-weight:700}
+.bnav-tab.active svg{stroke:#0a0a0a;fill:var(--org);stroke-width:2.2}
 .bnav-tab:hover:not(.active){color:var(--fg)}
 /* App body padding-bottom to clear bottom nav */
 .app-body{padding-bottom:64px}
