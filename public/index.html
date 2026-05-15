@@ -43,10 +43,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* ─── TOPBAR ─── */
 .topbar{background:var(--bg);flex-shrink:0;position:relative}
 .topbar-r1{padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between}
-.app-title{font-family:'Inter',sans-serif;font-size:18px;font-weight:800;color:var(--fg);letter-spacing:-.035em;line-height:1;display:inline-flex;align-items:center;gap:8px;font-feature-settings:'ss01','cv11'}
+.app-title{font-family:'Inter',sans-serif;font-size:21px;font-weight:800;color:var(--fg);letter-spacing:-.04em;line-height:1;display:inline-flex;align-items:center;gap:10px;font-feature-settings:'ss01','cv11'}
 .app-title em{color:var(--fg);font-style:normal;font-weight:800}
-.app-logo{width:26px;height:26px;border-radius:7px;background:var(--org);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px -2px rgba(210,255,48,.55),0 0 0 1px rgba(0,0,0,.04)}
-.app-logo svg{width:16px;height:16px;display:block}
+.app-logo{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(210,255,48,.45)) drop-shadow(0 0 0.5px rgba(0,0,0,.1))}
+.app-logo svg{width:34px;height:34px;display:block}
 .ttab-group{display:flex;align-items:center;gap:2px}
 .ttab-icon{width:44px;height:44px;border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:color .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative}
 .ttab-icon.active{color:var(--org-text)}
@@ -122,8 +122,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .home-section-label em{font-style:normal;color:var(--fg);font-weight:700}
 .home-section-kicker,.home-section-count{display:none}
 
-/* ─── HERO FEATURED CARD ─── */
+/* ─── HERO FEATURED CAROUSEL ─── */
 .hero-card{position:relative;margin:16px 16px 8px;border-radius:14px;overflow:hidden;aspect-ratio:1/1;cursor:pointer;-webkit-tap-highlight-color:transparent;background:var(--surf);box-shadow:0 12px 32px -10px rgba(60,50,30,.25),0 2px 0 rgba(60,50,30,.04);transition:transform .25s,box-shadow .3s}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .55s ease;pointer-events:none}
+.hero-slide.active{opacity:1;pointer-events:auto}
+.hero-dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:4;pointer-events:auto}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;transition:all .25s;padding:0;-webkit-tap-highlight-color:transparent}
+.hero-dot.active{background:var(--org);width:22px;border-radius:99px}
+.hero-dot:hover:not(.active){background:rgba(255,255,255,.7)}
 .hero-card:hover{transform:translateY(-2px);box-shadow:0 18px 38px -10px rgba(60,50,30,.32)}
 .hero-card:active{transform:scale(.99)}
 .hero-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -505,9 +511,19 @@ button.status-pill:hover{opacity:.75}
   <div class="topbar-r1" style="justify-content:flex-start">
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">
       <span class="app-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 18V6l4 6 4-6v12"/>
-          <path d="M16 18V6l4 6"/>
+        <!-- Asymmetric pennant/banner shape with bold M cut-out -->
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <clipPath id="lmask">
+              <!-- irregular pennant: top-right notch + bottom-right diagonal -->
+              <path d="M3 6 L31 4 L38 13 L34 25 L30 36 L7 38 L2 30 L3 14 Z"/>
+            </clipPath>
+          </defs>
+          <path d="M3 6 L31 4 L38 13 L34 25 L30 36 L7 38 L2 30 L3 14 Z" fill="#d2ff30"/>
+          <!-- Inner ink M letterform -->
+          <g clip-path="url(#lmask)" stroke="#0a0a0a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <path d="M10 27 L11 14 L20 24 L29 13 L29 27"/>
+          </g>
         </svg>
       </span>
       <span>Mangaink</span>
@@ -1334,17 +1350,16 @@ function renderDiscSection(label, items, container) {
   container.appendChild(sec);
 }
 
-// Hero featured card — uses top trending item
-function renderHero(item, container) {
-  if (!item) return;
+// Hero auto-rotating carousel — up to 5 trending titles
+let _heroTimer = null;
+let _heroIdx = 0;
+let _heroLen = 0;
+
+function buildHeroSlide(item, idx) {
   const cov = item.coverUrl ? esc(proxyUrl(item.coverUrl, item.coverReferer)) : '';
   const stars = item.rating ? starsHtml(item.rating) : '';
   const status = item.status ? `<span class="hero-status">${esc(item.status)}</span>` : '';
-  const div = document.createElement('div');
-  div.className = 'hero-card';
-  div.dataset.id = item.id;
-  div.dataset.source = item.source || 'mdex';
-  div.innerHTML = `
+  return `<div class="hero-slide${idx===0?' active':''}" data-idx="${idx}" data-id="${esc(item.id)}" data-source="${esc(item.source||'mdex')}">
     ${cov ? `<img class="hero-cover" src="${cov}" alt="" onerror="this.style.display='none'">` : '<div class="hero-skel"></div>'}
     <div class="hero-grad"></div>
     <div class="hero-content">
@@ -1361,11 +1376,69 @@ function renderHero(item, container) {
         </button>
       </div>
     </div>`;
-  const id = item.id, src = item.source || 'mdex';
-  div.addEventListener('click', () => openPanel(id, src));
-  div.addEventListener('mouseenter', () => prefetchManga(id, src), { once: true });
-  div.addEventListener('touchstart', () => prefetchManga(id, src), { once: true, passive: true });
-  container.appendChild(div);
+}
+
+function renderHero(items, container) {
+  // Stop any running carousel
+  if (_heroTimer) { clearInterval(_heroTimer); _heroTimer = null; }
+  if (!items?.length) return;
+  const pick = items.filter(m => m.coverUrl).slice(0, 5);
+  if (!pick.length) return;
+  _heroLen = pick.length;
+  _heroIdx = 0;
+  const wrap = document.createElement('div');
+  wrap.className = 'hero-card';
+  wrap.innerHTML = pick.map(buildHeroSlide).join('') +
+    `<div class="hero-dots">${pick.map((_,i)=>`<button class="hero-dot${i===0?' active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`).join('')}</div>`;
+  container.appendChild(wrap);
+
+  const slides = wrap.querySelectorAll('.hero-slide');
+  const dots = wrap.querySelectorAll('.hero-dot');
+
+  function showSlide(i) {
+    _heroIdx = (i + _heroLen) % _heroLen;
+    slides.forEach((s, k) => s.classList.toggle('active', k === _heroIdx));
+    dots.forEach((d, k) => d.classList.toggle('active', k === _heroIdx));
+  }
+  function startAuto() {
+    if (_heroTimer) clearInterval(_heroTimer);
+    _heroTimer = setInterval(() => showSlide(_heroIdx + 1), 5000);
+  }
+  function stopAuto() { if (_heroTimer) { clearInterval(_heroTimer); _heroTimer = null; } }
+
+  // Dot click → jump
+  dots.forEach(d => d.addEventListener('click', e => {
+    e.stopPropagation();
+    showSlide(parseInt(d.dataset.i, 10));
+    startAuto();
+  }));
+
+  // Click slide → open panel
+  wrap.addEventListener('click', e => {
+    if (e.target.closest('.hero-dot') || e.target.closest('.hero-read')) return;
+    const active = wrap.querySelector('.hero-slide.active');
+    if (!active) return;
+    openPanel(active.dataset.id, active.dataset.source || 'mdex');
+  });
+
+  // Pause auto on hover/touch, resume on leave
+  wrap.addEventListener('mouseenter', stopAuto);
+  wrap.addEventListener('mouseleave', startAuto);
+  wrap.addEventListener('touchstart', stopAuto, { passive: true });
+
+  // Swipe nav
+  let touchX = 0;
+  wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  wrap.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) { showSlide(_heroIdx + (dx < 0 ? 1 : -1)); startAuto(); }
+    else startAuto();
+  }, { passive: true });
+
+  // Prefetch each manga in carousel
+  pick.forEach(p => prefetchManga(p.id, p.source || 'mdex'));
+
+  startAuto();
 }
 
 const HOME_CACHE_TTL = 60 * 60 * 1000; // 60 min — generous, background refresh keeps it warm
@@ -1407,16 +1480,16 @@ function renderHomeData(data, wrap) {
     </div>`;
     return;
   }
-  // Hero featured card — first trending item with cover
+  // Hero carousel — up to 5 trending titles
   const trending = data.trending || [];
-  const featured = trending.find(m => m.coverUrl) || trending[0];
-  if (featured) renderHero(featured, wrap);
-  // Skip the featured item in Trending list to avoid duplicate
-  const trendingRest = trending.filter(m => m.id !== featured?.id);
-  renderDiscSection('Trending Now', trendingRest, wrap);
+  renderHero(trending, wrap);
+  // Trending list excludes items shown in carousel
+  const featuredIds = new Set(trending.slice(0, 5).map(m => m.id));
+  const trendingRest = trending.filter(m => !featuredIds.has(m.id));
   renderDiscSection('Latest Updates', data.updated, wrap);
   renderDiscSection('New Releases', data.newManga, wrap);
   renderDiscSection('Top Rated', data.topRated, wrap);
+  renderDiscSection('Trending Now', trendingRest, wrap);
 }
 
 function renderHomeSkeleton(wrap) {
