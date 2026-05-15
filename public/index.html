@@ -1356,8 +1356,10 @@ function buildHeroSlide(item, idx) {
   const cov = item.coverUrl ? esc(proxyUrl(item.coverUrl, item.coverReferer)) : '';
   const stars = item.rating ? starsHtml(item.rating) : '';
   const status = item.status ? `<span class="hero-status">${esc(item.status)}</span>` : '';
+  // First slide loads immediately; others load src when activated to avoid parallel-load failures
+  const imgSrc = idx === 0 ? `src="${cov}"` : `data-src="${cov}"`;
   return `<div class="hero-slide${idx===0?' active':''}" data-idx="${idx}" data-id="${esc(item.id)}" data-source="${esc(item.source||'mdex')}">
-    ${cov ? `<img class="hero-cover" src="${cov}" alt="" loading="eager" decoding="async" fetchpriority="${idx===0?'high':'auto'}" onerror="this.style.display='none'">` : '<div class="hero-skel"></div>'}
+    ${cov ? `<img class="hero-cover" ${imgSrc} alt="" decoding="async">` : '<div class="hero-skel"></div>'}
     <div class="hero-grad"></div>
     <div class="hero-content">
       <div class="hero-kicker">Trending Now</div>
@@ -1396,6 +1398,13 @@ function renderHero(items, container) {
     _heroIdx = (i + _heroLen) % _heroLen;
     slides.forEach((s, k) => s.classList.toggle('active', k === _heroIdx));
     dots.forEach((d, k) => d.classList.toggle('active', k === _heroIdx));
+    // Lazy-mount cover src on activation
+    const slide = slides[_heroIdx];
+    const img = slide?.querySelector('img[data-src]');
+    if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+    // Also preload the next slide so it's ready before transition
+    const next = slides[(_heroIdx + 1) % _heroLen]?.querySelector('img[data-src]');
+    if (next) { next.src = next.dataset.src; next.removeAttribute('data-src'); }
   }
   function startAuto() {
     if (_heroTimer) clearInterval(_heroTimer);
