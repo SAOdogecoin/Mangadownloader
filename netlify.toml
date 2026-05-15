@@ -1,0 +1,56 @@
+# Netlify config — runs same Vercel-style API handlers via thin adapter
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# API rewrites — preserve /api/* URL paths from existing frontend
+[[redirects]]
+  from = "/api/home"
+  to = "/.netlify/functions/home"
+  status = 200
+
+[[redirects]]
+  from = "/api/search"
+  to = "/.netlify/functions/search"
+  status = 200
+
+[[redirects]]
+  from = "/api/manga"
+  to = "/.netlify/functions/manga"
+  status = 200
+
+[[redirects]]
+  from = "/api/pages"
+  to = "/.netlify/functions/pages"
+  status = 200
+
+[[redirects]]
+  from = "/api/proxy"
+  to = "/.netlify/functions/proxy"
+  status = 200
+
+[[redirects]]
+  from = "/api/download"
+  to = "/.netlify/functions/download"
+  status = 200
+
+[[redirects]]
+  from = "/api/bato"
+  to = "/.netlify/functions/bato"
+  status = 200
+
+[[redirects]]
+  from = "/api/mangaplus"
+  to = "/.netlify/functions/mangaplus"
+  status = 200
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["jszip"]

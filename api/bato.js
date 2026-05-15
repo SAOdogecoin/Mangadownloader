@@ -52,7 +52,7 @@ function mapComic(c) {
     rating: c.score_avg ? Math.round(c.score_avg * 10) / 10 : null,
     tags: (c.genres || []).map(g => ({ name: g, id: g })),
     lastChapter: c.lastChapterNode?.data?.serial ? String(c.lastChapterNode.data.serial) : null,
-    source: 'alt'
+    source: 'bato'
   };
 }
 
