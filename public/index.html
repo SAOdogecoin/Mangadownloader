@@ -916,13 +916,13 @@ const _mangaCache = {};
 
 // Fire-and-forget prefetch on hover/touch. Caches the manga data so click is instant.
 function prefetchManga(id, source) {
-  const key = (source || 'bato') + ':' + id;
+  const key = (source || 'mdex') + ':' + id;
   if (_mangaCache[key]) return;
   _mangaCache[key] = 'pending';
   const url =
-    source === 'mp'    ? `/api/mangaplus?action=manga&id=${encodeURIComponent(id)}` :
-    source === 'mdex'  ? `/api/manga?id=${id}` :
-    `/api/bato?action=manga&id=${encodeURIComponent(id)}`;
+    source === 'mp'   ? `/api/mangaplus?action=manga&id=${encodeURIComponent(id)}` :
+    source === 'bato' ? `/api/bato?action=manga&id=${encodeURIComponent(id)}` :
+    `/api/manga?id=${id}`;
   fetch(url).then(r => r.json()).then(data => {
     if (!data.error) _mangaCache[key] = data;
     else delete _mangaCache[key];
@@ -935,7 +935,7 @@ function prefetchManga(id, source) {
 }
 
 async function openPanel(id, source) {
-  source = source || 'bato';
+  source = source || 'mdex';
   _panelSource = source;
   currentMangaData = null;
   selectMode = false; selectedChIds.clear();
@@ -1131,9 +1131,7 @@ async function doSearch() {
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
   try {
-    const url = _searchSource === 'mdex'
-      ? `/api/search?limit=${SEARCH_LIMIT}&offset=0&q=${encodeURIComponent(q)}${activeTagId ? '&tagId=' + activeTagId : ''}${activeStatus ? '&status=' + activeStatus : ''}`
-      : `/api/search?q=${encodeURIComponent(q)}&limit=8`;
+    const url = `/api/search?limit=${SEARCH_LIMIT}&offset=0&q=${encodeURIComponent(q)}${activeTagId ? '&tagId=' + activeTagId : ''}${activeStatus ? '&status=' + activeStatus : ''}`;
     const data = await fetch(url).then(r => r.json());
     if (data.error) throw new Error(data.error);
     renderResults(data.results || [], false);
@@ -1340,7 +1338,7 @@ function renderDiscSection(label, items, container) {
     </div>
     <div class="disc-strip">${cardsHtml}</div>`;
   sec.querySelectorAll('.disc-card').forEach(el => {
-    const id = el.dataset.id, src = el.dataset.source || 'bato';
+    const id = el.dataset.id, src = el.dataset.source || 'mdex';
     el.addEventListener('click', () => openPanel(id, src));
     el.addEventListener('mouseenter', () => prefetchManga(id, src), { once: true });
     el.addEventListener('touchstart', () => prefetchManga(id, src), { once: true, passive: true });
@@ -1359,7 +1357,7 @@ function buildHeroSlide(item, idx) {
   const status = item.status ? `<span class="hero-status">${esc(item.status)}</span>` : '';
   // First slide loads immediately; others load src when activated to avoid parallel-load failures
   const imgSrc = idx === 0 ? `src="${cov}"` : `data-src="${cov}"`;
-  return `<div class="hero-slide${idx===0?' active':''}" data-idx="${idx}" data-id="${esc(item.id)}" data-source="${esc(item.source||'bato')}">
+  return `<div class="hero-slide${idx===0?' active':''}" data-idx="${idx}" data-id="${esc(item.id)}" data-source="${esc(item.source||'mdex')}">
     ${cov ? `<img class="hero-cover" ${imgSrc} alt="" decoding="async">` : '<div class="hero-skel"></div>'}
     <div class="hero-grad"></div>
     <div class="hero-content">
@@ -1370,7 +1368,7 @@ function buildHeroSlide(item, idx) {
         ${item.rating ? `<span class="hero-stars">${stars}<span class="star-num">${item.rating.toFixed(1)}</span></span>` : ''}
       </div>
       <div class="hero-actions">
-        <button class="hero-read" onclick="event.stopPropagation();openPanel('${esc(item.id)}','${esc(item.source||'bato')}')">
+        <button class="hero-read" onclick="event.stopPropagation();openPanel('${esc(item.id)}','${esc(item.source||'mdex')}')">
           <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           Read
         </button>
@@ -1402,7 +1400,7 @@ function getHomeCache() {
   // Try sessionStorage first (fast), then localStorage (survives tabs/sessions)
   for (const store of [sessionStorage, localStorage]) {
     try {
-      const raw = store.getItem('homeCache_batoP');
+      const raw = store.getItem('homeCache_mdex2');
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Date.now() - parsed.ts < HOME_CACHE_TTL) { _homeCache = parsed; return parsed.data; }
@@ -1415,8 +1413,8 @@ function getHomeCache() {
 function setHomeCache(data) {
   _homeCache = { data, ts: Date.now() };
   const serialized = JSON.stringify(_homeCache);
-  try { sessionStorage.setItem('homeCache_batoP', serialized); } catch (_) {}
-  try { localStorage.setItem('homeCache_batoP', serialized); } catch (_) {}
+  try { sessionStorage.setItem('homeCache_mdex2', serialized); } catch (_) {}
+  try { localStorage.setItem('homeCache_mdex2', serialized); } catch (_) {}
 }
 
 function renderHomeData(data, wrap) {
