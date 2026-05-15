@@ -414,12 +414,20 @@ button.status-pill:hover{opacity:.75}
 .ch-row{cursor:pointer}
 .ch-row:active{background:#f5f4f2}
 
-/* ─── NAV TABS ─── */
-.topbar-r3{display:none}
-.nav-tabs-row{display:flex;gap:18px;align-items:center}
-.nav-pill{border:none;background:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--fg);cursor:pointer;padding:6px 0;-webkit-tap-highlight-color:transparent;transition:color .2s,letter-spacing .2s;white-space:nowrap;line-height:1;letter-spacing:-.005em;position:relative;opacity:.72}
-.nav-pill:hover{color:var(--org-text);opacity:1}
-.nav-pill.active{color:var(--fg);opacity:1;font-weight:600}
+/* ─── NAV TABS (legacy, hidden) ─── */
+.topbar-r3, .nav-tabs-row{display:none !important}
+
+/* ─── BOTTOM TAB NAV (mobile-first) ─── */
+.bnav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--border);z-index:50;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -4px 24px -8px rgba(60,50,30,.08)}
+.bnav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 0 7px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--sub);font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:-.005em;transition:color .15s;position:relative}
+.bnav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.bnav-tab.active{color:var(--fg)}
+.bnav-tab.active svg{transform:translateY(-1px)}
+.bnav-tab.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:2.5px;background:var(--org);border-radius:0 0 4px 4px}
+.bnav-tab:hover{color:var(--fg)}
+/* App body padding-bottom to clear bottom nav */
+.app-body{padding-bottom:64px}
+@supports(padding:max(0px)){.app-body{padding-bottom:max(64px,calc(64px + env(safe-area-inset-bottom)))}}
 .nav-pill.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(210,255,48,.6)}
 
 /* ─── GENRE PAGE ─── */
@@ -453,35 +461,36 @@ button.status-pill:hover{opacity:.75}
 .btn-dl-selected svg{width:14px;height:14px;stroke:var(--blk-text);fill:none;flex-shrink:0}
 .btn-dl-selected:disabled{opacity:.45;cursor:default}
 .btn-dl-selected:not(:disabled):hover{background:var(--blk-h)}
+
+/* ─── SEARCH PAGE ─── */
+.search-page-hdr{padding:14px 16px 8px;flex-shrink:0;background:var(--bg);position:sticky;top:0;z-index:5;border-bottom:1px solid var(--border)}
+.search-page-bar{display:flex;gap:8px;align-items:center}
+.search-wrap-page{position:relative;flex:1;display:flex;align-items:center}
+.search-page-icon{position:absolute;left:14px;width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
+.search-input-page{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:14px;color:var(--fg);padding:11px 38px 11px 38px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:-.005em}
+.search-input-page:focus{border-color:var(--org-text);box-shadow:0 0 0 3px var(--org-s)}
+.search-input-page::placeholder{color:var(--sub)}
+.btn-clear-input-page{position:absolute;right:10px;width:24px;height:24px;border:none;background:var(--surf);cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.btn-clear-input-page:hover{color:var(--fg);background:var(--border)}
+.btn-clear-input-page svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5}
+.btn-search-page{padding:11px 22px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:-.005em;transition:transform .15s,box-shadow .25s;white-space:nowrap;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 14px -4px rgba(60,50,30,.2)}
+.btn-search-page:hover{transform:translateY(-1px);box-shadow:0 8px 22px -6px rgba(60,50,30,.3)}
+.btn-search-page:active{transform:translateY(0)}
+.search-genres-section{padding:20px 16px 24px}
+.search-genres-kicker{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--sub);letter-spacing:.18em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.search-genres-kicker::before{content:'';width:14px;height:1.5px;background:var(--org)}
+.search-genres-section.hidden{display:none}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-r1">
+  <div class="topbar-r1" style="justify-content:center">
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Manga<em>ink</em></span>
-    <div class="nav-tabs-row" id="nav-pills">
-      <button class="nav-pill active" data-route="home" onclick="navigate('home')">Home</button>
-      <button class="nav-pill" data-route="library" onclick="navigate('library')">Library</button>
-      <button class="nav-pill" data-route="genres" onclick="navigate('genres')">Genres</button>
-    </div>
-  </div>
-  <div class="topbar-r2">
-    <div class="search-wrap">
-      <input class="search-input" id="search-input" placeholder="Search manga, manhwa…" oninput="scheduleSearch()" onkeydown="if(event.key==='Enter'){clearTimeout(_searchTimer);doSearch()}"/>
-      <button class="btn-clear-input" id="btn-clear-input" onclick="clearSearch()" style="display:none" aria-label="Clear">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <button class="btn-search" onclick="doSearch()">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Search
-    </button>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
 
-<div class="search-dropdown" id="search-dropdown"></div>
 
 <div class="app-body">
   <!-- Home -->
@@ -496,12 +505,20 @@ button.status-pill:hover{opacity:.75}
     <div id="cr-wrap"></div>
     <div id="lib-page-wrap"></div>
   </div>
-  <!-- Genres -->
-  <div class="view" id="v-genres">
-    <div class="genre-grid" id="genre-grid"></div>
-  </div>
-  <!-- Search results -->
+  <!-- Search (combined: input + genres + results) -->
   <div class="view" id="v-search">
+    <div class="search-page-hdr">
+      <div class="search-page-bar">
+        <div class="search-wrap-page">
+          <svg class="search-page-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input-page" id="search-input" placeholder="Search manga, manhwa…" oninput="onSearchInputChange()" onkeydown="if(event.key==='Enter')doSearch()"/>
+          <button class="btn-clear-input-page" id="btn-clear-input" onclick="clearSearchInput()" style="display:none" aria-label="Clear">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <button class="btn-search-page" onclick="doSearch()">Search</button>
+      </div>
+    </div>
     <div class="search-loading" id="search-loading" style="display:none">
       <div class="spin"></div> Searching…
     </div>
@@ -509,8 +526,29 @@ button.status-pill:hover{opacity:.75}
     <div id="load-more-wrap" style="display:none;padding:8px 16px 20px;text-align:center">
       <button class="btn-load-more" id="btn-load-more" onclick="loadMore()">Load more</button>
     </div>
+    <!-- Genres section, visible when results empty -->
+    <div class="search-genres-section" id="search-genres-section">
+      <div class="search-genres-kicker">Browse by genre</div>
+      <div class="genre-grid" id="genre-grid"></div>
+    </div>
   </div>
 </div>
+
+<!-- Bottom nav (mobile-first) -->
+<nav class="bnav">
+  <button class="bnav-tab active" data-route="home" onclick="navigate('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 12L12 4l9 8"/><path d="M5 10v10h14V10"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="bnav-tab" data-route="library" onclick="navigate('library')">
+    <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+    <span>Library</span>
+  </button>
+  <button class="bnav-tab" data-route="search" onclick="navigate('search')">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>Search</span>
+  </button>
+</nav>
 
 <!-- Manga Detail Panel -->
 <div class="panel-bg" id="panel-bg" onclick="closePanel()"></div>
@@ -775,7 +813,22 @@ function showSearchSkeleton(q) {
   dd.classList.add('open');
 }
 
-function scheduleSearch() {
+function onSearchInputChange() {
+  const q = document.getElementById('search-input').value;
+  const clr = document.getElementById('btn-clear-input');
+  if (clr) clr.style.display = q ? 'flex' : 'none';
+}
+function clearSearchInput() {
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  onSearchInputChange();
+  document.getElementById('search-genres-section')?.classList.remove('hidden');
+  document.getElementById('results-grid').innerHTML = '';
+  document.getElementById('load-more-wrap').style.display = 'none';
+  inp?.focus();
+}
+
+function scheduleSearch_DISABLED_legacy() {
   const q = document.getElementById('search-input').value.trim();
   clearTimeout(_searchTimer);
   document.getElementById('btn-clear-input').style.display = q ? 'flex' : 'none';
@@ -812,11 +865,7 @@ function clearSearch() {
   clearSearchResults();
 }
 
-function closeDropdown() {
-  const dd = document.getElementById('search-dropdown');
-  dd.classList.remove('open');
-  if (_predictCtrl) { _predictCtrl.abort(); _predictCtrl = null; }
-}
+function closeDropdown() { /* dropdown removed in mobile redesign */ }
 
 // Open panel instantly using cached search preview data, then fetch full details
 function openPanelFromDropdown(id, source) {
@@ -1031,7 +1080,6 @@ function renderDropItem(r) {
 
 async function doSearch() {
   document.getElementById('search-input').blur();
-  closeDropdown();
   const q = document.getElementById('search-input').value.trim();
   if (!q && !activeTagId && !activeStatus) return;
   lastQuery = q;
@@ -1039,6 +1087,7 @@ async function doSearch() {
   lastStatus = activeStatus;
   lastOffset = 0;
   navigate('search');
+  document.getElementById('search-genres-section')?.classList.add('hidden');
   document.getElementById('search-loading').style.display = 'flex';
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
@@ -1156,14 +1205,16 @@ function mcCardHtml(m, badge) {
 let _currentRoute = 'home';
 
 function navigate(route, { pushState = true } = {}) {
+  // Legacy redirect: genres → search (merged)
+  if (route === 'genres') route = 'search';
   _currentRoute = route;
-  const viewMap = { home: 'v-home', library: 'v-library', genres: 'v-genres', search: 'v-search' };
+  const viewMap = { home: 'v-home', library: 'v-library', search: 'v-search' };
   const viewId = viewMap[route] || 'v-home';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
-  document.querySelectorAll('.nav-pill').forEach(p => p.classList.toggle('active', p.dataset.route === route));
+  document.querySelectorAll('.bnav-tab').forEach(p => p.classList.toggle('active', p.dataset.route === route));
   if (pushState) history.pushState(null, '', '#' + route);
-  if (route === 'library') renderLibraryPage(); // renderLibraryPage calls renderContinueReading
-  if (route === 'genres') renderGenrePage();
+  if (route === 'library') renderLibraryPage();
+  if (route === 'search') renderGenrePage();
   if (route === 'home') loadDiscoverySections();
 }
 
@@ -2208,15 +2259,10 @@ function closeToc() {
 function toggleTheme() {}
 function updateThemeIcon() {}
 
-// Close dropdown on outside tap/click
-document.addEventListener('click', e => {
-  if (!e.target.closest('.topbar') && !e.target.closest('.search-dropdown')) closeDropdown();
-});
-
 // Hash routing
 window.addEventListener('hashchange', () => {
   const route = location.hash.replace('#', '') || 'home';
-  if (['home','library','genres'].includes(route)) navigate(route, { pushState: false });
+  if (['home','library','search','genres'].includes(route)) navigate(route, { pushState: false });
 });
 
 // Reader swipe to turn pages
