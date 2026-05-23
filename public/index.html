@@ -2084,7 +2084,9 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
       setTimeout(() => fetch(url).catch(() => {}), 800);
     }
   } catch (e) {
-    document.getElementById('reader-img-wrap').innerHTML = `<div class="reader-error">Failed to load chapter: ${esc(e.message)}</div>`;
+    // Close reader entirely on failure — don't leave a half-open error screen with the top bar showing
+    closeReader();
+    showToast(`Failed to load chapter: ${e.message}`, 3500);
   }
 }
 
