@@ -2754,6 +2754,21 @@ window.addEventListener('hashchange', () => {
   navigate(initialRoute, { pushState: false });
   if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
 })();
+
+// Horizontal scroll on disc-strip rows via mouse wheel (hover to activate)
+// Scroll up → right, scroll down → left (inverted natural feel)
+document.addEventListener('wheel', function(e) {
+  const strip = e.target.closest('.disc-strip');
+  if (!strip) return;
+  const maxScroll = strip.scrollWidth - strip.clientWidth;
+  if (maxScroll <= 0) return; // not scrollable
+  const delta = e.deltaY;
+  const atStart = strip.scrollLeft <= 0;
+  const atEnd = strip.scrollLeft >= maxScroll - 1;
+  if ((delta < 0 && atEnd) || (delta > 0 && atStart)) return; // let page scroll if at edge
+  e.preventDefault();
+  strip.scrollLeft -= delta; // up(−deltaY) → right, down(+deltaY) → left
+}, { passive: false });
 </script>
 
 <!-- Topbar last in DOM = always paints above all other stacking contexts -->
