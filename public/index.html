@@ -560,7 +560,7 @@ body:has(.hero-desktop) .topbar{background:transparent}
 }
 
 /* ─── DESKTOP LAYOUT (>=900px) ─── */
-.topbar-search-desktop,.topbar-lib-desktop,.desktop-sidebar{display:none}
+.topbar-search-desktop,.topbar-lib-desktop,.desktop-sidebar,.desktop-leftbar{display:none}
 @media (min-width:900px){
   .bnav{display:none !important}
   .topbar-r1{gap:24px;padding:14px 24px 10px}
@@ -572,6 +572,15 @@ body:has(.hero-desktop) .topbar{background:transparent}
   .topbar-lib-desktop{display:inline-flex;align-items:center;padding:9px 18px;border-radius:99px;background:#0a0a0a;color:#fff;font:700 13px 'Inter',sans-serif;letter-spacing:-.005em;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
   .topbar-lib-desktop:hover{background:#1c1c1c}
 
+  /* Left sidebar — page navigation */
+  .desktop-leftbar{display:block;position:fixed;left:0;top:62px;bottom:0;width:200px;padding:20px 16px 24px;overflow-y:auto;border-right:1px solid var(--border);background:var(--bg);z-index:5}
+  .desktop-leftbar h3{font:700 11px 'Inter',sans-serif;color:var(--sub);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;padding-left:6px}
+  .desktop-nav-list{display:flex;flex-direction:column;gap:2px}
+  .desktop-nav-list button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 12px;font:600 13px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;letter-spacing:-.005em}
+  .desktop-nav-list button:hover{background:var(--surf)}
+  .desktop-nav-list button.active{background:#0a0a0a;color:#fff}
+  .desktop-nav-list button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
   /* Right sidebar for genres */
   .desktop-sidebar{display:block;position:fixed;right:0;top:62px;bottom:0;width:240px;padding:20px 24px 24px;overflow-y:auto;border-left:1px solid var(--border);background:var(--bg);z-index:5}
   .desktop-sidebar h3{font:700 14px 'Inter',sans-serif;letter-spacing:-.01em;margin-bottom:12px;color:#0a0a0a}
@@ -579,8 +588,12 @@ body:has(.hero-desktop) .topbar{background:transparent}
   .desktop-genre-list button{text-align:left;background:none;border:1px solid var(--border);border-radius:99px;padding:7px 14px;font:500 12px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
   .desktop-genre-list button:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
 
-  /* Reserve right margin for sidebar in all views */
-  .view{padding-right:264px !important}
+  /* Reserve space for both sidebars in all views */
+  .view{padding-left:220px !important;padding-right:264px !important}
+  /* Hero too should respect left sidebar */
+  .hero-desktop{margin-left:0 !important;margin-right:0 !important}
+  /* Topbar Library button now redundant w/ left sidebar — hide */
+  .topbar-lib-desktop{display:none !important}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -622,6 +635,24 @@ body:has(.hero-desktop) .topbar{background:transparent}
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
+
+<aside class="desktop-leftbar" id="desktop-leftbar">
+  <h3>Browse</h3>
+  <nav class="desktop-nav-list">
+    <button data-route="home" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 12L12 4l9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </button>
+    <button data-route="library" onclick="navigate('library')">
+      <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+      <span>Library</span>
+    </button>
+    <button data-route="search" onclick="navigate('search')">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Search</span>
+    </button>
+  </nav>
+</aside>
 
 <aside class="desktop-sidebar" id="desktop-sidebar">
   <h3>Genres</h3>
@@ -1363,7 +1394,7 @@ function navigate(route, { pushState = true } = {}) {
   const viewMap = { home: 'v-home', library: 'v-library', search: 'v-search' };
   const viewId = viewMap[route] || 'v-home';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
-  document.querySelectorAll('.bnav-tab').forEach(p => p.classList.toggle('active', p.dataset.route === route));
+  document.querySelectorAll('.bnav-tab,.desktop-nav-list button').forEach(p => p.classList.toggle('active', p.dataset.route === route));
   if (pushState) history.pushState(null, '', '#' + route);
   if (route === 'library') renderLibraryPage();
   if (route === 'search') renderGenrePage();
