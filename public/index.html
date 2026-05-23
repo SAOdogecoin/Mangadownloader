@@ -183,6 +183,15 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 /* Discovery horizontal strip */
 .disc-strip{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;padding-left:16px;padding-right:16px;-webkit-overflow-scrolling:touch}
 .disc-strip::-webkit-scrollbar{display:none}
+/* Disc section scroll arrows */
+.disc-strip-wrap{position:relative}
+.disc-arrow{position:absolute;top:50%;transform:translateY(-60%);width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.95);box-shadow:0 2px 10px rgba(0,0,0,.14);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;transition:opacity .18s,transform .18s;-webkit-tap-highlight-color:transparent}
+.disc-arrow:hover{background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.disc-arrow:active{transform:translateY(-60%) scale(.92)}
+.disc-arrow.da-left{left:4px}
+.disc-arrow.da-right{right:4px}
+.disc-arrow svg{width:13px;height:13px;stroke:#0a0a0a;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.disc-arrow.da-hidden{opacity:0;pointer-events:none}
 /* 3 cards visible per row on mobile */
 .disc-card{flex-shrink:0;width:calc((100vw - 56px) / 3);max-width:140px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .25s cubic-bezier(.2,.8,.2,1);position:relative}
 .disc-card:hover{transform:translateY(-3px)}
@@ -1619,7 +1628,15 @@ function renderDiscSection(label, items, container, sortKey, opts) {
       <div class="home-section-label">${esc(label)}</div>
       ${viewAll}
     </div>
-    <div class="disc-strip">${cardsHtml}</div>`;
+    <div class="disc-strip-wrap">
+      <button class="disc-arrow da-left da-hidden" onclick="discScrollBtn(this,-1)" aria-label="Scroll left">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="disc-strip">${cardsHtml}</div>
+      <button class="disc-arrow da-right" onclick="discScrollBtn(this,1)" aria-label="Scroll right">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>`;
   sec.querySelectorAll('.disc-card').forEach(el => {
     const id = el.dataset.id, src = el.dataset.source || 'mdex';
     el.addEventListener('click', () => openPanel(id, src));
@@ -1627,6 +1644,27 @@ function renderDiscSection(label, items, container, sortKey, opts) {
     el.addEventListener('touchstart', () => prefetchManga(id, src), { once: true, passive: true });
   });
   container.appendChild(sec);
+  // Init arrow visibility after layout
+  const strip = sec.querySelector('.disc-strip');
+  if (strip) {
+    strip.addEventListener('scroll', () => _updateDiscArrows(strip), { passive: true });
+    requestAnimationFrame(() => _updateDiscArrows(strip));
+  }
+}
+
+function _updateDiscArrows(strip) {
+  const wrap = strip.closest('.disc-strip-wrap');
+  if (!wrap) return;
+  const max = strip.scrollWidth - strip.clientWidth;
+  wrap.querySelector('.da-left')?.classList.toggle('da-hidden', strip.scrollLeft <= 2);
+  wrap.querySelector('.da-right')?.classList.toggle('da-hidden', max <= 2 || strip.scrollLeft >= max - 2);
+}
+
+function discScrollBtn(btn, dir) {
+  const strip = btn.closest('.disc-strip-wrap')?.querySelector('.disc-strip');
+  if (!strip) return;
+  const cardW = strip.querySelector('.disc-card')?.offsetWidth + 14 || 154;
+  strip.scrollBy({ left: dir * cardW * 3, behavior: 'smooth' });
 }
 
 // View-all → navigate to search view, run filtered fetch using the section's sort key
@@ -2710,13 +2748,16 @@ async function goPrevChapter() {
 }
 
 function updateNextChBtn() {
-  const { pages, pageIdx, chapterListIdx, chapters } = readerState;
+  const { pages, pageIdx, isRTL, chapterListIdx, chapters } = readerState;
   if (!pages.length) return;
-  // Reading always advances 0 → N-1 regardless of RTL (pageNav handles direction internally)
   const atEnd = pageIdx === pages.length - 1;
   const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
   const btn = document.getElementById('next-ch-btn');
-  if (btn) btn.style.display = atEnd && hasNext ? 'block' : 'none';
+  if (btn) {
+    btn.style.display = atEnd && hasNext ? 'block' : 'none';
+    // Arrow points toward the direction of the next chapter tap zone
+    btn.textContent = isRTL ? '← Next Chapter' : 'Next Chapter →';
+  }
 }
 
 function updateChNav() {
@@ -2911,49 +2952,6 @@ document.getElementById('search-body').addEventListener('scroll', function() {
   if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
 })();
 
-// Smooth horizontal scroll on disc-strip rows via mouse wheel
-// Zero-latency: applies partial scroll immediately, then eases remainder via rAF
-(function() {
-  const state = new WeakMap(); // per-strip: { target, raf }
-  const EASE = 0.18;
-
-  function tick(strip) {
-    const s = state.get(strip);
-    if (!s) return;
-    const max = strip.scrollWidth - strip.clientWidth;
-    s.target = Math.max(0, Math.min(s.target, max));
-    const diff = s.target - strip.scrollLeft;
-    if (Math.abs(diff) < 0.5) {
-      strip.scrollLeft = s.target;
-      state.delete(strip);
-      return;
-    }
-    strip.scrollLeft += diff * EASE;
-    s.raf = requestAnimationFrame(() => tick(strip));
-  }
-
-  document.addEventListener('wheel', function(e) {
-    const strip = e.target.closest('.disc-strip');
-    if (!strip) return;
-    const max = strip.scrollWidth - strip.clientWidth;
-    if (max <= 0) return;
-    // Normalize deltaMode: 0=px (use as-is), 1=lines (~40px/line), 2=page (~600px)
-    const raw = e.deltaY;
-    const delta = e.deltaMode === 1 ? raw * 40 : e.deltaMode === 2 ? raw * 600 : raw;
-    const cur = state.has(strip) ? state.get(strip).target : strip.scrollLeft;
-    const atStart = cur <= 0 && delta > 0;
-    const atEnd = cur >= max - 1 && delta < 0;
-    if (atStart || atEnd) return;
-    e.preventDefault();
-    let s = state.get(strip);
-    if (!s) { s = { target: strip.scrollLeft, raf: null }; state.set(strip, s); }
-    s.target -= delta;
-    // Apply full delta immediately — no snap fighting, no dead-zone
-    strip.scrollLeft -= delta;
-    cancelAnimationFrame(s.raf);
-    s.raf = requestAnimationFrame(() => tick(strip));
-  }, { passive: false });
-})();
 </script>
 
 <!-- Topbar last in DOM = always paints above all other stacking contexts -->
