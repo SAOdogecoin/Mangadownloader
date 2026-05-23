@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
     fetchSection('order[latestUploadedChapter]=desc'),
     fetchSection('order[createdAt]=desc'),
     fetchSection('order[rating]=desc'),
-    fetchSection('order[followedCount]=desc&order[rating]=desc&limit=18'),
+    fetchSection('order[rating]=desc'),
     fetchSection(`includedTags[]=${TAG_SELF_PUBLISHED}&order[followedCount]=desc`),
     fetchSection(`createdAtSince=${encodeURIComponent(seasonStart)}&order[followedCount]=desc`),
     fetchSection(`createdAtSince=${encodeURIComponent(sixMonthsAgo)}&order[followedCount]=desc`),
@@ -86,9 +86,9 @@ module.exports = async (req, res) => {
     return base;
   }
 
-  // Dedupe recommended/seasonal vs trending (already-shown manga)
-  const trendingIds = new Set(trending.map(m => m.id));
-  const recommendedDedup = recommended.filter(m => !trendingIds.has(m.id));
+  // Dedupe recommended vs trending+updated (different sort order = high-rated manga not in other sections)
+  const shownIds = new Set([...trending, ...updated].map(m => m.id));
+  const recommendedDedup = recommended.filter(m => !shownIds.has(m.id));
 
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   res.json({
