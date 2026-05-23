@@ -98,7 +98,8 @@ module.exports = async (req, res) => {
         pages: ca.pages || 0,
         publishAt: ca.publishAt || null,
         group: groupRel?.attributes?.name || null,
-        translatedLanguage: ca.translatedLanguage || lang
+        translatedLanguage: ca.translatedLanguage || lang,
+        externalUrl: ca.externalUrl || null
       };
     });
 
@@ -114,7 +115,8 @@ module.exports = async (req, res) => {
         group: ch.group,
         publishAt: ch.publishAt,
         pages: ch.pages,
-        translatedLanguage: ch.translatedLanguage
+        translatedLanguage: ch.translatedLanguage,
+        externalUrl: ch.externalUrl
       });
     }
 

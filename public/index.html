@@ -525,6 +525,10 @@ button.status-pill:hover{opacity:.75}
 .ch-meta-row{display:flex;align-items:center;gap:6px;margin-top:2px}
 .ch-group-name{font-size:10px;color:var(--sub);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ch-time{font-size:10px;color:#a8a29e;font-weight:500;flex-shrink:0}
+/* External chapter */
+.ch-external-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(59,130,246,.12);color:#2563eb;letter-spacing:.02em;flex-shrink:0;white-space:nowrap}
+.ch-external-badge svg{width:9px;height:9px;stroke:#2563eb;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ch-source.is-external .ch-source-group,.ch-row.is-external .ch-group-name{color:var(--sub)}
 
 /* ─── NAV TABS (legacy, hidden) ─── */
 .topbar-r3, .nav-tabs-row{display:none !important}
@@ -2310,8 +2314,8 @@ async function renderPanel({ manga, chapters }) {
   const savedData = await IDB.get(manga.id);
   const lastChId = savedData?.lastReadChapterId;
 
-  // Reset select mode when panel re-renders
-  selectMode = false; selectedChIds.clear();
+  // Reset select mode + external URL map when panel re-renders
+  selectMode = false; selectedChIds.clear(); _extChUrls.clear();
 
   let chHtml = chapters.length ? `<div class="ch-actions-bar">
     <span class="ch-count-label">${chapters.length} chapter${chapters.length !== 1 ? 's' : ''}</span>
@@ -2333,6 +2337,8 @@ async function renderPanel({ manga, chapters }) {
       const sources = ch.sources || [];
       const isCurAny = ch.id === lastChId || sources.some(s => s.id === lastChId);
 
+      const extBadge = `<span class="ch-external-badge"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Official</span>`;
+
       if (sources.length > 1) {
         // ── Multi-source: tree display ──
         const grpId = `chgrp-${chIdEsc}`;
@@ -2340,12 +2346,15 @@ async function renderPanel({ manga, chapters }) {
         const sourcesHtml = sources.map(s => {
           const sIdEsc = esc(s.id);
           const isCurSrc = s.id === lastChId;
-          return `<div class="ch-source${isCurSrc ? ' current-ch' : ''}" data-chid="${sIdEsc}" onclick="handleChRowClick('${sIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
+          const isExt = !!s.externalUrl;
+          if (isExt) _extChUrls.set(s.id, s.externalUrl);
+          return `<div class="ch-source${isCurSrc ? ' current-ch' : ''}${isExt ? ' is-external' : ''}" data-chid="${sIdEsc}" onclick="handleChRowClick('${sIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
             <div class="ch-tree-col"></div>
             <div class="ch-source-body">
               <div class="ch-source-top">
                 <span class="ch-source-flag">${langFlag(s.translatedLanguage)}</span>
                 <span class="ch-source-group">${esc(s.group || 'Unknown group')}</span>
+                ${isExt ? extBadge : ''}
               </div>
               <div class="ch-source-meta">
                 ${s.publishAt ? `<span class="ch-source-time">${timeAgo(s.publishAt)}</span>` : ''}
@@ -2366,14 +2375,17 @@ async function renderPanel({ manga, chapters }) {
       } else {
         // ── Single source: augmented row ──
         const isCur = ch.id === lastChId;
+        const isExt = !!ch.externalUrl;
+        if (isExt) _extChUrls.set(ch.id, ch.externalUrl);
         const flag = langFlag(ch.translatedLanguage);
         const time = timeAgo(ch.publishAt);
-        return `<div class="ch-row${isCur ? ' current-ch' : ''}" data-chid="${chIdEsc}" onclick="handleChRowClick('${chIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
+        return `<div class="ch-row${isCur ? ' current-ch' : ''}${isExt ? ' is-external' : ''}" data-chid="${chIdEsc}" onclick="handleChRowClick('${chIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
           <div class="ch-row-info">
             <div class="ch-num">${flag} ${chLabel}${ch.title ? ` — ${esc(ch.title)}` : ''}</div>
             <div class="ch-meta-row">
               ${ch.group ? `<span class="ch-group-name">${esc(ch.group)}</span>` : ''}
               ${time ? `<span class="ch-time">${time}</span>` : ''}
+              ${isExt ? extBadge : ''}
             </div>
           </div>
           <div class="ch-checkbox" id="chk-${chIdEsc}" onclick="event.stopPropagation();toggleChSelect('${chIdEsc}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -2415,7 +2427,7 @@ function closePanel() {
   panel.style.transition = '';
   document.getElementById('panel-bg').classList.remove('open');
   panel.classList.remove('open');
-  selectMode = false; selectedChIds.clear();
+  selectMode = false; selectedChIds.clear(); _extChUrls.clear();
   const bar = document.getElementById('panel-select-bar');
   if (bar) bar.classList.remove('show');
 }
@@ -2562,9 +2574,17 @@ async function downloadChapter(chapterId, chapterNum, mangaTitle, btnEl) {
 let selectMode = false;
 let selectedChIds = new Set();
 
+const _extChUrls = new Map(); // chapterId → externalUrl, populated on panel render
+
+function openExternalChapter(url) {
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 function handleChRowClick(chId, mangaId, chNum, chTitle) {
-  if (selectMode) toggleChSelect(chId);
-  else startRead(mangaId, chId, chNum, chTitle);
+  if (selectMode) { toggleChSelect(chId); return; }
+  const extUrl = _extChUrls.get(chId);
+  if (extUrl) { openExternalChapter(extUrl); return; }
+  startRead(mangaId, chId, chNum, chTitle);
 }
 
 function toggleSelectMode() {
