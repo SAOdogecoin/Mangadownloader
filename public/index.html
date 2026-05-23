@@ -45,10 +45,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* ─── TOPBAR ─── */
 .topbar{background:var(--bg);flex-shrink:0;position:relative}
 .topbar-r1{padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between}
-.app-title{font-family:'Inter',sans-serif;font-size:21px;font-weight:800;color:var(--fg);letter-spacing:-.04em;line-height:1;display:inline-flex;align-items:center;gap:10px;font-feature-settings:'ss01','cv11'}
-.app-title em{color:var(--fg);font-style:normal;font-weight:800}
-.app-logo{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(225,29,72,.45)) drop-shadow(0 0 0.5px rgba(0,0,0,.1))}
-.app-logo svg{width:34px;height:34px;display:block}
+.app-title{font-family:'Inter',sans-serif;font-size:22px;font-weight:800;color:#0a0a0a;letter-spacing:-.04em;line-height:1;font-feature-settings:'ss01','cv11'}
 .ttab-group{display:flex;align-items:center;gap:2px}
 .ttab-icon{width:44px;height:44px;border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:color .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative}
 .ttab-icon.active{color:var(--org-text)}
@@ -125,7 +122,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .home-section-kicker,.home-section-count{display:none}
 
 /* ─── HERO FEATURED CAROUSEL ─── */
-.hero-card{position:relative;margin:16px 16px 8px;border-radius:14px;overflow:hidden;aspect-ratio:1/1;cursor:pointer;-webkit-tap-highlight-color:transparent;background:#0a0a0a;transition:transform .25s}
+.hero-card{position:relative;margin:16px 16px 8px;border-radius:4px;overflow:hidden;aspect-ratio:1/1;cursor:pointer;-webkit-tap-highlight-color:transparent;background:#0a0a0a;transition:transform .25s}
 .hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .55s ease;pointer-events:none}
 .hero-slide.active{opacity:1;pointer-events:auto}
 .hero-dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:4;pointer-events:auto}
@@ -515,25 +512,7 @@ button.status-pill:hover{opacity:.75}
 
 <div class="topbar">
   <div class="topbar-r1" style="justify-content:flex-start">
-    <span class="app-title" onclick="navigate('home')" style="cursor:pointer">
-      <span class="app-logo" aria-hidden="true">
-        <!-- Asymmetric pennant/banner shape with bold M cut-out -->
-        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <clipPath id="lmask">
-              <!-- irregular pennant: top-right notch + bottom-right diagonal -->
-              <path d="M3 6 L31 4 L38 13 L34 25 L30 36 L7 38 L2 30 L3 14 Z"/>
-            </clipPath>
-          </defs>
-          <path d="M3 6 L31 4 L38 13 L34 25 L30 36 L7 38 L2 30 L3 14 Z" fill="#d2ff30"/>
-          <!-- Inner ink M letterform -->
-          <g clip-path="url(#lmask)" stroke="#0a0a0a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-            <path d="M10 27 L11 14 L20 24 L29 13 L29 27"/>
-          </g>
-        </svg>
-      </span>
-      <span>Mangaink</span>
-    </span>
+    <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
