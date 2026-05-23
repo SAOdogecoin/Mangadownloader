@@ -76,12 +76,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 .btn-search svg{width:13px;height:13px;stroke:var(--blk-text);fill:none}
 
 /* ─── LAYOUT ─── */
-.app-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+/* app-body absolutely fills viewport so fixed topbar doesn't push it down */
+.app-body{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
 .view{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0}
 .view.active{display:flex}
-/* Mobile non-home views: pad below fixed topbar (~44px) */
+/* Pad below fixed topbar. Mobile topbar ~50px, desktop ~65px (set per breakpoint) */
 #v-library,#v-search{padding-top:52px}
-/* Home view: hero extends to top behind transparent topbar */
 #v-home{padding-top:0}
 
 /* ─── SEARCH VIEW ─── */
@@ -594,9 +594,12 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:transparent !impo
   .hero-desktop{margin-left:0 !important;margin-right:0 !important}
   .topbar-lib-desktop{display:none !important}
 
-  /* Topbar: logo | search (center, capped) | nav links */
-  .topbar-r1{display:grid !important;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:14px 24px 10px !important}
-  .topbar-search-desktop{max-width:440px;width:100%;justify-self:center}
+  /* Topbar: logo | search (center, fixed 320px) | nav links */
+  .topbar-r1{display:grid !important;grid-template-columns:auto minmax(0,320px) auto;align-items:center;gap:24px;padding:14px 24px 10px !important}
+  .topbar-search-desktop{max-width:320px !important;width:320px;flex:none !important;justify-self:center}
+  /* Desktop: correct view padding to match topbar height */
+  #v-library,#v-search{padding-top:66px}
+  #v-home{padding-top:0}
 
   /* Desktop nav links (right side of topbar) */
   .topbar-desktop-nav{display:flex;align-items:center;gap:2px}
@@ -606,8 +609,8 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:transparent !impo
   /* Genres button special style */
   .topbar-desktop-nav .genres-btn{border:1.5px solid var(--border);padding:7px 14px;border-radius:99px}
   .topbar-desktop-nav .genres-btn:hover{border-color:#0a0a0a;background:none}
-  /* Show genres section again on desktop search (no sidebar) */
-  #v-search .search-genres-section{display:block !important}
+  /* Genres section visible on desktop search (sidebar gone); JS hidden class still works */
+  #v-search .search-genres-section:not(.hidden){display:block}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -631,8 +634,7 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:transparent !impo
   /* When hero shows, topbar becomes transparent over hero. Search input stays SOLID white for contrast. */
   body:has(.hero-desktop) .topbar{background:transparent;border-bottom:none}
   body:has(.hero-desktop) .topbar-search-desktop input{background:#fff;border-color:rgba(0,0,0,.12);box-shadow:0 4px 16px -8px rgba(0,0,0,.18)}
-  /* Hide in-page genre section on desktop (sidebar replaces it) */
-  #v-search .search-genres-section{display:none}
+  /* (genre section now visible on desktop — sidebar removed) */
 }
 </style>
 </head>
@@ -1791,8 +1793,12 @@ function renderHomeSkeleton(wrap) {
 (function(){
   const vHome = document.getElementById('v-home');
   if (vHome) vHome.addEventListener('scroll', () => {
-    document.body.classList.toggle('home-scrolled', vHome.scrollTop > 40);
+    // Threshold = ~80% of hero height so topbar stays transparent while hero is visible
+    const threshold = window.innerWidth >= 900 ? 300 : 220;
+    document.body.classList.toggle('home-scrolled', vHome.scrollTop > threshold);
   }, { passive: true });
+  // Reset scroll on home load so hero is always at top
+  if (vHome) vHome.scrollTop = 0;
 })();
 
 async function loadDiscoverySections({ forceRefresh = false } = {}) {
