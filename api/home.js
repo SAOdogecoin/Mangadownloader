@@ -1,6 +1,6 @@
 const HEADERS = { 'User-Agent': 'Mangaink/1.0 (https://mangaink.vercel.app)' };
 const BASE = 'https://api.mangadex.org';
-const COMMON = `includes[]=cover_art&availableTranslatedLanguage[]=en&hasAvailableChapters=true&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&limit=18`;
+const COMMON = `includes[]=cover_art&includes[]=author&includes[]=artist&availableTranslatedLanguage[]=en&hasAvailableChapters=true&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&limit=18`;
 
 // MangaDex tag IDs
 const TAG_SELF_PUBLISHED = '891cf039-b895-47f0-9229-bef4c96eccd4';
@@ -78,6 +78,10 @@ module.exports = async (req, res) => {
       const rawDesc = attrs.description?.en || Object.values(attrs.description || {})[0] || '';
       base.description = rawDesc.replace(/\[.*?\]/g, '').trim();
       base.tags = (attrs.tags || []).slice(0, 3).map(t => ({ name: t.attributes?.name?.en || '', id: t.id })).filter(t => t.name);
+      // Author + artist names from relationships
+      const authorRels = (m.relationships || []).filter(r => r.type === 'author' || r.type === 'artist');
+      const names = [...new Set(authorRels.map(r => r.attributes?.name).filter(Boolean))];
+      base.author = names.slice(0, 2).join(', ');
     }
     return base;
   }

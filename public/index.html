@@ -550,27 +550,37 @@ button.status-pill:hover{opacity:.75}
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
 
-  /* ── Desktop wide hero carousel ── */
-  .hero-desktop{position:relative;margin:8px 16px 24px;height:300px;border-radius:14px;overflow:hidden;background:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  /* ── Desktop wide hero carousel (extends behind topbar) ── */
+  .hero-desktop{position:relative;margin:-40px -24px 24px;height:380px;overflow:hidden;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
   .hd-slide.active{visibility:visible;pointer-events:auto}
-  .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(28px) brightness(.65) saturate(140%);transform:scale(1.12);opacity:.85}
-  .hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.7) 45%,rgba(255,255,255,.35) 100%);pointer-events:none}
-  .hd-content{position:relative;height:100%;display:flex;align-items:center;gap:32px;padding:28px 36px;z-index:2}
-  .hd-thumb-wrap{flex-shrink:0;width:170px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 16px 38px -10px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.18)}
+  /* Whitened (not blurred) background — image still readable */
+  .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
+  .hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.85) 40%,rgba(255,255,255,.55) 75%,rgba(255,255,255,.35) 100%);pointer-events:none}
+  .hd-content{position:relative;height:100%;display:flex;align-items:center;gap:32px;padding:60px 40px 40px;z-index:2}
+  .hd-thumb-wrap{flex-shrink:0;width:180px;aspect-ratio:2/3;border-radius:10px;overflow:hidden;box-shadow:0 20px 44px -12px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.18)}
   .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
-  .hd-info{flex:1;display:flex;flex-direction:column;gap:10px;max-width:680px}
+  .hd-info{flex:1;display:flex;flex-direction:column;gap:10px;max-width:720px}
   .hd-kicker{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:#0a0a0a;letter-spacing:-.005em}
-  .hd-title{font-family:'Inter',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.025em;line-height:1.1;color:#0a0a0a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hd-title{font-family:'Inter',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.08;color:#0a0a0a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hd-meta-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'Inter',sans-serif;font-size:12px;color:#0a0a0a;font-weight:600}
+  .hd-rating{display:inline-flex;align-items:center;gap:4px}
+  .hd-rating .stars{display:inline-flex;gap:1px}
+  .hd-rating .star{color:#f59e0b;font-size:12px;line-height:1}
+  .hd-rating-num{font-weight:800;font-variant-numeric:tabular-nums}
+  .hd-author{color:rgba(0,0,0,.65);font-style:italic;font-weight:500}
   .hd-tags{display:flex;gap:8px;flex-wrap:wrap}
   .hd-tag{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;color:#0a0a0a;background:rgba(0,0,0,.08);padding:4px 9px;border-radius:99px}
-  .hd-desc{font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;color:rgba(0,0,0,.7);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:560px}
-  .hd-nav{position:absolute;right:24px;bottom:20px;display:flex;align-items:center;gap:12px;z-index:3}
+  .hd-desc{font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;color:rgba(0,0,0,.75);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:580px}
+  .hd-nav{position:absolute;right:32px;bottom:24px;display:flex;align-items:center;gap:12px;z-index:3}
   .hd-num{font-family:'Inter',sans-serif;font-size:12px;color:rgba(0,0,0,.65);letter-spacing:.04em}
   .hd-num strong{color:#0a0a0a;font-weight:800;font-size:14px}
-  .hd-arrow{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .15s}
+  .hd-arrow{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.8);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .15s}
   .hd-arrow:hover{background:#fff;transform:scale(1.05)}
   .hd-arrow svg{width:14px;height:14px;stroke:#0a0a0a;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  /* When hero shows, topbar becomes transparent over hero */
+  body:has(.hero-desktop) .topbar{background:transparent}
+  body:has(.hero-desktop) .topbar-search-desktop input{background:rgba(255,255,255,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   /* Hide in-page genre section on desktop (sidebar replaces it) */
   #v-search .search-genres-section{display:none}
 }
@@ -1656,7 +1666,12 @@ function renderHeroDesktop(items, container) {
 function buildHeroDesktopSlide(item, idx) {
   const cov = item.coverUrl ? esc(proxyUrl(item.coverUrl, item.coverReferer)) : '';
   const tagsHtml = (item.tags || []).slice(0, 3).map(t => `<span class="hd-tag">${esc((t.name || t || '').toUpperCase())}</span>`).join('');
-  const desc = item.description ? esc(item.description.slice(0, 220)) : '';
+  const desc = item.description ? esc(item.description.slice(0, 240)) : '';
+  const stars = item.rating ? starsHtml(item.rating) : '';
+  const metaParts = [];
+  if (item.rating) metaParts.push(`<span class="hd-rating">${stars}<span class="hd-rating-num">${item.rating.toFixed(1)}</span></span>`);
+  if (item.author) metaParts.push(`<span class="hd-author">${esc(item.author)}</span>`);
+  const metaRow = metaParts.length ? `<div class="hd-meta-row">${metaParts.join('')}</div>` : '';
   return `<div class="hd-slide${idx===0?' active':''}" data-id="${esc(item.id)}" data-source="${esc(item.source||'mdex')}">
     ${cov ? `<img class="hd-bg" src="${cov}" alt="" loading="eager" decoding="async">` : ''}
     <div class="hd-bg-overlay"></div>
@@ -1667,6 +1682,7 @@ function buildHeroDesktopSlide(item, idx) {
       <div class="hd-info">
         <div class="hd-kicker">Popular New Titles</div>
         <div class="hd-title">${esc(item.title)}</div>
+        ${metaRow}
         ${tagsHtml ? `<div class="hd-tags">${tagsHtml}</div>` : ''}
         ${desc ? `<div class="hd-desc">${desc}</div>` : ''}
       </div>
