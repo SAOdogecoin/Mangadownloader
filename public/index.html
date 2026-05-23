@@ -454,14 +454,14 @@ button.status-pill:hover{opacity:.75}
 .topbar-r3, .nav-tabs-row{display:none !important}
 
 /* ─── BOTTOM TAB NAV (floating pill, centered, selected = black circle) ─── */
-.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:6px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50}
+.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:stretch;gap:6px;background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:8px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50;min-width:280px}
 @supports not (backdrop-filter:blur(1px)){.bnav{background:rgba(255,255,255,.92)}}
-.bnav-tab{width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;transition:background .18s,color .18s,transform .15s}
+.bnav-tab{flex:1;min-width:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 14px;background:none;border:none;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:-.005em;transition:background .18s,color .18s,transform .15s}
 .bnav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bnav-tab[data-route="home"] svg{width:24px;height:24px}
-.bnav-tab span{display:none}
-.bnav-tab:active{transform:scale(.92)}
-.bnav-tab.active{background:#0a0a0a;color:#fff}
+.bnav-tab span{display:block;line-height:1}
+.bnav-tab:active{transform:scale(.94)}
+.bnav-tab.active{background:#0a0a0a;color:#fff;font-weight:700}
 .bnav-tab.active svg{stroke:#fff;fill:none;stroke-width:2}
 /* App body padding-bottom to clear bottom nav */
 .app-body{padding-bottom:88px}
