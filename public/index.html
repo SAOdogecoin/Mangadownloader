@@ -725,9 +725,10 @@ body[data-route="library"] .topbar{background:#fff !important;border-bottom:1px 
       <div class="spin"></div> Searching…
     </div>
     <div class="results-grid" id="results-grid"></div>
-    <div id="load-more-wrap" style="display:none;padding:8px 16px 20px;text-align:center">
-      <button class="btn-load-more" id="btn-load-more" onclick="loadMore()">Load more</button>
+    <div id="load-more-wrap" style="display:none;padding:20px;text-align:center">
+      <div class="spin"></div>
     </div>
+    <div id="results-sentinel" style="height:1px"></div>
     <!-- Genres section, visible when results empty -->
     <div class="search-genres-section" id="search-genres-section">
       <div class="search-genres-kicker">Browse by genre</div>
@@ -963,12 +964,19 @@ let activeStatus = '';
 let lastQuery = '';
 let lastTagId = '';
 let lastStatus = '';
+let lastSort = '';
+let lastSince = '';
 let lastOffset = 0;
+let _loadingMore = false;
+let _hasMore = false;
+let _sentinelObs = null;
+const _viewAllCache = new Map();
 let _searchTimer;
 let _predictCtrl = null;
 const _previewCache = {};
 const _dropCache = {}; // query+tag → results for instant re-render
 const SEARCH_LIMIT = 20;
+const VIEWALL_INITIAL = 40; // fills screen on first load
 let _searchSource = 'mdex'; // MangaDex primary
 let _panelSource = 'mdex';
 
@@ -1309,7 +1317,9 @@ async function doSearch() {
   lastQuery = q;
   lastTagId = activeTagId;
   lastStatus = activeStatus;
-  lastOffset = 0;
+  lastSort = ''; lastSince = ''; lastOffset = 0;
+  _loadingMore = false; _hasMore = true;
+  if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
   navigate('search');
   document.getElementById('search-genres-section')?.classList.add('hidden');
   document.getElementById('search-loading').style.display = 'flex';
@@ -1319,7 +1329,11 @@ async function doSearch() {
     const url = `/api/search?limit=${SEARCH_LIMIT}&offset=0&q=${encodeURIComponent(q)}${activeTagId ? '&tagId=' + activeTagId : ''}${activeStatus ? '&status=' + activeStatus : ''}`;
     const data = await fetch(url).then(r => r.json());
     if (data.error) throw new Error(data.error);
-    renderResults(data.results || [], false);
+    const results = data.results || [];
+    lastOffset = results.length;
+    _hasMore = results.length >= SEARCH_LIMIT;
+    renderResults(results, false);
+    if (_hasMore) _initSentinel();
   } catch (e) {
     showToast('Search failed: ' + e.message);
   } finally {
@@ -1328,29 +1342,35 @@ async function doSearch() {
 }
 
 async function loadMore() {
-  if (!lastQuery && !lastTagId) return;
-  const btn = document.getElementById('btn-load-more');
-  btn.disabled = true;
-  btn.textContent = 'Loading…';
-  const nextOffset = lastOffset + SEARCH_LIMIT;
+  if (_loadingMore || !_hasMore) return;
+  if (!lastQuery && !lastTagId && !lastSort) return;
+  _loadingMore = true;
+  document.getElementById('load-more-wrap').style.display = 'block';
   try {
-    let url = `/api/search?limit=${SEARCH_LIMIT}&offset=${nextOffset}`;
+    let url = `/api/search?limit=${SEARCH_LIMIT}&offset=${lastOffset}`;
     if (lastQuery) url += `&q=${encodeURIComponent(lastQuery)}`;
     if (lastTagId) url += `&tagId=${lastTagId}`;
     if (lastStatus) url += `&status=${lastStatus}`;
+    if (lastSort) url += `&sort=${encodeURIComponent(lastSort)}`;
+    if (lastSince) url += `&since=${encodeURIComponent(lastSince)}`;
     const data = await fetch(url).then(r => r.json());
     if (data.error) throw new Error(data.error);
     const results = data.results || [];
     if (results.length) {
-      lastOffset = nextOffset;
+      lastOffset += results.length;
+      _hasMore = results.length >= SEARCH_LIMIT;
       renderResults(results, true);
     } else {
-      document.getElementById('load-more-wrap').style.display = 'none';
+      _hasMore = false;
     }
   } catch (e) {
     showToast('Load more failed: ' + e.message);
-    btn.disabled = false;
-    btn.textContent = 'Load more';
+  } finally {
+    _loadingMore = false;
+    if (!_hasMore) {
+      document.getElementById('load-more-wrap').style.display = 'none';
+      if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
+    }
   }
 }
 
@@ -1391,14 +1411,8 @@ function renderResults(results, append = false) {
   } else {
     grid.innerHTML = html;
   }
-  // Show load more if a full page came back
-  if (results.length >= SEARCH_LIMIT) {
-    lmw.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Load more';
-  } else {
-    lmw.style.display = 'none';
-  }
+  // Spinner shown by loadMore itself; hide here only if we know there's no more
+  if (!_hasMore) lmw.style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1590,33 +1604,55 @@ function renderDiscSection(label, items, container, sortKey, opts) {
 }
 
 // View-all → navigate to search view, run filtered fetch using the section's sort key
+function _initSentinel() {
+  if (_sentinelObs) _sentinelObs.disconnect();
+  const sentinel = document.getElementById('results-sentinel');
+  if (!sentinel) return;
+  _sentinelObs = new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) loadMore();
+  }, { rootMargin: '300px' }); // preload 300px before hitting bottom
+  _sentinelObs.observe(sentinel);
+}
+
 async function viewAllSection(sortKey, label) {
   navigate('search');
+  // Reset state
+  lastQuery = ''; lastTagId = ''; lastStatus = ''; lastSort = ''; lastSince = ''; lastOffset = 0;
+  _loadingMore = false; _hasMore = true;
+  if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
   document.getElementById('search-genres-section')?.classList.add('hidden');
   document.getElementById('search-loading').style.display = 'flex';
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
-  // Set lastQuery state so loadMore works
-  lastQuery = ''; lastTagId = ''; lastStatus = ''; lastOffset = 0;
-  // Map section to API params
-  let url = `/api/search?limit=${SEARCH_LIMIT}&offset=0`;
+
+  // Build initial URL (40 items to fill screen)
+  let url = `/api/search?limit=${VIEWALL_INITIAL}&offset=0`;
   if (sortKey === 'selfPublished') {
     url += '&tagId=891cf039-b895-47f0-9229-bef4c96eccd4&sort=followedCount';
     lastTagId = '891cf039-b895-47f0-9229-bef4c96eccd4';
+    lastSort = 'followedCount';
   } else if (sortKey === 'seasonal') {
-    const now = new Date(); const m = now.getUTCMonth() + 1; const y = now.getUTCFullYear();
-    const start = m>=3&&m<=5 ? `${y}-03-01T00:00:00` : m>=6&&m<=8 ? `${y}-06-01T00:00:00` : m>=9&&m<=11 ? `${y}-09-01T00:00:00` : `${y}-12-01T00:00:00`;
+    const m = new Date().getUTCMonth() + 1, y = new Date().getUTCFullYear();
+    const start = m>=3&&m<=5?`${y}-03-01T00:00:00`:m>=6&&m<=8?`${y}-06-01T00:00:00`:m>=9&&m<=11?`${y}-09-01T00:00:00`:`${y}-12-01T00:00:00`;
     url += `&since=${encodeURIComponent(start)}&sort=followedCount`;
+    lastSort = 'followedCount'; lastSince = start;
   } else {
     url += `&sort=${encodeURIComponent(sortKey)}`;
+    lastSort = sortKey;
   }
   try {
-    const data = await fetch(url).then(r => r.json());
+    // Use preload cache if available (instant render)
+    const cached = _viewAllCache.get(url);
+    const data = cached || await fetch(url).then(r => r.json());
+    if (!cached) _viewAllCache.set(url, data);
     if (data.error) throw new Error(data.error);
-    renderResults(data.results || [], false);
-    // Update topbar search input on desktop to show the active filter
+    const results = data.results || [];
+    lastOffset = results.length;
+    _hasMore = results.length >= VIEWALL_INITIAL;
+    renderResults(results, false);
     const tb = document.getElementById('topbar-search-input');
     if (tb) tb.placeholder = `Browsing: ${label}`;
+    if (_hasMore) _initSentinel();
   } catch (e) {
     showToast('Failed: ' + e.message);
   } finally {
@@ -1715,6 +1751,28 @@ function renderHomeData(data, wrap) {
   if (data.seasonName) renderDiscSection(`Seasonal — ${data.seasonName}`, data.seasonal, wrap, 'seasonal');
   renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
   renderDiscSection('Self-Published', data.selfPublished, wrap, 'selfPublished');
+  // Preload view-all pages in background so View All is instant
+  _preloadViewAllSections(data.seasonName);
+}
+
+function _preloadViewAllSections(seasonName) {
+  const urls = [
+    `/api/search?limit=${VIEWALL_INITIAL}&offset=0&sort=latestUploadedChapter`,
+    `/api/search?limit=${VIEWALL_INITIAL}&offset=0&sort=createdAt`,
+    `/api/search?limit=${VIEWALL_INITIAL}&offset=0&tagId=891cf039-b895-47f0-9229-bef4c96eccd4&sort=followedCount`,
+  ];
+  if (seasonName) {
+    const m = new Date().getUTCMonth() + 1, y = new Date().getUTCFullYear();
+    const start = m>=3&&m<=5?`${y}-03-01T00:00:00`:m>=6&&m<=8?`${y}-06-01T00:00:00`:m>=9&&m<=11?`${y}-09-01T00:00:00`:`${y}-12-01T00:00:00`;
+    urls.push(`/api/search?limit=${VIEWALL_INITIAL}&offset=0&since=${encodeURIComponent(start)}&sort=followedCount`);
+  }
+  // Stagger fetches to avoid hammering API simultaneously
+  urls.forEach((url, i) => setTimeout(() => {
+    if (_viewAllCache.has(url)) return;
+    fetch(url).then(r => r.ok ? r.json() : null).then(d => {
+      if (d && !d.error) _viewAllCache.set(url, d);
+    }).catch(() => {});
+  }, 800 + i * 600)); // start 800ms after home renders, 600ms apart
 }
 
 // ─── Desktop wide hero carousel ──────────────────────────────────────
