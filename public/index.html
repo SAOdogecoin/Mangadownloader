@@ -454,7 +454,7 @@ button.status-pill:hover{opacity:.75}
 .topbar-r3, .nav-tabs-row{display:none !important}
 
 /* ─── BOTTOM TAB NAV (floating pill, centered, selected = black circle) ─── */
-.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:stretch;gap:6px;background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:8px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50;min-width:280px}
+.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:stretch;gap:6px;background:rgba(255,255,255,.4);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:8px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50;min-width:280px}
 @supports not (backdrop-filter:blur(1px)){.bnav{background:rgba(255,255,255,.92)}}
 .bnav-tab{flex:1;min-width:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 14px;background:none;border:none;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:-.005em;transition:background .18s,color .18s,transform .15s}
 .bnav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -464,8 +464,11 @@ button.status-pill:hover{opacity:.75}
 .bnav-tab.active{background:#0a0a0a;color:#fff;font-weight:700}
 .bnav-tab.active svg{stroke:#fff;fill:none;stroke-width:2}
 /* App body padding-bottom to clear bottom nav */
-.app-body{padding-bottom:88px}
-@supports(padding:max(0px)){.app-body{padding-bottom:max(88px,calc(88px + env(safe-area-inset-bottom)))}}
+/* No reserved space — content scrolls UNDER the floating pill so it shows through the blur */
+.app-body{padding-bottom:14px}
+@supports(padding:max(0px)){.app-body{padding-bottom:max(14px,calc(14px + env(safe-area-inset-bottom)))}}
+/* Last home-section gets extra bottom space so last manga row isn't permanently hidden by pill */
+.home-section:last-of-type,.search-genres-section,#lib-page-wrap{padding-bottom:90px}
 .nav-pill.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(10,10,10,.6)}
 
 /* ─── GENRE PAGE ─── */
