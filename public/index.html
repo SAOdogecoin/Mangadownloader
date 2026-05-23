@@ -1628,9 +1628,12 @@ function _initSentinel() {
   if (_sentinelObs) _sentinelObs.disconnect();
   const sentinel = document.getElementById('results-sentinel');
   if (!sentinel) return;
+  // root must be the actual scroll container (.view), not the viewport —
+  // IntersectionObserver scroll tracking only fires from the scrolling element
+  const scroller = document.getElementById('v-search');
   _sentinelObs = new IntersectionObserver(([e]) => {
     if (e.isIntersecting) loadMore();
-  }, { rootMargin: '300px' }); // preload 300px before hitting bottom
+  }, { root: scroller, rootMargin: '300px' });
   _sentinelObs.observe(sentinel);
 }
 
