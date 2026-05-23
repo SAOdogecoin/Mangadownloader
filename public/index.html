@@ -340,6 +340,14 @@ button.status-pill:hover{opacity:.75}
 /* Hide tap zones + next-ch button overlay in vertical mode (they block scroll) */
 .reader-overlay.vmode .tap-zone{display:none}
 .reader-overlay.vmode .next-ch-btn{display:none !important}
+.reader-overlay.vmode .reader-ch-nav{display:none !important}
+/* Chapter prev/next nav bar — bottom, always visible in horizontal mode */
+.reader-ch-nav{position:absolute;bottom:64px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px;z-index:4;pointer-events:none;transition:opacity .2s}
+.reader-ch-nav.hide{opacity:0;pointer-events:none}
+.reader-ch-nav-btn{display:flex;align-items:center;gap:5px;padding:7px 14px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:99px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,opacity .2s;pointer-events:auto;letter-spacing:.01em}
+.reader-ch-nav-btn:active{background:rgba(0,0,0,.8)}
+.reader-ch-nav-btn:disabled{opacity:.25;cursor:default;pointer-events:none}
+.reader-ch-nav-btn svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 /* Mobile momentum scroll */
 .reader-area.vertical{-webkit-overflow-scrolling:touch;touch-action:pan-y;scroll-behavior:auto}
 .reader-page-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600}
@@ -813,7 +821,19 @@ body[data-route="library"] .topbar{background:#fff !important;box-shadow:none;bo
   <!-- Page counter bottom-center -->
   <div class="reader-pg-counter" id="reader-pg-counter">1 / 1</div>
 
-  <!-- Next chapter -->
+  <!-- Chapter prev/next nav — hidden in vmode via CSS -->
+  <div class="reader-ch-nav" id="reader-ch-nav">
+    <button class="reader-ch-nav-btn" id="reader-prev-btn" onclick="goPrevChapter()" disabled>
+      <svg id="prev-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Prev</span>
+    </button>
+    <button class="reader-ch-nav-btn" id="reader-next-btn" onclick="goNextChapter()" disabled>
+      <span>Next</span>
+      <svg id="next-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- Next chapter (end-of-chapter callout, still used in horizontal mode) -->
   <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter</button>
 </div>
 
@@ -2364,6 +2384,7 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
   document.getElementById('reader-overlay').classList.toggle('vmode', readerState.isVertical);
   updateModeIcon();
+  updateChNav();
 
   // Show overlay
   document.getElementById('reader-overlay').classList.remove('hidden');
@@ -2674,6 +2695,36 @@ async function goNextChapter() {
   await startRead(mangaId, nextCh.id, nextCh.chapter || '', nextCh.title || '');
 }
 
+async function goPrevChapter() {
+  const { chapters, chapterListIdx, mangaId } = readerState;
+  const prevCh = chapters[chapterListIdx - 1];
+  if (!prevCh) return;
+  await startRead(mangaId, prevCh.id, prevCh.chapter || '', prevCh.title || '');
+}
+
+function updateChNav() {
+  const { chapterListIdx, chapters, isRTL } = readerState;
+  const hasPrev = chapterListIdx > 0;
+  const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
+  const prevBtn = document.getElementById('reader-prev-btn');
+  const nextBtn = document.getElementById('reader-next-btn');
+  if (!prevBtn) return;
+  prevBtn.disabled = !hasPrev;
+  nextBtn.disabled = !hasNext;
+  // Arrow direction reflects reading direction:
+  // RTL (manga): forward = left, backward = right → swap arrows
+  // LTR (manhwa): forward = right, backward = left → normal
+  const prevPoly = prevBtn.querySelector('polyline');
+  const nextPoly = nextBtn.querySelector('polyline');
+  if (isRTL) {
+    prevPoly.setAttribute('points', '9 18 15 12 9 6');  // → pointing right
+    nextPoly.setAttribute('points', '15 18 9 12 15 6');  // ← pointing left
+  } else {
+    prevPoly.setAttribute('points', '15 18 9 12 15 6');  // ← pointing left
+    nextPoly.setAttribute('points', '9 18 15 12 9 6');   // → pointing right
+  }
+}
+
 function closeReader() {
   document.getElementById('reader-overlay').classList.add('hidden');
   document.body.classList.remove('reader-open');
@@ -2688,6 +2739,7 @@ function closeReader() {
   document.getElementById('next-ch-btn').style.display = 'none';
   document.getElementById('reader-top').classList.remove('hide');
   document.getElementById('reader-pg-counter').classList.remove('hide');
+  document.getElementById('reader-ch-nav').classList.remove('hide');
   // Refresh panel chapter highlights
   if (currentMangaData) renderPanel(currentMangaData);
 }
@@ -2697,6 +2749,7 @@ function toggleTopBar() {
   readerState.topBarVisible = !readerState.topBarVisible;
   bar.classList.toggle('hide', !readerState.topBarVisible);
   document.getElementById('reader-pg-counter').classList.toggle('hide', !readerState.topBarVisible);
+  document.getElementById('reader-ch-nav').classList.toggle('hide', !readerState.topBarVisible);
   if (readerState.topBarVisible) resetTopBarTimer();
 }
 
@@ -2704,6 +2757,7 @@ function autoHideTopBar() {
   readerState.topBarVisible = true;
   document.getElementById('reader-top').classList.remove('hide');
   document.getElementById('reader-pg-counter').classList.remove('hide');
+  document.getElementById('reader-ch-nav').classList.remove('hide');
   resetTopBarTimer();
 }
 
@@ -2711,6 +2765,7 @@ function resetTopBarTimer() {
   clearTimeout(readerState.topBarTimer);
   readerState.topBarTimer = setTimeout(() => {
     document.getElementById('reader-top').classList.add('hide');
+    document.getElementById('reader-ch-nav').classList.add('hide');
     readerState.topBarVisible = false;
   }, 3500);
 }
