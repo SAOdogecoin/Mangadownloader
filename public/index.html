@@ -471,10 +471,9 @@ button.status-pill:hover{opacity:.75}
 .bnav-tab:active{transform:scale(.94)}
 .bnav-tab.active{background:#0a0a0a;color:#fff;font-weight:700}
 .bnav-tab.active svg{stroke:#fff;fill:none;stroke-width:2}
-/* App body padding-bottom to clear bottom nav */
+/* App body padding-bottom — none (bottom nav is floating, no reserved space needed) */
 /* No reserved space — content scrolls UNDER the floating pill so it shows through the blur */
-.app-body{padding-bottom:14px}
-@supports(padding:max(0px)){.app-body{padding-bottom:max(14px,calc(14px + env(safe-area-inset-bottom)))}}
+.app-body{padding-bottom:0}
 /* Last home-section gets extra bottom space so last manga row isn't permanently hidden by pill */
 .home-section:last-of-type,.search-genres-section,#lib-page-wrap{padding-bottom:90px}
 .nav-pill.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(10,10,10,.6)}
@@ -1689,9 +1688,6 @@ function renderHomeData(data, wrap) {
   const popularNew = data.popularNew || [];
   renderHeroDesktop(popularNew, wrap);
   renderDiscSection('Latest Updates', data.updated, wrap, 'latestUploadedChapter', {showChapter:true});
-  renderDiscSection('Recommended', data.recommended, wrap, 'followedCount');
-  renderDiscSection('Popular New Titles', popularNew, wrap, 'followedCount');
-  renderDiscSection('Top Rated', data.topRated, wrap, 'rating');
   if (data.seasonName) renderDiscSection(`Seasonal — ${data.seasonName}`, data.seasonal, wrap, 'seasonal');
   renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
   renderDiscSection('Self-Published', data.selfPublished, wrap, 'selfPublished');
