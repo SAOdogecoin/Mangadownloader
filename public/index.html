@@ -580,6 +580,24 @@ button.status-pill:hover{opacity:.75}
 .recent-chip-rm{width:14px;height:14px;border:none;background:none;cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:color .14s;margin-left:1px}
 .recent-chip-rm:hover{color:var(--fg)}
 .recent-chip-rm svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+/* Autocomplete popup */
+.ac-popup{position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fff;border-radius:14px;box-shadow:0 12px 48px -8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);z-index:99999;overflow:hidden;display:none;flex-direction:column;min-width:280px}
+.ac-popup.show{display:flex;animation:ac-in .11s ease-out}
+@keyframes ac-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.ac-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .08s;-webkit-tap-highlight-color:transparent;border:none;width:100%;background:none;font-family:inherit;text-align:left}
+.ac-item:hover,.ac-item.ac-focused{background:var(--surf)}
+.ac-item+.ac-item{border-top:1px solid rgba(0,0,0,.04)}
+.ac-cover-wrap{width:36px;height:52px;border-radius:5px;overflow:hidden;flex-shrink:0;background:var(--surf)}
+.ac-cover{width:100%;height:100%;object-fit:cover;display:block}
+.ac-cover-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.ac-cover-ph svg{width:16px;height:16px;stroke:#ccc;fill:none}
+.ac-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ac-title{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;line-height:1.2}
+.ac-meta{display:flex;align-items:center;gap:6px}
+.ac-status{font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.03em;text-transform:capitalize;flex-shrink:0}
+.ac-rating{font-size:11px;font-weight:600;color:var(--sub);display:flex;align-items:center;gap:2px}
+.ac-rating svg{width:10px;height:10px;flex-shrink:0}
+.ac-empty{padding:16px;font-size:13px;color:var(--sub);text-align:center}
 
 /* ─── HERO BANNER (responsive) ─── */
 /* Mobile: side margins + rounded card, extends UP behind topbar via negative top margin */
@@ -763,10 +781,11 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       <div class="search-page-bar">
         <div class="search-wrap-page">
           <svg class="search-page-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input-page" id="search-input" placeholder="Search manga, manhwa…" oninput="onSearchInputChange()" onkeydown="if(event.key==='Enter')doSearch()"/>
+          <input class="search-input-page" id="search-input" placeholder="Search manga, manhwa…" oninput="onSearchInputChange()" onkeydown="acKeyNav(event,'main');if(event.key==='Enter'&&!event.defaultPrevented)doSearch()" onblur="setTimeout(()=>closeAc('main'),180)"/>
           <button class="btn-clear-input-page" id="btn-clear-input" onclick="clearSearchInput()" style="display:none" aria-label="Clear">
             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <div class="ac-popup" id="ac-popup-main"></div>
         </div>
         <button class="btn-search-page" onclick="doSearch()">Search</button>
       </div>
@@ -1063,6 +1082,7 @@ function renderDesktopSidebarGenres() {
 
 // Desktop: read from topbar input + fire search
 function doDesktopSearch() {
+  closeAc('desktop');
   const inp = document.getElementById('topbar-search-input');
   const mobile = document.getElementById('search-input');
   if (!inp) return;
@@ -1112,17 +1132,107 @@ function onSearchInputChange() {
   const q = document.getElementById('search-input').value;
   const clr = document.getElementById('btn-clear-input');
   if (clr) clr.style.display = q ? 'flex' : 'none';
+  scheduleAc(q.trim(), 'main');
 }
 function clearSearchInput() {
   const inp = document.getElementById('search-input');
   if (inp) inp.value = '';
   onSearchInputChange();
+  closeAc('main');
   document.getElementById('search-genres-section')?.classList.remove('hidden');
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
   renderRecentSearches();
   inp?.focus();
 }
+
+// ─── Autocomplete / predictive search ────────────────────────────────────────
+const _acCache = new Map();
+let _acAbort = null;
+let _acTimer = null;
+let _acFocusIdx = -1;
+
+function scheduleAc(q, src) {
+  clearTimeout(_acTimer);
+  if (!q || q.length < 2) { closeAc(src); return; }
+  _acTimer = setTimeout(() => fetchAc(q, src), 160);
+}
+async function fetchAc(q, src) {
+  const key = q.toLowerCase();
+  const cached = _acCache.get(key);
+  if (cached) { renderAc(cached, src); return; }
+  if (_acAbort) _acAbort.abort();
+  _acAbort = new AbortController();
+  try {
+    const res = await fetch(`/api/search?limit=6&offset=0&q=${encodeURIComponent(q)}`, { signal: _acAbort.signal });
+    const data = await res.json();
+    const results = data.results || [];
+    _acCache.set(key, results);
+    if (_acCache.size > 50) _acCache.delete(_acCache.keys().next().value);
+    renderAc(results, src);
+  } catch(e) { if (e.name !== 'AbortError') closeAc(src); }
+}
+function renderAc(results, src) {
+  _acFocusIdx = -1;
+  const pop = document.getElementById(src === 'desktop' ? 'ac-popup-desktop' : 'ac-popup-main');
+  if (!pop) return;
+  if (!results.length) {
+    pop.innerHTML = `<div class="ac-empty">No results found</div>`;
+    pop.classList.add('show'); return;
+  }
+  const srcKey = src === 'desktop' ? 'desktop' : 'main';
+  pop.innerHTML = results.map(r => {
+    const pillCls = statusPillClass(r.status);
+    const covHtml = r.coverUrl
+      ? `<img class="ac-cover" src="${esc(proxyUrl(r.coverUrl, r.coverReferer))}" loading="eager" onerror="this.style.display='none'">`
+      : `<div class="ac-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
+    const ratingHtml = r.rating
+      ? `<span class="ac-rating"><svg viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>${r.rating.toFixed(1)}</span>`
+      : '';
+    const statusHtml = r.status ? `<span class="ac-status ${pillCls}">${esc(r.status)}</span>` : '';
+    return `<button class="ac-item" onmousedown="event.preventDefault()" onclick="selectAcItem('${esc(r.id)}','${srcKey}')">
+      <div class="ac-cover-wrap">${covHtml}</div>
+      <div class="ac-info">
+        <div class="ac-title">${esc(r.title)}</div>
+        <div class="ac-meta">${statusHtml}${ratingHtml}</div>
+      </div>
+    </button>`;
+  }).join('');
+  pop.classList.add('show');
+}
+function closeAc(src) {
+  clearTimeout(_acTimer);
+  _acFocusIdx = -1;
+  const ids = src ? [(src === 'desktop' ? 'ac-popup-desktop' : 'ac-popup-main')] : ['ac-popup-main','ac-popup-desktop'];
+  ids.forEach(id => document.getElementById(id)?.classList.remove('show'));
+}
+function selectAcItem(id, src) {
+  closeAc(src);
+  openPanel(id, _searchSource);
+}
+function acKeyNav(e, src) {
+  const pop = document.getElementById(src === 'desktop' ? 'ac-popup-desktop' : 'ac-popup-main');
+  if (!pop?.classList.contains('show')) return;
+  const items = [...pop.querySelectorAll('.ac-item')];
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _acFocusIdx = Math.min(_acFocusIdx + 1, items.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _acFocusIdx = Math.max(_acFocusIdx - 1, 0);
+  } else if (e.key === 'Escape') {
+    e.preventDefault(); closeAc(src); return;
+  } else if (e.key === 'Enter' && _acFocusIdx >= 0) {
+    e.preventDefault(); items[_acFocusIdx].click(); return;
+  } else return;
+  items.forEach((el, i) => el.classList.toggle('ac-focused', i === _acFocusIdx));
+}
+// Close on outside click
+document.addEventListener('mousedown', e => {
+  if (!e.target.closest('#ac-popup-main') && !e.target.closest('.search-wrap-page')) closeAc('main');
+  if (!e.target.closest('#ac-popup-desktop') && !e.target.closest('.topbar-search-desktop')) closeAc('desktop');
+});
 
 // ─── Recent searches ─────────────────────────────────────────────────────────
 const RECENT_SEARCH_KEY = 'recentSearches';
@@ -1427,6 +1537,7 @@ function renderDropItem(r) {
 }
 
 async function doSearch() {
+  closeAc('main');
   document.getElementById('search-input').blur();
   const q = document.getElementById('search-input').value.trim();
   if (!q && !activeTagId && !activeStatus) return;
@@ -3083,7 +3194,8 @@ document.getElementById('search-body').addEventListener('scroll', function() {
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
     <div class="topbar-search-desktop">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="topbar-search-input" type="text" placeholder="Search manga…" onkeydown="if(event.key==='Enter')doDesktopSearch()"/>
+      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="scheduleAc(this.value.trim(),'desktop')" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
+      <div class="ac-popup" id="ac-popup-desktop"></div>
     </div>
     <nav class="topbar-desktop-nav">
       <button data-route="home" onclick="navigate('home')">Home</button>
