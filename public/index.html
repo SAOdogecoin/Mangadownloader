@@ -651,7 +651,7 @@ button.status-pill:hover{opacity:.75}
   <div class="reader-progress"><div class="reader-progress-fill" id="progress-fill"></div></div>
 
   <!-- Next chapter -->
-  <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter →</button>
+  <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter</button>
 </div>
 
 <!-- TOC -->
@@ -1279,7 +1279,25 @@ function renderHomeState() {
 function renderContinueReading() {
   const wrap = document.getElementById('cr-wrap');
   if (!wrap) return;
-  const recent = allManga
+  // Merge read-history (covers non-library reads) with library entries
+  const hist = getReadHistory();
+  const merged = {};
+  Object.values(hist).forEach(h => { merged[h.id] = h; });
+  allManga.forEach(m => {
+    if (m.lastReadChapterId) {
+      merged[m.id] = {
+        id: m.id,
+        title: m.title,
+        coverUrl: m.coverUrl,
+        coverReferer: m.coverReferer,
+        source: m.source || 'mdex',
+        lastReadChapterId: m.lastReadChapterId,
+        lastReadChapter: m.lastReadChapter,
+        lastReadAt: m.lastReadAt || merged[m.id]?.lastReadAt || 0
+      };
+    }
+  });
+  const recent = Object.values(merged)
     .filter(m => m.lastReadChapterId)
     .sort((a, b) => (b.lastReadAt || 0) - (a.lastReadAt || 0))
     .slice(0, 12);
@@ -1290,7 +1308,7 @@ function renderContinueReading() {
   </div>`;
   // CR items resume reader at saved chapter+page
   wrap.querySelectorAll('.disc-card').forEach(el => {
-    const m = allManga.find(x => x.id === el.dataset.id);
+    const m = recent.find(x => x.id === el.dataset.id);
     el.addEventListener('click', async () => {
       if (!m?.lastReadChapterId) { openPanel(el.dataset.id); return; }
       // Fetch fresh manga data for chapter list (so next-chapter nav works)
@@ -2185,7 +2203,7 @@ async function showVertical(startIdx) {
     </div>`;
   }).join('');
   const hasNext = readerState.chapterListIdx >= 0 && readerState.chapterListIdx < readerState.chapters.length - 1;
-  const endHtml = `<div class="reader-vend">End of chapter${hasNext ? `<br><button onclick="goNextChapter()">Next Chapter →</button>` : ''}</div>`;
+  const endHtml = `<div class="reader-vend">End of chapter${hasNext ? `<br><button onclick="goNextChapter()">Next Chapter</button>` : ''}</div>`;
   wrap.innerHTML = pagesHtml + endHtml;
 
   // Jump to saved page
@@ -2226,13 +2244,45 @@ async function showVertical(startIdx) {
 }
 
 async function saveProgress(mangaId, chapterId, chapterNum, pageIdx) {
+  // Update library entry if saved
   const saved = await IDB.get(mangaId);
-  if (!saved) return;
-  saved.lastReadChapterId = chapterId;
-  saved.lastReadPage = pageIdx;
-  saved.lastReadChapter = chapterNum;
-  saved.lastReadAt = Date.now();
-  await IDB.save(saved);
+  if (saved) {
+    saved.lastReadChapterId = chapterId;
+    saved.lastReadPage = pageIdx;
+    saved.lastReadChapter = chapterNum;
+    saved.lastReadAt = Date.now();
+    await IDB.save(saved);
+  }
+  // Always update read history (works for non-library reads too)
+  saveReadHistory(mangaId, chapterId, chapterNum, pageIdx);
+}
+
+// Read history: persists progress for ANY manga (library or not) → powers Continue Reading
+function saveReadHistory(mangaId, chapterId, chapterNum, pageIdx) {
+  try {
+    const hist = JSON.parse(localStorage.getItem('readHistory') || '{}');
+    const m = currentMangaData?.manga;
+    const existing = hist[mangaId] || {};
+    hist[mangaId] = {
+      id: mangaId,
+      title: m?.title || existing.title || 'Untitled',
+      coverUrl: m?.coverUrl || existing.coverUrl || null,
+      coverReferer: m?.coverReferer || existing.coverReferer || null,
+      source: m?.source || existing.source || 'mdex',
+      lastReadChapterId: chapterId,
+      lastReadChapter: chapterNum,
+      lastReadPage: pageIdx,
+      lastReadAt: Date.now()
+    };
+    // Cap history to 30 most-recent entries
+    const entries = Object.values(hist).sort((a,b) => (b.lastReadAt||0) - (a.lastReadAt||0)).slice(0, 30);
+    const capped = {};
+    entries.forEach(e => capped[e.id] = e);
+    localStorage.setItem('readHistory', JSON.stringify(capped));
+  } catch (e) { console.warn('saveReadHistory failed', e); }
+}
+function getReadHistory() {
+  try { return JSON.parse(localStorage.getItem('readHistory') || '{}'); } catch { return {}; }
 }
 
 function pageNav(dir) {
