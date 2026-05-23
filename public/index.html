@@ -43,7 +43,8 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 -webkit-tap-highlight-color:transparent;
 
 /* ─── TOPBAR ─── */
-.topbar{background:var(--bg);flex-shrink:0;position:relative;backdrop-filter:none;-webkit-backdrop-filter:none}
+.topbar{background:rgba(255,255,255,.65);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);position:absolute;top:0;left:0;right:0;z-index:10;border-bottom:1px solid rgba(0,0,0,.05)}
+@supports not (backdrop-filter:blur(1px)){.topbar{background:rgba(255,255,255,.96)}}
 .topbar-r1{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;padding-top:max(12px, env(safe-area-inset-top, 12px))}
 .app-title{font-family:'Knewave',cursive;font-size:24px;font-weight:400;color:#0a0a0a;letter-spacing:.01em;line-height:1;text-transform:uppercase}
 .ttab-group{display:flex;align-items:center;gap:2px}
@@ -77,7 +78,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 
 /* ─── LAYOUT ─── */
 .app-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.view{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0}
+.view{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0;padding-top:calc(48px + env(safe-area-inset-top,0))}
 .view.active{display:flex}
 
 /* ─── SEARCH VIEW ─── */
@@ -149,7 +150,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 .hero-stars .star-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#fff;margin-left:4px}
 .hero-status{display:inline-block;padding:2px 8px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:capitalize}
 .hero-actions{display:flex;gap:10px;margin-top:6px;pointer-events:auto}
-.hero-read{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);color:#fff;border:1px solid rgba(255,255,255,.45);padding:10px 22px;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em;transition:background .15s,transform .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.hero-read{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);color:#fff;border:1px solid rgba(255,255,255,.45);padding:10px 22px;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em;transition:background .15s,transform .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transform:translateZ(0);will-change:backdrop-filter;isolation:isolate}
 .hero-read:hover{background:rgba(255,255,255,.32);transform:translateY(-1px)}
 /* If browser doesn't support backdrop-filter, fall back to semi-solid */
 @supports not (backdrop-filter:blur(1px)){.hero-read{background:rgba(255,255,255,.85);color:#0a0a0a}.hero-read{box-shadow:none}}
