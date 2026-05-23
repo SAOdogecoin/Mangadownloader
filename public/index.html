@@ -355,6 +355,10 @@ button.status-pill:hover{opacity:.75}
 /* Progress bar */
 .reader-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1);z-index:2}
 .reader-progress-fill{height:100%;background:var(--org);transition:width .2s}
+/* Next chapter callout — shown at end of chapter */
+.next-ch-btn{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);padding:10px 24px;background:var(--org);color:#fff;border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:5;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(10,10,10,.55);transition:opacity .2s}
+.next-ch-btn:active{opacity:.8}
+.reader-overlay.vmode .next-ch-btn{display:none !important}
 
 /* Touch zones (invisible) */
 .tap-zone{position:absolute;top:50px;bottom:3px;width:30%;z-index:3}
@@ -815,7 +819,10 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   <!-- Progress bar -->
   <div class="reader-progress"><div class="reader-progress-fill" id="progress-fill"></div></div>
 
-  <!-- Bottom bar: [left ch btn] [page counter] [right ch btn] — hidden in vmode -->
+  <!-- Next chapter callout at end of chapter -->
+  <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter →</button>
+
+  <!-- Bottom bar: [left page btn] [page counter] [right page btn] — hidden in vmode -->
   <div class="reader-bottom-bar" id="reader-bottom-bar">
     <button class="reader-ch-nav-btn" id="reader-left-btn" disabled>
       <svg viewBox="0 0 24 24"><polyline id="left-arrow" points="15 18 9 12 15 6"/></svg>
@@ -1766,8 +1773,8 @@ function renderHomeData(data, wrap) {
   renderHeroDesktop(popularNew, wrap);
   renderDiscSection('Latest Updates', data.updated, wrap, 'latestUploadedChapter', {showChapter:true});
   if (data.seasonName) renderDiscSection(`Seasonal — ${data.seasonName}`, data.seasonal, wrap, 'seasonal');
-  renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
   renderDiscSection('Self-Published', data.selfPublished, wrap, 'selfPublished');
+  renderDiscSection('Recently Added', data.newManga, wrap, 'createdAt');
   // Preload view-all pages in background so View All is instant
   _preloadViewAllSections(data.seasonName);
 }
@@ -2527,6 +2534,8 @@ function showPage(idx) {
   const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
   updateReaderUrl();
+  updateChNav();
+  updateNextChBtn();
 
   // Save progress
   saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
@@ -2585,6 +2594,7 @@ async function showVertical(startIdx) {
           const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
           document.getElementById('progress-fill').style.width = pct + '%';
           updateReaderUrl();
+          updateChNav();
           saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
         }
       }
@@ -2683,6 +2693,8 @@ async function goNextChapter() {
   const { chapters, chapterListIdx, mangaId } = readerState;
   const nextCh = chapters[chapterListIdx + 1];
   if (!nextCh) return;
+  const btn = document.getElementById('next-ch-btn');
+  if (btn) btn.style.display = 'none';
   await startRead(mangaId, nextCh.id, nextCh.chapter || '', nextCh.title || '');
 }
 
@@ -2693,31 +2705,40 @@ async function goPrevChapter() {
   await startRead(mangaId, prevCh.id, prevCh.chapter || '', prevCh.title || '');
 }
 
-function updateChNav() {
-  const { chapterListIdx, chapters, isRTL } = readerState;
-  const hasPrev = chapterListIdx > 0;
+function updateNextChBtn() {
+  const { pages, pageIdx, isRTL, chapterListIdx, chapters } = readerState;
+  if (!pages.length) return;
+  const atEnd = isRTL ? pageIdx === 0 : pageIdx === pages.length - 1;
   const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
+  const btn = document.getElementById('next-ch-btn');
+  if (btn) btn.style.display = atEnd && hasNext ? 'block' : 'none';
+}
+
+function updateChNav() {
+  // Page navigation buttons — arrows match physical tap direction
+  const { pageIdx, pages, isRTL } = readerState;
+  const total = pages.length;
   const leftBtn = document.getElementById('reader-left-btn');
   const rightBtn = document.getElementById('reader-right-btn');
-  if (!leftBtn) return;
+  if (!leftBtn || !total) return;
   if (isRTL) {
-    // RTL manga: tap LEFT = next page → left btn = Next Ch (← arrow)
-    leftBtn.onclick = goNextChapter;
-    leftBtn.disabled = !hasNext;
+    // RTL: tap LEFT = next page forward in reading order
+    leftBtn.onclick = () => pageNav('next');
+    leftBtn.disabled = pageIdx === 0; // at reading end
     document.getElementById('left-label').textContent = 'Next';
     document.getElementById('left-arrow').setAttribute('points', '15 18 9 12 15 6'); // ←
-    rightBtn.onclick = goPrevChapter;
-    rightBtn.disabled = !hasPrev;
+    rightBtn.onclick = () => pageNav('prev');
+    rightBtn.disabled = pageIdx === total - 1; // at reading start
     document.getElementById('right-label').textContent = 'Prev';
     document.getElementById('right-arrow').setAttribute('points', '9 18 15 12 9 6'); // →
   } else {
-    // LTR manhwa: tap RIGHT = next page → right btn = Next Ch (→ arrow)
-    leftBtn.onclick = goPrevChapter;
-    leftBtn.disabled = !hasPrev;
+    // LTR: tap RIGHT = next page forward
+    leftBtn.onclick = () => pageNav('prev');
+    leftBtn.disabled = pageIdx === 0;
     document.getElementById('left-label').textContent = 'Prev';
     document.getElementById('left-arrow').setAttribute('points', '15 18 9 12 15 6'); // ←
-    rightBtn.onclick = goNextChapter;
-    rightBtn.disabled = !hasNext;
+    rightBtn.onclick = () => pageNav('next');
+    rightBtn.disabled = pageIdx === total - 1;
     document.getElementById('right-label').textContent = 'Next';
     document.getElementById('right-arrow').setAttribute('points', '9 18 15 12 9 6'); // →
   }
@@ -2742,6 +2763,8 @@ function closeReader() {
   if (_vertObserver) { _vertObserver.disconnect(); _vertObserver = null; }
   if (_vertChunkObs) { _vertChunkObs.disconnect(); _vertChunkObs = null; }
   clearTimeout(readerState.topBarTimer);
+  const nxBtn = document.getElementById('next-ch-btn');
+  if (nxBtn) nxBtn.style.display = 'none';
   document.getElementById('reader-top').classList.remove('hide');
   document.getElementById('reader-bottom-bar').classList.remove('hide');
   history.replaceState(null, '', readerState.prevHash || '#home');
