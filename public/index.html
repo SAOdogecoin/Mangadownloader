@@ -468,9 +468,9 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── PANEL ACTION ROW ─── */
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
-.panel-altsrc-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:transparent;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.panel-altsrc-btn:hover{border-color:var(--org-text);color:var(--org-text)}
-.panel-altsrc-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.panel-start-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:transparent;color:var(--fg);border:1.5px solid var(--fg);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-start-btn:hover{background:var(--fg);color:#fff}
+.panel-start-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--org);color:#0d1117;border:none;border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .panel-dl-btn:hover{background:var(--org-h)}
 .panel-dl-btn.active{background:var(--surf);color:var(--fg)}
@@ -1562,20 +1562,24 @@ async function renderPanel({ manga, chapters }) {
           <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
           Download
         </button>
-        <button class="panel-altsrc-btn" onclick="findOnOtherSources()" title="Find this manga on other sources">
-          <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-          Other Sources
+        <button class="panel-start-btn" id="panel-start-btn" onclick="readFromStart()" title="Read from chapter 1">
+          <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          Read from Start
         </button>
       </div>
     </div>`;
 
-  // Group chapters by volume
+  // Group chapters by volume — display newest first within each volume
   const volumes = {};
   for (const ch of chapters) {
     const vol = ch.volume || 'No Volume';
     if (!volumes[vol]) volumes[vol] = [];
     volumes[vol].push(ch);
   }
+  // Reverse each volume's chapters so newest shows first
+  Object.keys(volumes).forEach(k => volumes[k] = volumes[k].slice().reverse());
+  // Reverse volume key order too (newer volumes first)
+  const volEntries = Object.entries(volumes).reverse();
 
   const savedData = await IDB.get(manga.id);
   const lastChId = savedData?.lastReadChapterId;
@@ -1590,7 +1594,7 @@ async function renderPanel({ manga, chapters }) {
     </button>
   </div>` : '';
 
-  for (const [vol, chs] of Object.entries(volumes)) {
+  for (const [vol, chs] of volEntries) {
     if (Object.keys(volumes).length > 1 || vol !== 'No Volume') {
       chHtml += `<div class="ch-section-hdr">${vol === 'No Volume' ? 'Chapters' : `Volume ${esc(vol)}`}</div>`;
     }
@@ -1673,55 +1677,16 @@ function closePanel() {
   }, { passive: true });
 })();
 
-// Find current manga on OTHER sources — searches MangaPlus + Bato in parallel
-async function findOnOtherSources() {
-  console.log('[findOnOtherSources] clicked', { currentMangaData: !!currentMangaData });
-  if (!currentMangaData?.manga) { showToast('Wait for manga to finish loading first'); return; }
-  const title = currentMangaData.manga.title;
-  const body = document.getElementById('panel-body');
-  const existing = body.innerHTML;
-  body.innerHTML = existing + `<div id="other-src-results" style="border-top:1px solid var(--border);margin-top:8px">
-    <div style="padding:14px 16px;font-size:13px;color:var(--sub);font-weight:600">Searching other sources for "${esc(title)}"…</div>
-  </div>`;
-  // Scroll the new section into view so user sees it appear
-  setTimeout(() => document.getElementById('other-src-results')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
-
-  const sources = [
-    { name: 'MangaPlus (official)', url: `/api/mangaplus?action=search&q=${encodeURIComponent(title)}`, srcKey: 'mp', sub: 'Shueisha official' },
-    { name: 'Bato.to', url: `/api/bato?action=search&q=${encodeURIComponent(title)}`, srcKey: 'bato', sub: 'Community scans' },
-  ];
-
-  const results = await Promise.all(sources.map(s =>
-    fetch(s.url).then(r => r.json()).catch(e => ({ error: e.message }))
-  ));
-
-  const container = document.getElementById('other-src-results');
-  if (!container) return;
-  let html = '';
-  let anyHit = false;
-  results.forEach((d, i) => {
-    const src = sources[i];
-    if (d.error || !d.results?.length) {
-      html += `<div style="padding:10px 16px;font-size:11px;color:var(--sub)">${esc(src.name)}: ${d.error ? 'unavailable' : 'no match'}</div>`;
-      return;
-    }
-    anyHit = true;
-    d.results.forEach(r => { _previewCache[r.id] = r; });
-    html += `<div style="padding:10px 16px 4px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--fg)">${esc(src.name)}</div>`;
-    html += d.results.slice(0, 4).map(r => {
-      const covSrc = r.coverUrl ? proxyUrl(r.coverUrl, r.coverReferer) : null;
-      const img = covSrc ? `<img style="width:42px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" src="${esc(covSrc)}" onerror="this.style.display='none'">` : '';
-      return `<div onclick="closePanel();openPanel('${esc(r.id)}','${src.srcKey}')" style="display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border)">
-        ${img}
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--fg)">${esc(r.title)}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">${esc(src.sub)}</div>
-        </div>
-      </div>`;
-    }).join('');
-  });
-  if (!anyHit && !html) html = '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No matches anywhere.</div>';
-  container.innerHTML = html;
+// Start reading from chapter 1 (oldest)
+function readFromStart() {
+  if (!currentMangaData?.manga || !currentMangaData?.chapters?.length) {
+    showToast('Wait for chapters to load');
+    return;
+  }
+  // Internal chapter array is ascending (oldest first) → index 0 = first chapter
+  const first = currentMangaData.chapters[0];
+  readerState.chapterListIdx = 0;
+  startRead(currentMangaData.manga.id, first.id, first.chapter || '1', first.title || '');
 }
 
 // Search alt source by title, show results inline in panel body
@@ -2061,8 +2026,11 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
       probe.src = proxyUrl(readerState.pages[0]);
     }
 
-    // Aggressive chapter prefetch — fire-and-forget warm all remaining pages
-    setTimeout(() => prefetchAllPages(readerState.pages, readerState.pagesFallback), 250);
+    // For horizontal mode: keep aggressive whole-chapter prefetch (small images, fine).
+    // For vertical mode: skip — chunk observer in showVertical handles on-demand load.
+    if (!readerState.isVertical) {
+      setTimeout(() => prefetchAllPages(readerState.pages, readerState.pagesFallback), 250);
+    }
 
     // Prefetch next chapter's page list (not images, just the manifest) for fast chapter swap
     const nextCh = readerState.chapters[readerState.chapterListIdx + 1];
@@ -2161,44 +2129,32 @@ function showPage(idx) {
 
 // ─── Vertical (webtoon/manhua) reader ─────────────────────────────────
 let _vertObserver = null;
+let _vertChunkObs = null;
 async function showVertical(startIdx) {
   const { pages, pagesFallback } = readerState;
   const area = document.getElementById('reader-area');
   const wrap = document.getElementById('reader-img-wrap');
   const total = pages.length;
 
-  // Pre-warm ALL images with parallel fetch before rendering — guarantees smooth scroll
-  // Show loading state with progress
-  wrap.innerHTML = `<div class="reader-page-loading" id="vert-loader">
-    <div class="reader-spin"></div>
-    <div>Preparing chapter <span id="vert-prog">0</span>/${total}</div>
-  </div>`;
-
-  let loaded = 0;
-  const progEl = () => document.getElementById('vert-prog');
-  const preloadOne = (url) => new Promise(resolve => {
-    if (!url) return resolve();
-    const img = new Image();
-    img.decoding = 'async';
-    const done = () => { loaded++; if (progEl()) progEl().textContent = loaded; resolve(); };
-    img.onload = done;
-    img.onerror = done;
-    img.src = url;
-  });
-
-  // Warm first 6 pages with priority, then everything else in parallel
+  // Chunked load — first ~20% eagerly, rest lazy with src set on-demand as user scrolls
+  const INITIAL_CHUNK = Math.max(3, Math.ceil(total * 0.2));
+  // Quick warm of first 3 pages so render is instant
   const proxied = pages.map(p => proxyUrl(p));
-  await Promise.all(proxied.slice(0, 6).map(preloadOne));
-  // Fire-and-forget the rest while we render
-  proxied.slice(6).forEach(preloadOne);
+  await Promise.all(proxied.slice(0, 3).map(url => new Promise(r => {
+    const img = new Image(); img.decoding = 'async';
+    img.onload = img.onerror = () => r();
+    img.src = url;
+  })));
 
-  // Build stacked DOM — eager load (cache should serve instantly now)
+  // Build stacked DOM. First INITIAL_CHUNK pages get real src (eager load).
+  // Rest get data-src — actual src set when IntersectionObserver detects approach.
   const pagesHtml = pages.map((p, i) => {
     const url = esc(proxyUrl(p));
     const fb = pagesFallback?.[i] ? esc(proxyUrl(pagesFallback[i])) : '';
-    const eager = i < 8 ? 'eager' : 'lazy'; // first 8 eager, rest lazy (browser cache will serve)
-    return `<div class="reader-vpage" data-idx="${i}">
-      <img loading="${eager}" decoding="async" src="${url}" alt="" ${fb ? `onerror="if(this.dataset.fb){return}this.dataset.fb=1;this.src='${fb}'"` : ''}>
+    const srcAttr = i < INITIAL_CHUNK ? `src="${url}"` : `data-src="${url}"`;
+    const loading = i < INITIAL_CHUNK ? 'eager' : 'lazy';
+    return `<div class="reader-vpage" data-idx="${i}" style="min-height:${i < INITIAL_CHUNK ? 'auto' : '60vh'}">
+      <img loading="${loading}" decoding="async" ${srcAttr} alt="" ${fb ? `onerror="if(this.dataset.fb){return}this.dataset.fb=1;this.src='${fb}'"` : ''}>
       <span class="reader-vpage-num">${String(i+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</span>
     </div>`;
   }).join('');
@@ -2229,6 +2185,24 @@ async function showVertical(startIdx) {
     }
   }, { root: area, threshold: [0.4, 0.6] });
   wrap.querySelectorAll('.reader-vpage').forEach(el => _vertObserver.observe(el));
+
+  // Chunked-load observer: when a deferred page comes within 1.5 viewport heights, set its src
+  if (_vertChunkObs) _vertChunkObs.disconnect();
+  _vertChunkObs = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const img = e.target.querySelector('img[data-src]');
+      if (img) {
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        e.target.style.minHeight = '';
+        _vertChunkObs.unobserve(e.target);
+      }
+    }
+  }, { root: area, rootMargin: '150% 0px 150% 0px' });
+  wrap.querySelectorAll('.reader-vpage[data-idx]').forEach(el => {
+    if (el.querySelector('img[data-src]')) _vertChunkObs.observe(el);
+  });
 
   // Update progress bar initial state
   document.getElementById('reader-loc-btn').textContent = `${startIdx + 1}/${total}`;
@@ -2326,6 +2300,7 @@ function closeReader() {
   area.classList.remove('vertical');
   area.onclick = null;
   if (_vertObserver) { _vertObserver.disconnect(); _vertObserver = null; }
+  if (_vertChunkObs) { _vertChunkObs.disconnect(); _vertChunkObs = null; }
   clearTimeout(readerState.topBarTimer);
   document.getElementById('next-ch-btn').style.display = 'none';
   document.getElementById('reader-top').classList.remove('hide');
