@@ -36,14 +36,14 @@ html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;font-feature-settings:'ss01','cv11';-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;letter-spacing:-.005em}
 /* Subtle film grain over background for depth */
 /* (grain texture removed — it broke backdrop-filter via mix-blend-mode stacking context) */
-.app-body{position:relative}
+.app-body{position:relative;z-index:0}
 /* Hide all scrollbars (mobile & desktop) — kept scrollable, just invisible */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
 -webkit-tap-highlight-color:transparent;
 
 /* ─── TOPBAR ─── */
-.topbar{background:var(--bg);flex-shrink:0;position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transform:translateZ(0)}
+.topbar{background:var(--bg);flex-shrink:0;position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transform:translateZ(0);will-change:transform;isolation:isolate}
 .topbar-r1{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;padding-top:max(12px, env(safe-area-inset-top, 12px))}
 .app-title{font-family:'Knewave',cursive;font-size:24px;font-weight:400;color:#0a0a0a;letter-spacing:.01em;line-height:1;text-transform:uppercase}
 .ttab-group{display:flex;align-items:center;gap:2px}
@@ -660,22 +660,6 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:rgba(255,255,255,
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="topbar-r1">
-    <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
-    <div class="topbar-search-desktop">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="topbar-search-input" type="text" placeholder="Search manga…" onkeydown="if(event.key==='Enter')doDesktopSearch()"/>
-    </div>
-    <nav class="topbar-desktop-nav">
-      <button data-route="home" onclick="navigate('home')">Home</button>
-      <button data-route="library" onclick="navigate('library')">Library</button>
-      <button class="genres-btn" onclick="navigate('search')">Genres</button>
-    </nav>
-  </div>
-  <div class="topbar-r3" id="nav-pills-old"></div>
-</div>
 
 <aside class="desktop-sidebar" id="desktop-sidebar">
   <h3>Browse</h3>
@@ -2753,5 +2737,22 @@ window.addEventListener('hashchange', () => {
   if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
 })();
 </script>
+
+<!-- Topbar last in DOM = always paints above all other stacking contexts -->
+<div class="topbar">
+  <div class="topbar-r1">
+    <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
+    <div class="topbar-search-desktop">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="topbar-search-input" type="text" placeholder="Search manga…" onkeydown="if(event.key==='Enter')doDesktopSearch()"/>
+    </div>
+    <nav class="topbar-desktop-nav">
+      <button data-route="home" onclick="navigate('home')">Home</button>
+      <button data-route="library" onclick="navigate('library')">Library</button>
+      <button class="genres-btn" onclick="navigate('search')">Genres</button>
+    </nav>
+  </div>
+  <div class="topbar-r3" id="nav-pills-old"></div>
+</div>
 </body>
 </html>
