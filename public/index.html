@@ -520,16 +520,55 @@ button.status-pill:hover{opacity:.75}
 .search-genres-section{padding:16px 16px 24px}
 .search-genres-kicker{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.01em;margin-bottom:12px}
 .search-genres-section.hidden{display:none}
+
+/* ─── DESKTOP LAYOUT (>=900px) ─── */
+.topbar-search-desktop,.topbar-lib-desktop,.desktop-sidebar{display:none}
+@media (min-width:900px){
+  .bnav{display:none !important}
+  .topbar-r1{gap:24px;padding:14px 24px 10px}
+  .topbar-search-desktop{display:flex;flex:1;max-width:520px;position:relative;align-items:center}
+  .topbar-search-desktop svg{position:absolute;left:14px;width:14px;height:14px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
+  .topbar-search-desktop input{width:100%;padding:9px 16px 9px 38px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font:600 13px 'Inter',sans-serif;color:var(--fg);outline:none;letter-spacing:-.005em;transition:border-color .15s}
+  .topbar-search-desktop input:focus{border-color:#0a0a0a}
+  .topbar-search-desktop input::placeholder{color:var(--sub);font-weight:500}
+  .topbar-lib-desktop{display:inline-flex;align-items:center;padding:9px 18px;border-radius:99px;background:#0a0a0a;color:#fff;font:700 13px 'Inter',sans-serif;letter-spacing:-.005em;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+  .topbar-lib-desktop:hover{background:#1c1c1c}
+
+  /* Right sidebar for genres */
+  .desktop-sidebar{display:block;position:fixed;right:0;top:62px;bottom:0;width:240px;padding:20px 24px 24px;overflow-y:auto;border-left:1px solid var(--border);background:var(--bg);z-index:5}
+  .desktop-sidebar h3{font:700 14px 'Inter',sans-serif;letter-spacing:-.01em;margin-bottom:12px;color:#0a0a0a}
+  .desktop-genre-list{display:flex;flex-direction:column;gap:6px}
+  .desktop-genre-list button{text-align:left;background:none;border:1px solid var(--border);border-radius:99px;padding:7px 14px;font:500 12px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+  .desktop-genre-list button:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+
+  /* Reserve right margin for sidebar in all views */
+  .view{padding-right:264px !important}
+
+  /* Hide search page's own header on desktop (topbar has the search bar) */
+  #v-search .search-page-hdr{display:none}
+  /* Hide in-page genre section on desktop (sidebar replaces it) */
+  #v-search .search-genres-section{display:none}
+}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-r1" style="justify-content:flex-start">
+  <div class="topbar-r1" style="justify-content:space-between">
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
+    <div class="topbar-search-desktop">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="topbar-search-input" type="text" placeholder="Search manga…" onkeydown="if(event.key==='Enter')doDesktopSearch()"/>
+    </div>
+    <button class="topbar-lib-desktop" onclick="navigate('library')">Library</button>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
+
+<aside class="desktop-sidebar" id="desktop-sidebar">
+  <h3>Genres</h3>
+  <div class="desktop-genre-list" id="desktop-genre-list"></div>
+</aside>
 
 
 <div class="app-body">
@@ -807,9 +846,29 @@ let _panelSource = 'mdex';
 
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
-  if (!grid || grid.children.length) return;
+  if (grid && !grid.children.length) {
+    const tagItems = GENRES.filter(g => g.type === 'tag');
+    grid.innerHTML = tagItems.map(g => `<button class="genre-card" onclick="selectGenreAndSearch('${g.id}')">${esc(g.name)}</button>`).join('');
+  }
+  renderDesktopSidebarGenres();
+}
+
+function renderDesktopSidebarGenres() {
+  const list = document.getElementById('desktop-genre-list');
+  if (!list || list.children.length) return;
   const tagItems = GENRES.filter(g => g.type === 'tag');
-  grid.innerHTML = tagItems.map(g => `<button class="genre-card" onclick="selectGenreAndSearch('${g.id}')">${esc(g.name)}</button>`).join('');
+  list.innerHTML = tagItems.map(g => `<button onclick="selectGenreAndSearch('${g.id}')">${esc(g.name)}</button>`).join('');
+}
+
+// Desktop: read from topbar input + fire search
+function doDesktopSearch() {
+  const inp = document.getElementById('topbar-search-input');
+  const mobile = document.getElementById('search-input');
+  if (!inp) return;
+  const q = inp.value.trim();
+  if (!q) return;
+  if (mobile) mobile.value = q; // mirror to mobile input so doSearch reads it
+  doSearch();
 }
 
 function selectGenreAndSearch(id) {
@@ -2426,6 +2485,7 @@ window.addEventListener('hashchange', () => {
   await IDB.init();
   await loadLibrary();
   updateThemeIcon();
+  renderDesktopSidebarGenres();
   const initialRoute = location.hash.replace('#', '') || 'home';
   navigate(initialRoute, { pushState: false });
   if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
