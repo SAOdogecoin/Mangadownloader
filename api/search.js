@@ -40,16 +40,21 @@ async function fetchMangaByAuthor(authorId, limit) {
 }
 
 module.exports = async (req, res) => {
-  const { q = '', limit = 20, offset = 0, tagId = '', status = '' } = req.query;
-  if (!q.trim() && !tagId.trim() && !status.trim()) return res.status(400).json({ error: 'Missing query or tagId or status' });
+  const { q = '', limit = 20, offset = 0, tagId = '', status = '', sort = '', since = '' } = req.query;
+  if (!q.trim() && !tagId.trim() && !status.trim() && !sort.trim()) return res.status(400).json({ error: 'Missing query or tagId or status or sort' });
 
   try {
     // Build title search URL
     let titleUrl = `${BASE}/manga?limit=${limit}&offset=${offset}&${COMMON}`;
     if (q.trim()) titleUrl += `&title=${encodeURIComponent(q)}&order[relevance]=desc`;
-    else titleUrl += `&order[followedCount]=desc`;
+    else if (sort.trim()) {
+      // Whitelisted sort orders to map to MangaDex
+      const map = { followedCount:'order[followedCount]=desc', rating:'order[rating]=desc', latestUploadedChapter:'order[latestUploadedChapter]=desc', createdAt:'order[createdAt]=desc' };
+      titleUrl += '&' + (map[sort] || map.followedCount);
+    } else titleUrl += `&order[followedCount]=desc`;
     if (tagId.trim()) titleUrl += `&includedTags[]=${encodeURIComponent(tagId)}`;
     if (status.trim()) titleUrl += `&status[]=${encodeURIComponent(status)}`;
+    if (since.trim()) titleUrl += `&createdAtSince=${encodeURIComponent(since)}`;
 
     // Run title search + author lookup in parallel (author only when q provided)
     const [titleRes, authorIds] = await Promise.all([

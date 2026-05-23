@@ -116,8 +116,11 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 /* Unified section wrapper */
 .home-section{padding:18px 16px 4px;flex-shrink:0;position:relative}
 .home-section:first-of-type{padding-top:8px}
-.home-section-head{margin-bottom:10px;padding-bottom:0}
+.home-section-head{margin-bottom:10px;padding-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .home-section-label{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.01em;line-height:1.2}
+.view-all-btn{display:inline-flex;align-items:center;gap:2px;background:none;border:none;color:var(--sub);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.005em;cursor:pointer;padding:4px 4px 4px 10px;border-radius:99px;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s}
+.view-all-btn:hover{color:#0a0a0a;background:var(--surf)}
+.view-all-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .home-section-label em{font-style:normal;color:var(--fg);font-weight:700}
 .home-section-kicker,.home-section-count{display:none}
 
@@ -1427,15 +1430,22 @@ function discCardHtml(m) {
 }
 
 let _sectionIdx = 0;
-function renderDiscSection(label, items, container) {
+function renderDiscSection(label, items, container, sortKey) {
   if (!items || !items.length) return;
   _sectionIdx++;
   const cardsHtml = items.map(m => discCardHtml(m)).join('');
   const sec = document.createElement('div');
   sec.className = 'home-section';
+  const viewAll = sortKey
+    ? `<button class="view-all-btn" onclick="viewAllSection('${esc(sortKey)}','${esc(label)}')" aria-label="View all ${esc(label)}">
+        <span>View all</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+      </button>`
+    : '';
   sec.innerHTML = `
     <div class="home-section-head">
       <div class="home-section-label">${esc(label)}</div>
+      ${viewAll}
     </div>
     <div class="disc-strip">${cardsHtml}</div>`;
   sec.querySelectorAll('.disc-card').forEach(el => {
@@ -1445,6 +1455,41 @@ function renderDiscSection(label, items, container) {
     el.addEventListener('touchstart', () => prefetchManga(id, src), { once: true, passive: true });
   });
   container.appendChild(sec);
+}
+
+// View-all → navigate to search view, run filtered fetch using the section's sort key
+async function viewAllSection(sortKey, label) {
+  navigate('search');
+  document.getElementById('search-genres-section')?.classList.add('hidden');
+  document.getElementById('search-loading').style.display = 'flex';
+  document.getElementById('results-grid').innerHTML = '';
+  document.getElementById('load-more-wrap').style.display = 'none';
+  // Set lastQuery state so loadMore works
+  lastQuery = ''; lastTagId = ''; lastStatus = ''; lastOffset = 0;
+  // Map section to API params
+  let url = `/api/search?limit=${SEARCH_LIMIT}&offset=0`;
+  if (sortKey === 'selfPublished') {
+    url += '&tagId=891cf039-b895-47f0-9229-bef4c96eccd4&sort=followedCount';
+    lastTagId = '891cf039-b895-47f0-9229-bef4c96eccd4';
+  } else if (sortKey === 'seasonal') {
+    const now = new Date(); const m = now.getUTCMonth() + 1; const y = now.getUTCFullYear();
+    const start = m>=3&&m<=5 ? `${y}-03-01T00:00:00` : m>=6&&m<=8 ? `${y}-06-01T00:00:00` : m>=9&&m<=11 ? `${y}-09-01T00:00:00` : `${y}-12-01T00:00:00`;
+    url += `&since=${encodeURIComponent(start)}&sort=followedCount`;
+  } else {
+    url += `&sort=${encodeURIComponent(sortKey)}`;
+  }
+  try {
+    const data = await fetch(url).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    renderResults(data.results || [], false);
+    // Update topbar search input on desktop to show the active filter
+    const tb = document.getElementById('topbar-search-input');
+    if (tb) tb.placeholder = `Browsing: ${label}`;
+  } catch (e) {
+    showToast('Failed: ' + e.message);
+  } finally {
+    document.getElementById('search-loading').style.display = 'none';
+  }
 }
 
 // Hero auto-rotating carousel — up to 5 trending titles
@@ -1539,11 +1584,14 @@ function renderHomeData(data, wrap) {
     const featuredIds = new Set(trending.filter(m => m.coverUrl).slice(0, 1).map(m => m.id));
     trendingForSection = trending.filter(m => !featuredIds.has(m.id));
   }
-  if (isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap);
-  renderDiscSection('Latest Updates', data.updated, wrap);
-  renderDiscSection('New Releases', data.newManga, wrap);
-  renderDiscSection('Top Rated', data.topRated, wrap);
-  if (!isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap);
+  if (isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap, 'followedCount');
+  renderDiscSection('Latest Updates', data.updated, wrap, 'latestUploadedChapter');
+  renderDiscSection('Recommended', data.recommended, wrap, 'followedCount');
+  if (data.seasonName) renderDiscSection(`Seasonal — ${data.seasonName}`, data.seasonal, wrap, 'seasonal');
+  renderDiscSection('Self-Published', data.selfPublished, wrap, 'selfPublished');
+  renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
+  renderDiscSection('Top Rated', data.topRated, wrap, 'rating');
+  if (!isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap, 'followedCount');
 }
 
 function renderHomeSkeleton(wrap) {
