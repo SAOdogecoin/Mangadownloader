@@ -562,9 +562,8 @@ button.status-pill:hover{opacity:.75}
 @media (min-width:900px){.hd-side-arrow{display:flex}}
 /* Topbar smooth bg + blur transition */
 .topbar{transition:background .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
-/* Hero: semi-opaque topbar until user scrolls — keeps text above the hero image */
-body:has(.hero-desktop):not(.home-scrolled) .topbar{background:rgba(255,255,255,.96) !important;border-bottom:1px solid rgba(0,0,0,.06);backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
-/* Once scrolled, solid white */
+/* Keep the topbar solid white so text remains visible above the hero */
+.topbar{background:var(--bg) !important;border-bottom:1px solid rgba(0,0,0,.06);}
 .home-scrolled .topbar{background:var(--bg) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 /* Topbar desktop nav */
 .topbar-desktop-nav{display:none}
@@ -656,8 +655,8 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:rgba(255,255,255,
   .hd-dots{bottom:22px}
   /* Home view: hero starts at very top (behind topbar) — no top padding */
   #v-home{padding-top:0}
-  /* Home top: transparent topbar over hero until user scrolls */
-  body:has(#v-home.active):not(.home-scrolled) .topbar{background:rgba(255,255,255,.84) !important;border:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+  /* Always keep the topbar white on home so the buttons and title stay visible */
+  .topbar{background:var(--bg) !important;border-bottom:1px solid rgba(0,0,0,.06)}
   body:has(.hero-desktop) .topbar-search-desktop input{background:#fff;border-color:rgba(0,0,0,.12);box-shadow:0 4px 16px -8px rgba(0,0,0,.18)}
   /* (genre section now visible on desktop — sidebar removed) */
 }
