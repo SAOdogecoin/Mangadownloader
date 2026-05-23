@@ -2755,20 +2755,45 @@ window.addEventListener('hashchange', () => {
   if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
 })();
 
-// Horizontal scroll on disc-strip rows via mouse wheel (hover to activate)
-// Scroll up → right, scroll down → left (inverted natural feel)
-document.addEventListener('wheel', function(e) {
-  const strip = e.target.closest('.disc-strip');
-  if (!strip) return;
-  const maxScroll = strip.scrollWidth - strip.clientWidth;
-  if (maxScroll <= 0) return; // not scrollable
-  const delta = e.deltaY;
-  const atStart = strip.scrollLeft <= 0;
-  const atEnd = strip.scrollLeft >= maxScroll - 1;
-  if ((delta < 0 && atEnd) || (delta > 0 && atStart)) return; // let page scroll if at edge
-  e.preventDefault();
-  strip.scrollLeft -= delta; // up(−deltaY) → right, down(+deltaY) → left
-}, { passive: false });
+// Smooth horizontal scroll on disc-strip rows via mouse wheel
+// Accumulates delta into a target position, eases with rAF — no stutter on rapid spin
+(function() {
+  const state = new WeakMap(); // per-strip: { target, raf }
+  const EASE = 0.12; // lower = smoother/slower, higher = snappier
+
+  function tick(strip) {
+    const s = state.get(strip);
+    if (!s) return;
+    const max = strip.scrollWidth - strip.clientWidth;
+    s.target = Math.max(0, Math.min(s.target, max));
+    const diff = s.target - strip.scrollLeft;
+    if (Math.abs(diff) < 0.5) {
+      strip.scrollLeft = s.target;
+      state.delete(strip);
+      return;
+    }
+    strip.scrollLeft += diff * EASE;
+    s.raf = requestAnimationFrame(() => tick(strip));
+  }
+
+  document.addEventListener('wheel', function(e) {
+    const strip = e.target.closest('.disc-strip');
+    if (!strip) return;
+    const max = strip.scrollWidth - strip.clientWidth;
+    if (max <= 0) return;
+    const delta = e.deltaY;
+    const cur = state.has(strip) ? state.get(strip).target : strip.scrollLeft;
+    const atStart = cur <= 0 && delta > 0;
+    const atEnd = cur >= max - 1 && delta < 0;
+    if (atStart || atEnd) return; // fall through to page scroll at edges
+    e.preventDefault();
+    let s = state.get(strip);
+    if (!s) { s = { target: strip.scrollLeft, raf: null }; state.set(strip, s); }
+    s.target -= delta; // up → right, down → left
+    cancelAnimationFrame(s.raf);
+    s.raf = requestAnimationFrame(() => tick(strip));
+  }, { passive: false });
+})();
 </script>
 
 <!-- Topbar last in DOM = always paints above all other stacking contexts -->
