@@ -570,6 +570,9 @@ button.status-pill:hover{opacity:.75}
 /* Keep the topbar fully opaque above the hero */
 .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
 .topbar > *{position:relative;z-index:10000}
+/* Search/Library: topbar always solid white with clear bottom border */
+body[data-route="search"] .topbar,
+body[data-route="library"] .topbar{background:#fff !important;border-bottom:1px solid var(--border);box-shadow:none}
 .home-scrolled .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 /* Topbar desktop nav */
 .topbar-desktop-nav{display:none}
@@ -1433,6 +1436,8 @@ function navigate(route, { pushState = true } = {}) {
   document.querySelectorAll('.bnav-tab,.desktop-nav-list button,.topbar-desktop-nav button[data-route]').forEach(p => p.classList.toggle('active', p.dataset.route === route));
   // Remove home-scrolled when leaving home so topbar starts white on other pages
   if (route !== 'home') document.body.classList.remove('home-scrolled');
+  // Track active route on body for CSS targeting
+  document.body.dataset.route = route;
   if (pushState) history.pushState(null, '', '#' + route);
   if (route === 'library') renderLibraryPage();
   if (route === 'search') renderGenrePage();
@@ -2756,10 +2761,11 @@ window.addEventListener('hashchange', () => {
 })();
 
 // Smooth horizontal scroll on disc-strip rows via mouse wheel
-// Accumulates delta into a target position, eases with rAF — no stutter on rapid spin
+// Zero-latency: applies partial scroll immediately, then eases remainder via rAF
 (function() {
   const state = new WeakMap(); // per-strip: { target, raf }
-  const EASE = 0.12; // lower = smoother/slower, higher = snappier
+  const EASE = 0.14;
+  const IMMEDIATE = 0.35; // fraction applied instantly per event (kills dead-zone feel)
 
   function tick(strip) {
     const s = state.get(strip);
@@ -2785,11 +2791,13 @@ window.addEventListener('hashchange', () => {
     const cur = state.has(strip) ? state.get(strip).target : strip.scrollLeft;
     const atStart = cur <= 0 && delta > 0;
     const atEnd = cur >= max - 1 && delta < 0;
-    if (atStart || atEnd) return; // fall through to page scroll at edges
+    if (atStart || atEnd) return;
     e.preventDefault();
     let s = state.get(strip);
     if (!s) { s = { target: strip.scrollLeft, raf: null }; state.set(strip, s); }
-    s.target -= delta; // up → right, down → left
+    s.target -= delta;
+    // Apply a fraction immediately so the strip moves on the same frame as the event
+    strip.scrollLeft += -delta * IMMEDIATE;
     cancelAnimationFrame(s.raf);
     s.raf = requestAnimationFrame(() => tick(strip));
   }, { passive: false });
