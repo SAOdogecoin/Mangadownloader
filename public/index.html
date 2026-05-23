@@ -516,7 +516,7 @@ button.status-pill:hover{opacity:.75}
 /* Flag (left) + right-aligned info */
 .ch-source-flag{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;line-height:1}
 .ch-source-flag img{border-radius:1px;display:block;flex-shrink:0}
-.ch-src-num{font-size:10px;font-weight:700;color:var(--sub);line-height:1;white-space:nowrap}
+.ch-src-num{font-size:12px;font-weight:800;color:#0a0a0a;line-height:1;white-space:nowrap}
 .ch-source-right{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .ch-source-group{font-size:12px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;text-align:right}
 .ch-source-time{font-size:10px;color:var(--sub);font-weight:500}
@@ -688,9 +688,12 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .topbar-r1{gap:24px;padding:14px 24px 10px}
   .topbar-search-desktop{display:flex;flex:1;max-width:520px;position:relative;align-items:center}
   .topbar-search-desktop svg{position:absolute;left:14px;width:14px;height:14px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
-  .topbar-search-desktop input{width:100%;padding:9px 16px 9px 38px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font:600 13px 'Inter',sans-serif;color:var(--fg);outline:none;letter-spacing:-.005em;transition:border-color .15s}
+  .topbar-search-desktop input{width:100%;padding:9px 36px 9px 38px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font:600 13px 'Inter',sans-serif;color:var(--fg);outline:none;letter-spacing:-.005em;transition:border-color .15s}
   .topbar-search-desktop input:focus{border-color:#0a0a0a}
   .topbar-search-desktop input::placeholder{color:var(--sub);font-weight:500}
+  #btn-clear-topbar{position:absolute;right:10px;width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0;z-index:2}
+  #btn-clear-topbar:hover{color:#0a0a0a}
+  #btn-clear-topbar svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
   .topbar-lib-desktop{display:inline-flex;align-items:center;padding:9px 18px;border-radius:99px;background:#0a0a0a;color:#fff;font:700 13px 'Inter',sans-serif;letter-spacing:-.005em;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
   .topbar-lib-desktop:hover{background:#1c1c1c}
 
@@ -1196,6 +1199,20 @@ function onSearchInputChange() {
 function clearSearchInput() {
   clearSearchAndReset();
   document.getElementById('search-input')?.focus();
+}
+function onDesktopInputChange() {
+  const inp = document.getElementById('topbar-search-input');
+  const clr = document.getElementById('btn-clear-topbar');
+  if (clr) clr.style.display = (inp?.value ? 'flex' : 'none');
+  scheduleAc((inp?.value || '').trim(), 'desktop');
+}
+function clearDesktopSearch() {
+  const inp = document.getElementById('topbar-search-input');
+  if (inp) { inp.value = ''; inp.placeholder = 'Search manga…'; }
+  const clr = document.getElementById('btn-clear-topbar');
+  if (clr) clr.style.display = 'none';
+  closeAc('desktop');
+  clearSearchAndReset();
 }
 
 // ─── Autocomplete / predictive search ────────────────────────────────────────
@@ -1735,6 +1752,10 @@ function setSearchTitle(text) {
 function clearSearchAndReset() {
   const inp = document.getElementById('search-input');
   if (inp) { inp.value = ''; onSearchInputChange(); }
+  const tb = document.getElementById('topbar-search-input');
+  if (tb) { tb.value = ''; tb.placeholder = 'Search manga…'; }
+  const tbClr = document.getElementById('btn-clear-topbar');
+  if (tbClr) tbClr.style.display = 'none';
   closeAc('main');
   if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
   lastQuery = ''; lastTagId = ''; lastStatus = ''; _hasMore = false; _loadingMore = false;
@@ -1998,6 +2019,9 @@ function _initSentinel() {
 }
 
 async function viewAllSection(sortKey, label) {
+  // Hide genres/recent BEFORE navigate so clearSearchAndReset doesn't re-show them
+  document.getElementById('search-genres-section')?.classList.add('hidden');
+  document.getElementById('recent-searches-wrap')?.classList.add('hidden');
   if (_currentRoute !== 'search') navigate('search');
   setSearchTitle(label);
   // Reset state
@@ -3328,7 +3352,10 @@ document.getElementById('search-body').addEventListener('scroll', function() {
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
     <div class="topbar-search-desktop">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="scheduleAc(this.value.trim(),'desktop')" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
+      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="onDesktopInputChange()" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
+      <button id="btn-clear-topbar" onclick="clearDesktopSearch()" aria-label="Clear">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
       <div class="ac-popup" id="ac-popup-desktop"></div>
     </div>
     <nav class="topbar-desktop-nav">
