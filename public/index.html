@@ -320,8 +320,7 @@ button.status-pill:hover{opacity:.75}
 .reader-toc-btn:active{background:rgba(255,255,255,.25)}
 .reader-toc-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* Page counter — bottom center floating pill */
-.reader-pg-counter{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:6px 18px;border-radius:99px;z-index:4;pointer-events:none;transition:opacity .2s;letter-spacing:.06em;white-space:nowrap}
-.reader-pg-counter.hide{opacity:0}
+.reader-pg-counter{background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:6px 18px;border-radius:99px;pointer-events:none;letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
 .reader-mode-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* Reader area */
@@ -337,13 +336,12 @@ button.status-pill:hover{opacity:.75}
 .reader-area.vertical .reader-vpage-num{position:absolute;top:6px;right:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.06em;pointer-events:none;mix-blend-mode:difference}
 .reader-area.vertical .reader-vend{padding:48px 20px 80px;text-align:center;color:rgba(255,255,255,.55);font-family:'Inter',sans-serif;font-size:15px;font-weight:600;letter-spacing:-.005em}
 .reader-area.vertical .reader-vend button{margin-top:14px;background:var(--org);color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;cursor:pointer}
-/* Hide tap zones + next-ch button overlay in vertical mode (they block scroll) */
+/* Hide tap zones in vertical mode (they block scroll) */
 .reader-overlay.vmode .tap-zone{display:none}
-.reader-overlay.vmode .next-ch-btn{display:none !important}
-.reader-overlay.vmode .reader-ch-nav{display:none !important}
-/* Chapter prev/next nav bar — bottom, always visible in horizontal mode */
-.reader-ch-nav{position:absolute;bottom:64px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px;z-index:4;pointer-events:none;transition:opacity .2s}
-.reader-ch-nav.hide{opacity:0;pointer-events:none}
+.reader-overlay.vmode .reader-bottom-bar{display:none !important}
+/* Bottom bar: [left ch btn] [page counter] [right ch btn] — single row */
+.reader-bottom-bar{position:absolute;bottom:16px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:4;pointer-events:none;transition:opacity .2s}
+.reader-bottom-bar.hide{opacity:0;pointer-events:none}
 .reader-ch-nav-btn{display:flex;align-items:center;gap:5px;padding:7px 14px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:99px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,opacity .2s;pointer-events:auto;letter-spacing:.01em}
 .reader-ch-nav-btn:active{background:rgba(0,0,0,.8)}
 .reader-ch-nav-btn:disabled{opacity:.25;cursor:default;pointer-events:none}
@@ -364,9 +362,6 @@ button.status-pill:hover{opacity:.75}
 .tap-right{right:0}
 .tap-center{left:30%;right:30%;cursor:default}
 
-/* Next chapter button */
-.next-ch-btn{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 22px;background:var(--org);color:#fff;border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:4;display:none;box-shadow:0 4px 16px rgba(10,10,10,.6)}
-.next-ch-btn:hover{background:var(--org-h)}
 
 /* ─── TOC PANEL ─── */
 .toc-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:110;display:none}
@@ -578,9 +573,11 @@ button.status-pill:hover{opacity:.75}
 /* Keep the topbar fully opaque above the hero */
 .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
 .topbar > *{position:relative;z-index:10000}
-/* Search/Library: topbar always solid white */
-body[data-route="search"] .topbar,
+/* Library: solid white */
 body[data-route="library"] .topbar{background:#fff !important;box-shadow:none;border-bottom:none}
+/* Search: transparent until scrolled, then frosted glass */
+body[data-route="search"] .topbar{background:rgba(255,255,255,0) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);box-shadow:none;border-bottom:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s}
+body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .home-scrolled .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 /* Topbar desktop nav */
 .topbar-desktop-nav{display:none}
@@ -818,23 +815,18 @@ body[data-route="library"] .topbar{background:#fff !important;box-shadow:none;bo
   <!-- Progress bar -->
   <div class="reader-progress"><div class="reader-progress-fill" id="progress-fill"></div></div>
 
-  <!-- Page counter bottom-center -->
-  <div class="reader-pg-counter" id="reader-pg-counter">1 / 1</div>
-
-  <!-- Chapter prev/next nav — hidden in vmode via CSS -->
-  <div class="reader-ch-nav" id="reader-ch-nav">
-    <button class="reader-ch-nav-btn" id="reader-prev-btn" onclick="goPrevChapter()" disabled>
-      <svg id="prev-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      <span>Prev</span>
+  <!-- Bottom bar: [left ch btn] [page counter] [right ch btn] — hidden in vmode -->
+  <div class="reader-bottom-bar" id="reader-bottom-bar">
+    <button class="reader-ch-nav-btn" id="reader-left-btn" disabled>
+      <svg viewBox="0 0 24 24"><polyline id="left-arrow" points="15 18 9 12 15 6"/></svg>
+      <span id="left-label">Prev</span>
     </button>
-    <button class="reader-ch-nav-btn" id="reader-next-btn" onclick="goNextChapter()" disabled>
-      <span>Next</span>
-      <svg id="next-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <div class="reader-pg-counter" id="reader-pg-counter">1 / 1</div>
+    <button class="reader-ch-nav-btn" id="reader-right-btn" disabled>
+      <span id="right-label">Next</span>
+      <svg viewBox="0 0 24 24"><polyline id="right-arrow" points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
-
-  <!-- Next chapter (end-of-chapter callout, still used in horizontal mode) -->
-  <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter</button>
 </div>
 
 <!-- TOC -->
@@ -1470,6 +1462,8 @@ function navigate(route, { pushState = true } = {}) {
   document.querySelectorAll('.bnav-tab,.desktop-nav-list button,.topbar-desktop-nav button[data-route]').forEach(p => p.classList.toggle('active', p.dataset.route === route));
   // Remove home-scrolled when leaving home so topbar starts white on other pages
   if (route !== 'home') document.body.classList.remove('home-scrolled');
+  // Reset search topbar blur when leaving search
+  if (route !== 'search') document.querySelector('.topbar').classList.remove('topbar-scrolled');
   // Track active route on body for CSS targeting
   document.body.dataset.route = route;
   if (pushState) history.pushState(null, '', '#' + route);
@@ -2396,6 +2390,11 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   document.getElementById('reader-ch').textContent = `Ch.${chapterNum}${chapterTitle ? ' — ' + chapterTitle : ''}`;
   showPageLoading();
   autoHideTopBar();
+  // Update URL — save pre-reader hash to restore on close
+  if (!readerState.prevHash || !location.hash.startsWith('#read/')) {
+    readerState.prevHash = location.hash || '#home';
+  }
+  updateReaderUrl();
 
   // Fetch pages — detect alt source by chapter ID prefix
   try {
@@ -2501,7 +2500,6 @@ function showPage(idx) {
   img.onload = () => {
     wrap.innerHTML = '';
     wrap.appendChild(img);
-    updateNextChBtn();
   };
   img.onerror = () => {
     const fallback = readerState.pagesFallback?.[idx];
@@ -2528,6 +2526,7 @@ function showPage(idx) {
   document.getElementById('reader-pg-counter').textContent = `${idx + 1} / ${total}`;
   const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
+  updateReaderUrl();
 
   // Save progress
   saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
@@ -2585,6 +2584,7 @@ async function showVertical(startIdx) {
           document.getElementById('reader-pg-counter').textContent = `${idx + 1} / ${total}`;
           const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
           document.getElementById('progress-fill').style.width = pct + '%';
+          updateReaderUrl();
           saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
         }
       }
@@ -2614,7 +2614,7 @@ async function showVertical(startIdx) {
   document.getElementById('reader-pg-counter').textContent = `${startIdx + 1} / ${total}`;
   const pct = total > 1 ? (startIdx / (total - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
-  updateNextChBtn();
+  updateReaderUrl();
 
   // Tap anywhere to toggle top bar in vertical mode
   area.onclick = (e) => {
@@ -2674,27 +2674,15 @@ function pageNav(dir) {
   if (dir === 'next') next = isRTL ? pageIdx - 1 : pageIdx + 1;
   else next = isRTL ? pageIdx + 1 : pageIdx - 1;
 
-  if (next < 0 || next >= pages.length) {
-    if (next >= pages.length || (isRTL && next < 0)) updateNextChBtn(true);
-    return;
-  }
+  if (next < 0 || next >= pages.length) return;
   showPage(next);
   resetTopBarTimer();
-}
-
-function updateNextChBtn(forceShow = false) {
-  const { pages, pageIdx, isRTL, chapterListIdx, chapters } = readerState;
-  const atEnd = isRTL ? pageIdx === 0 : pageIdx === pages.length - 1;
-  const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
-  const btn = document.getElementById('next-ch-btn');
-  btn.style.display = (atEnd || forceShow) && hasNext ? 'block' : 'none';
 }
 
 async function goNextChapter() {
   const { chapters, chapterListIdx, mangaId } = readerState;
   const nextCh = chapters[chapterListIdx + 1];
   if (!nextCh) return;
-  document.getElementById('next-ch-btn').style.display = 'none';
   await startRead(mangaId, nextCh.id, nextCh.chapter || '', nextCh.title || '');
 }
 
@@ -2709,23 +2697,38 @@ function updateChNav() {
   const { chapterListIdx, chapters, isRTL } = readerState;
   const hasPrev = chapterListIdx > 0;
   const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
-  const prevBtn = document.getElementById('reader-prev-btn');
-  const nextBtn = document.getElementById('reader-next-btn');
-  if (!prevBtn) return;
-  prevBtn.disabled = !hasPrev;
-  nextBtn.disabled = !hasNext;
-  // Arrow direction reflects reading direction:
-  // RTL (manga): forward = left, backward = right → swap arrows
-  // LTR (manhwa): forward = right, backward = left → normal
-  const prevPoly = prevBtn.querySelector('polyline');
-  const nextPoly = nextBtn.querySelector('polyline');
+  const leftBtn = document.getElementById('reader-left-btn');
+  const rightBtn = document.getElementById('reader-right-btn');
+  if (!leftBtn) return;
   if (isRTL) {
-    prevPoly.setAttribute('points', '9 18 15 12 9 6');  // → pointing right
-    nextPoly.setAttribute('points', '15 18 9 12 15 6');  // ← pointing left
+    // RTL manga: tap LEFT = next page → left btn = Next Ch (← arrow)
+    leftBtn.onclick = goNextChapter;
+    leftBtn.disabled = !hasNext;
+    document.getElementById('left-label').textContent = 'Next';
+    document.getElementById('left-arrow').setAttribute('points', '15 18 9 12 15 6'); // ←
+    rightBtn.onclick = goPrevChapter;
+    rightBtn.disabled = !hasPrev;
+    document.getElementById('right-label').textContent = 'Prev';
+    document.getElementById('right-arrow').setAttribute('points', '9 18 15 12 9 6'); // →
   } else {
-    prevPoly.setAttribute('points', '15 18 9 12 15 6');  // ← pointing left
-    nextPoly.setAttribute('points', '9 18 15 12 9 6');   // → pointing right
+    // LTR manhwa: tap RIGHT = next page → right btn = Next Ch (→ arrow)
+    leftBtn.onclick = goPrevChapter;
+    leftBtn.disabled = !hasPrev;
+    document.getElementById('left-label').textContent = 'Prev';
+    document.getElementById('left-arrow').setAttribute('points', '15 18 9 12 15 6'); // ←
+    rightBtn.onclick = goNextChapter;
+    rightBtn.disabled = !hasNext;
+    document.getElementById('right-label').textContent = 'Next';
+    document.getElementById('right-arrow').setAttribute('points', '9 18 15 12 9 6'); // →
   }
+}
+
+function slugify(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'manga';
+}
+function updateReaderUrl() {
+  const { mangaTitle, chapterNum, pageIdx } = readerState;
+  history.replaceState(null, '', `#read/${slugify(mangaTitle)}/${encodeURIComponent(chapterNum || '0')}/${pageIdx + 1}`);
 }
 
 function closeReader() {
@@ -2739,10 +2742,9 @@ function closeReader() {
   if (_vertObserver) { _vertObserver.disconnect(); _vertObserver = null; }
   if (_vertChunkObs) { _vertChunkObs.disconnect(); _vertChunkObs = null; }
   clearTimeout(readerState.topBarTimer);
-  document.getElementById('next-ch-btn').style.display = 'none';
   document.getElementById('reader-top').classList.remove('hide');
-  document.getElementById('reader-pg-counter').classList.remove('hide');
-  document.getElementById('reader-ch-nav').classList.remove('hide');
+  document.getElementById('reader-bottom-bar').classList.remove('hide');
+  history.replaceState(null, '', readerState.prevHash || '#home');
   // Refresh panel chapter highlights
   if (currentMangaData) renderPanel(currentMangaData);
 }
@@ -2751,16 +2753,14 @@ function toggleTopBar() {
   const bar = document.getElementById('reader-top');
   readerState.topBarVisible = !readerState.topBarVisible;
   bar.classList.toggle('hide', !readerState.topBarVisible);
-  document.getElementById('reader-pg-counter').classList.toggle('hide', !readerState.topBarVisible);
-  document.getElementById('reader-ch-nav').classList.toggle('hide', !readerState.topBarVisible);
+  document.getElementById('reader-bottom-bar').classList.toggle('hide', !readerState.topBarVisible);
   if (readerState.topBarVisible) resetTopBarTimer();
 }
 
 function autoHideTopBar() {
   readerState.topBarVisible = true;
   document.getElementById('reader-top').classList.remove('hide');
-  document.getElementById('reader-pg-counter').classList.remove('hide');
-  document.getElementById('reader-ch-nav').classList.remove('hide');
+  document.getElementById('reader-bottom-bar').classList.remove('hide');
   resetTopBarTimer();
 }
 
@@ -2768,7 +2768,7 @@ function resetTopBarTimer() {
   clearTimeout(readerState.topBarTimer);
   readerState.topBarTimer = setTimeout(() => {
     document.getElementById('reader-top').classList.add('hide');
-    document.getElementById('reader-ch-nav').classList.add('hide');
+    document.getElementById('reader-bottom-bar').classList.add('hide');
     readerState.topBarVisible = false;
   }, 3500);
 }
@@ -2847,6 +2847,11 @@ window.addEventListener('hashchange', () => {
   const route = location.hash.replace('#', '') || 'home';
   if (['home','library','search','genres'].includes(route)) navigate(route, { pushState: false });
 });
+
+// Search topbar: transparent → frosted glass on scroll
+document.getElementById('v-search').addEventListener('scroll', function() {
+  document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 8);
+}, { passive: true });
 
 // Reader swipe to turn pages
 (function() {
