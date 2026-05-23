@@ -1,4 +1,4 @@
-const HEADERS = { 'User-Agent': 'MangaDL/1.0 (https://manga-dl-app.vercel.app)' };
+const HEADERS = { 'User-Agent': 'Mangaink/1.0 (https://mangaink.vercel.app)' };
 const BASE = 'https://api.mangadex.org';
 const COMMON = `includes[]=cover_art&availableTranslatedLanguage[]=en&hasAvailableChapters=true&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&limit=18`;
 

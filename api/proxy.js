@@ -24,8 +24,6 @@ module.exports = async (req, res) => {
     '.chapmanganato.to',
     '.mangakakalot.com',
     'i.imgur.com',
-    '.railway.app',      // Suwayomi on Railway
-    '.up.railway.app',
     '.shueisha.co.jp',   // MangaPlus
     'mangaplus.shueisha.co.jp',
     '.tokyo-cdn.com',
