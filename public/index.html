@@ -514,7 +514,9 @@ button.status-pill:hover{opacity:.75}
 .ch-source:not(:last-child) .ch-tree-col::before{bottom:0}
 .ch-tree-col::after{content:'';position:absolute;left:13px;top:50%;transform:translateY(-50%);width:10px;height:1.5px;background:var(--border)}
 /* Flag (left) + right-aligned info */
-.ch-source-flag{font-size:14px;line-height:1;flex-shrink:0}
+.ch-source-flag{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;line-height:1}
+.ch-source-flag img{border-radius:1px;display:block;flex-shrink:0}
+.ch-src-num{font-size:10px;font-weight:700;color:var(--sub);line-height:1;white-space:nowrap}
 .ch-source-right{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .ch-source-group{font-size:12px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;text-align:right}
 .ch-source-time{font-size:10px;color:var(--sub);font-weight:500}
@@ -1004,8 +1006,13 @@ function timeAgo(dateStr) {
   if (months < 12) return `${months}mo ago`;
   return `${Math.floor(months / 12)}y ago`;
 }
-const _LANG_FLAGS = {en:'🇬🇧','en-us':'🇺🇸',ja:'🇯🇵',ko:'🇰🇷',zh:'🇨🇳','zh-hk':'🇭🇰','zh-ro':'🇨🇳',fr:'🇫🇷',es:'🇪🇸','es-la':'🇲🇽','es-419':'🇲🇽',pt:'🇵🇹','pt-br':'🇧🇷',de:'🇩🇪',it:'🇮🇹',ru:'🇷🇺',ar:'🇸🇦',tr:'🇹🇷',id:'🇮🇩',vi:'🇻🇳',th:'🇹🇭',pl:'🇵🇱',uk:'🇺🇦',nl:'🇳🇱',ro:'🇷🇴',sv:'🇸🇪',hu:'🇭🇺',cs:'🇨🇿',bg:'🇧🇬',he:'🇮🇱',fa:'🇮🇷',ms:'🇲🇾',fil:'🇵🇭',mn:'🇲🇳'};
-function langFlag(code) { return _LANG_FLAGS[(code||'').toLowerCase()] || '🌐'; }
+const _LANG_COUNTRY = {en:'gb','en-us':'us',ja:'jp',ko:'kr',zh:'cn','zh-hk':'hk','zh-ro':'cn',fr:'fr',es:'es','es-la':'mx','es-419':'mx',pt:'pt','pt-br':'br',de:'de',it:'it',ru:'ru',ar:'sa',tr:'tr',id:'id',vi:'vn',th:'th',pl:'pl',uk:'ua',nl:'nl',ro:'ro',sv:'se',hu:'hu',cs:'cz',bg:'bg',he:'il',fa:'ir',ms:'my',fil:'ph',mn:'mn'};
+function langFlag(code) {
+  const cc = _LANG_COUNTRY[(code||'').toLowerCase()];
+  return cc
+    ? `<img src="https://flagcdn.com/16x12/${cc}.png" width="16" height="12" alt="${cc.toUpperCase()}">`
+    : `<span style="font-size:9px;font-weight:700;color:var(--sub)">${(code||'??').slice(0,2).toUpperCase()}</span>`;
+}
 function toggleChGroup(id) { document.getElementById(id)?.classList.toggle('collapsed'); }
 function statusPillClass(s) {
   return { ongoing: 'pill-ongoing', completed: 'pill-completed', hiatus: 'pill-hiatus', cancelled: 'pill-cancelled' }[s] || 'pill-ongoing';
@@ -2377,7 +2384,7 @@ async function renderPanel({ manga, chapters }) {
           if (isExt) _extChUrls.set(s.id, s.externalUrl);
           return `<div class="ch-source${isCurSrc ? ' current-ch' : ''}${isExt ? ' is-external' : ''}" data-chid="${sIdEsc}" onclick="handleChRowClick('${sIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
             <div class="ch-tree-col"></div>
-            <span class="ch-source-flag">${langFlag(s.translatedLanguage)}</span>
+            <span class="ch-source-flag">${langFlag(s.translatedLanguage)}<span class="ch-src-num">Ch.${chNumEsc || '?'}</span></span>
             <div class="ch-source-right">
               <span class="ch-source-group">${esc(s.group || 'Unknown group')}${isExt ? ' ' + extBadge : ''}</span>
               <span class="ch-source-time">${[s.publishAt ? timeAgo(s.publishAt) : '', s.pages ? s.pages + 'p' : ''].filter(Boolean).join(' · ')}</span>
