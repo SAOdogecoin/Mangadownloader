@@ -2706,33 +2706,36 @@ async function goPrevChapter() {
 }
 
 function updateNextChBtn() {
-  const { pages, pageIdx, isRTL, chapterListIdx, chapters } = readerState;
+  const { pages, pageIdx, chapterListIdx, chapters } = readerState;
   if (!pages.length) return;
-  const atEnd = isRTL ? pageIdx === 0 : pageIdx === pages.length - 1;
+  // Reading always advances 0 → N-1 regardless of RTL (pageNav handles direction internally)
+  const atEnd = pageIdx === pages.length - 1;
   const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
   const btn = document.getElementById('next-ch-btn');
   if (btn) btn.style.display = atEnd && hasNext ? 'block' : 'none';
 }
 
 function updateChNav() {
-  // Page navigation buttons — arrows match physical tap direction
+  // pageNav('prev') in RTL increments idx (forward); pageNav('next') decrements (backward)
+  // So RTL "Next" button must call pageNav('prev'), and "Prev" must call pageNav('next')
   const { pageIdx, pages, isRTL } = readerState;
   const total = pages.length;
   const leftBtn = document.getElementById('reader-left-btn');
   const rightBtn = document.getElementById('reader-right-btn');
   if (!leftBtn || !total) return;
   if (isRTL) {
-    // RTL: tap LEFT = next page forward in reading order
-    leftBtn.onclick = () => pageNav('next');
-    leftBtn.disabled = pageIdx === 0; // at reading end
+    // RTL: ← (left) = forward = pageNav('prev') = increment
+    leftBtn.onclick = () => pageNav('prev');
+    leftBtn.disabled = pageIdx === total - 1; // can't increment past last
     document.getElementById('left-label').textContent = 'Next';
     document.getElementById('left-arrow').setAttribute('points', '15 18 9 12 15 6'); // ←
-    rightBtn.onclick = () => pageNav('prev');
-    rightBtn.disabled = pageIdx === total - 1; // at reading start
+    // → (right) = backward = pageNav('next') = decrement
+    rightBtn.onclick = () => pageNav('next');
+    rightBtn.disabled = pageIdx === 0; // can't decrement below 0
     document.getElementById('right-label').textContent = 'Prev';
     document.getElementById('right-arrow').setAttribute('points', '9 18 15 12 9 6'); // →
   } else {
-    // LTR: tap RIGHT = next page forward
+    // LTR: ← = backward, → = forward
     leftBtn.onclick = () => pageNav('prev');
     leftBtn.disabled = pageIdx === 0;
     document.getElementById('left-label').textContent = 'Prev';
