@@ -44,6 +44,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 
 /* ─── TOPBAR ─── */
 .topbar{background:var(--bg);flex-shrink:0;position:fixed;top:0;left:0;right:0;z-index:9999;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transform:translateZ(0);will-change:transform;isolation:isolate}
+body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .topbar-r1{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;padding-top:max(12px, env(safe-area-inset-top, 12px))}
 .app-title{font-family:'Knewave',cursive;font-size:24px;font-weight:400;color:#0a0a0a;letter-spacing:.01em;line-height:1;text-transform:uppercase}
 .ttab-group{display:flex;align-items:center;gap:2px}
@@ -561,10 +562,11 @@ button.status-pill:hover{opacity:.75}
 .hd-side-arrow svg{width:14px;height:14px;stroke:#0a0a0a;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 @media (min-width:900px){.hd-side-arrow{display:flex}}
 /* Topbar smooth bg + blur transition */
-.topbar{transition:background .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
-/* Keep the topbar solid white so text remains visible above the hero */
-.topbar{background:var(--bg) !important;border-bottom:1px solid rgba(0,0,0,.06);}
-.home-scrolled .topbar{background:var(--bg) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
+.topbar{transition:background .3s,box-shadow .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
+/* Keep the topbar fully opaque above the hero */
+.topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
+.topbar > *{position:relative;z-index:10000}
+.home-scrolled .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 /* Topbar desktop nav */
 .topbar-desktop-nav{display:none}
 
@@ -627,12 +629,11 @@ button.status-pill:hover{opacity:.75}
 
   /* Desktop nav links (right side of topbar) */
   .topbar-desktop-nav{display:flex;align-items:center;gap:2px}
-  .topbar-desktop-nav button{border:none;background:none;font:600 13px 'Inter',sans-serif;color:var(--sub);padding:8px 14px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;letter-spacing:-.005em;white-space:nowrap}
+  .topbar-desktop-nav button{border:none;background:none;font:600 13px 'Inter',sans-serif;color:#0a0a0a;padding:8px 14px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;letter-spacing:-.005em;white-space:nowrap;text-decoration:none}
   .topbar-desktop-nav button:hover{color:#0a0a0a;background:var(--surf)}
-  .topbar-desktop-nav button.active{color:#0a0a0a}
-  /* Genres button special style */
-  .topbar-desktop-nav .genres-btn{border:1.5px solid var(--border);padding:7px 14px;border-radius:99px}
-  .topbar-desktop-nav .genres-btn:hover{border-color:#0a0a0a;background:none}
+  .topbar-desktop-nav button.active{color:#0a0a0a;background:none;box-shadow:none;text-decoration:none}
+  .topbar-desktop-nav .genres-btn{border:none;padding:8px 14px;border-radius:8px;background:none;color:inherit}
+  .topbar-desktop-nav .genres-btn:hover{background:var(--surf)}
   /* Genres section visible on desktop search (sidebar gone); JS hidden class still works */
   #v-search .search-genres-section:not(.hidden){display:block}
 
@@ -656,7 +657,7 @@ button.status-pill:hover{opacity:.75}
   /* Home view: hero starts at very top (behind topbar) — no top padding */
   #v-home{padding-top:0}
   /* Always keep the topbar white on home so the buttons and title stay visible */
-  .topbar{background:var(--bg) !important;border-bottom:1px solid rgba(0,0,0,.06)}
+  .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
   body:has(.hero-desktop) .topbar-search-desktop input{background:#fff;border-color:rgba(0,0,0,.12);box-shadow:0 4px 16px -8px rgba(0,0,0,.18)}
   /* (genre section now visible on desktop — sidebar removed) */
 }
@@ -2294,6 +2295,7 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
 
   // Show overlay
   document.getElementById('reader-overlay').classList.remove('hidden');
+  document.body.classList.add('reader-open');
   document.getElementById('reader-title').textContent = readerState.mangaTitle;
   document.getElementById('reader-ch').textContent = `Ch.${chapterNum}${chapterTitle ? ' — ' + chapterTitle : ''}`;
   showPageLoading();
@@ -2602,6 +2604,7 @@ async function goNextChapter() {
 
 function closeReader() {
   document.getElementById('reader-overlay').classList.add('hidden');
+  document.body.classList.remove('reader-open');
   document.getElementById('reader-overlay').classList.remove('vmode');
   document.getElementById('reader-img-wrap').innerHTML = '';
   const area = document.getElementById('reader-area');
