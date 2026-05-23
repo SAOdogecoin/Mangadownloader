@@ -33,21 +33,22 @@ module.exports = async (req, res) => {
     season.name === 'Fall'   ? `${season.year}-09-01T00:00:00` :
                                `${season.year}-12-01T00:00:00`;
 
-  const [trending, updated, newManga, topRated, recommended, selfPublished, seasonal] = await Promise.all([
+  // Popular-new = manga created in last 6 months, ordered by followers
+  const sixMonthsAgo = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 19);
+
+  const [trending, updated, newManga, topRated, recommended, selfPublished, seasonal, popularNew] = await Promise.all([
     fetchSection('order[followedCount]=desc'),
     fetchSection('order[latestUploadedChapter]=desc'),
     fetchSection('order[createdAt]=desc'),
     fetchSection('order[rating]=desc'),
-    // Recommended = highly-followed + decent rating mix
     fetchSection('order[followedCount]=desc&order[rating]=desc&limit=18'),
-    // Self-Published tag filter
     fetchSection(`includedTags[]=${TAG_SELF_PUBLISHED}&order[followedCount]=desc`),
-    // Seasonal = created since season start, ongoing
     fetchSection(`createdAtSince=${encodeURIComponent(seasonStart)}&order[followedCount]=desc`),
+    fetchSection(`createdAtSince=${encodeURIComponent(sixMonthsAgo)}&order[followedCount]=desc`),
   ]);
 
   // Fetch stats for all unique ids
-  const allItems = [...trending, ...updated, ...newManga, ...topRated, ...recommended, ...selfPublished, ...seasonal];
+  const allItems = [...trending, ...updated, ...newManga, ...topRated, ...recommended, ...selfPublished, ...seasonal, ...popularNew];
   const ids = [...new Set(allItems.map(m => m.id))];
   let statsMap = {};
   try {
@@ -87,13 +88,14 @@ module.exports = async (req, res) => {
 
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   res.json({
-    trending: trending.map(m => mapManga(m, true)), // include description+tags for hero
+    trending: trending.map(mapManga),
     updated: updated.map(mapManga),
     newManga: newManga.map(mapManga),
     topRated: topRated.map(mapManga),
     recommended: recommendedDedup.map(mapManga),
     selfPublished: selfPublished.map(mapManga),
     seasonal: seasonal.map(mapManga),
+    popularNew: popularNew.map(m => mapManga(m, true)), // hero needs description+tags
     seasonName: `${season.name} ${season.year}`,
   });
 };

@@ -1597,19 +1597,18 @@ function renderHomeData(data, wrap) {
     </div>`;
     return;
   }
-  // Mobile: no hero. Desktop: wide landscape carousel hero w/ 5 trending.
-  const trending = data.trending || [];
+  // Mobile: no hero. Desktop: wide landscape carousel hero w/ Popular New Titles.
   const isDesktop = window.innerWidth >= 900;
-  if (isDesktop) renderHeroDesktop(trending, wrap);
-  let trendingForSection = trending;
-  if (isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap, 'followedCount');
+  const popularNew = data.popularNew || [];
+  if (isDesktop) renderHeroDesktop(popularNew, wrap);
+  renderDiscSection('Popular New Titles', popularNew, wrap, 'followedCount');
   renderDiscSection('Latest Updates', data.updated, wrap, 'latestUploadedChapter');
   renderDiscSection('Recommended', data.recommended, wrap, 'followedCount');
   if (data.seasonName) renderDiscSection(`Seasonal — ${data.seasonName}`, data.seasonal, wrap, 'seasonal');
-  renderDiscSection('Self-Published', data.selfPublished, wrap, 'selfPublished');
   renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
+  renderDiscSection('Trending Now', data.trending || [], wrap, 'followedCount');
   renderDiscSection('Top Rated', data.topRated, wrap, 'rating');
-  if (!isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap, 'followedCount');
+  renderDiscSection('Self-Published', data.selfPublished, wrap, 'selfPublished');
 }
 
 // ─── Desktop wide hero carousel ──────────────────────────────────────
