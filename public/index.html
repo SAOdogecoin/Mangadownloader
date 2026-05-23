@@ -605,17 +605,17 @@ button.status-pill:hover{opacity:.75}
 .recent-searches-wrap{padding:14px 16px 2px;flex-shrink:0}
 .recent-searches-wrap.hidden{display:none}
 .recent-searches-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.recent-searches-lbl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.04em;text-transform:uppercase}
+.recent-searches-lbl{font-size:13px;font-weight:800;color:#0a0a0a;letter-spacing:.05em;text-transform:uppercase}
 .recent-searches-clear{font-size:11px;font-weight:600;color:var(--sub);background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:4px;-webkit-tap-highlight-color:transparent;transition:color .15s}
 .recent-searches-clear:hover{color:var(--fg)}
-.recent-searches-chips{display:flex;flex-wrap:wrap;gap:7px}
-.recent-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px 6px 9px;background:var(--surf);border:1px solid var(--border);border-radius:99px;cursor:pointer;font-size:12px;font-weight:500;color:var(--fg);-webkit-tap-highlight-color:transparent;transition:background .14s,border-color .14s;max-width:180px}
-.recent-chip:hover{background:var(--border);border-color:rgba(10,10,10,.2)}
-.recent-chip svg{width:11px;height:11px;stroke:var(--sub);fill:none;stroke-width:2;flex-shrink:0}
+.recent-searches-chips{display:flex;flex-wrap:wrap;gap:8px}
+.recent-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px 8px 12px;background:#0a0a0a;border:1px solid #0a0a0a;border-radius:99px;cursor:pointer;font-size:13px;font-weight:600;color:#fff;-webkit-tap-highlight-color:transparent;transition:opacity .14s;max-width:220px}
+.recent-chip:hover{opacity:.8}
+.recent-chip svg{width:12px;height:12px;stroke:rgba(255,255,255,.6);fill:none;stroke-width:2;flex-shrink:0}
 .recent-chip-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.recent-chip-rm{width:14px;height:14px;border:none;background:none;cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:color .14s;margin-left:1px}
-.recent-chip-rm:hover{color:var(--fg)}
-.recent-chip-rm svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+.recent-chip-rm{width:16px;height:16px;border:none;background:none;cursor:pointer;color:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:0;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:color .14s;margin-left:2px}
+.recent-chip-rm:hover{color:#fff}
+.recent-chip-rm svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
 /* Autocomplete popup */
 .ac-popup{position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fff;border-radius:14px;box-shadow:0 12px 48px -8px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.07);z-index:99999;overflow:hidden;display:none;flex-direction:column;min-width:280px}
 .ac-popup.show{display:flex;animation:ac-in .11s ease-out}
@@ -1300,8 +1300,7 @@ function saveRecentSearch(q) {
   if (list.length > RECENT_SEARCH_MAX) list = list.slice(0, RECENT_SEARCH_MAX);
   localStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(list));
 }
-function removeRecentSearch(q, e) {
-  e?.stopPropagation();
+function removeRecentSearch(q) {
   const list = getRecentSearches().filter(s => s !== q);
   localStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(list));
   renderRecentSearches();
@@ -1322,14 +1321,14 @@ function renderRecentSearches() {
   if (!list.length) { wrap.classList.add('hidden'); return; }
   wrap.classList.remove('hidden');
   wrap.innerHTML = `<div class="recent-searches-hdr">
-    <span class="recent-searches-lbl">Recent</span>
+    <span class="recent-searches-lbl">Recent Searches</span>
     <button class="recent-searches-clear" onclick="clearAllRecentSearches()">Clear all</button>
   </div>
   <div class="recent-searches-chips">${list.map(q => `
-    <div class="recent-chip" onclick="useRecentSearch(${JSON.stringify(q)})">
+    <div class="recent-chip" data-q="${esc(q)}" onclick="useRecentSearch(this.dataset.q)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span class="recent-chip-txt">${esc(q)}</span>
-      <button class="recent-chip-rm" onclick="removeRecentSearch(${JSON.stringify(q)},event)" aria-label="Remove">
+      <button class="recent-chip-rm" data-q="${esc(q)}" onclick="event.stopPropagation();removeRecentSearch(this.dataset.q)" aria-label="Remove">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>`).join('')}
@@ -1917,9 +1916,9 @@ function discCardHtml(m, showChapter) {
     ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl, m.coverReferer))}" alt="" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="disc-ph">${SVG_BOOK}</div>`;
   const stars = m.rating ? starsHtml(m.rating) : '';
-  const chTime = (showChapter && m.latestChapterAt) ? ' · ' + timeAgo(m.latestChapterAt) : '';
-  const chapterBadge = (showChapter && m.lastChapter)
-    ? `<div class="disc-chapter-badge">Ch.${esc(m.lastChapter)}${chTime}</div>` : '';
+  const chTime = (showChapter && m.latestChapterAt) ? timeAgo(m.latestChapterAt) : '';
+  const chapterBadge = showChapter && (m.lastChapter || chTime)
+    ? `<div class="disc-chapter-badge">${m.lastChapter ? 'Ch.' + esc(m.lastChapter) : ''}${m.lastChapter && chTime ? ' · ' : ''}${chTime}</div>` : '';
   return `<div class="disc-card" data-id="${esc(m.id)}" data-source="${esc(m.source || 'mdex')}">
     <div class="disc-cover-wrap">${img}${chapterBadge}</div>
     <div class="disc-title">${esc(m.title)}</div>

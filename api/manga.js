@@ -9,7 +9,7 @@ async function fetchAllChapters(id, lang) {
 
   // First fetch — also tells us total count
   const firstRes = await fetch(
-    `${BASE}/manga/${id}/feed?translatedLanguage[]=${lang}&order[volume]=asc&order[chapter]=asc&limit=${limit}&offset=0&${FEED_PARAMS}`,
+    `${BASE}/manga/${id}/feed?order[volume]=asc&order[chapter]=asc&limit=${limit}&offset=0&${FEED_PARAMS}`,
     { headers: HEADERS }
   );
   if (!firstRes.ok) throw new Error(`Chapter feed failed: ${firstRes.status}`);
@@ -27,7 +27,7 @@ async function fetchAllChapters(id, lang) {
     for (let i = 0; i < offsets.length; i += 3) {
       const batch = offsets.slice(i, i + 3).map(o =>
         fetch(
-          `${BASE}/manga/${id}/feed?translatedLanguage[]=${lang}&order[volume]=asc&order[chapter]=asc&limit=${limit}&offset=${o}&${FEED_PARAMS}`,
+          `${BASE}/manga/${id}/feed?order[volume]=asc&order[chapter]=asc&limit=${limit}&offset=${o}&${FEED_PARAMS}`,
           { headers: HEADERS }
         ).then(r => r.ok ? r.json() : { data: [] }).then(d => d.data || [])
         .catch(() => [])
