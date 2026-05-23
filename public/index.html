@@ -35,7 +35,7 @@
 html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;font-feature-settings:'ss01','cv11';-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;letter-spacing:-.005em}
 /* Subtle film grain over background for depth */
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.06;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+/* (grain texture removed — it broke backdrop-filter via mix-blend-mode stacking context) */
 .app-body,.topbar{position:relative;z-index:1}
 /* Hide all scrollbars (mobile & desktop) — kept scrollable, just invisible */
 *{scrollbar-width:none;-ms-overflow-style:none}
@@ -454,7 +454,8 @@ button.status-pill:hover{opacity:.75}
 .topbar-r3, .nav-tabs-row{display:none !important}
 
 /* ─── BOTTOM TAB NAV (floating pill, centered, selected = black circle) ─── */
-.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:99px;padding:6px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50}
+.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:6px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50}
+@supports not (backdrop-filter:blur(1px)){.bnav{background:rgba(255,255,255,.92)}}
 .bnav-tab{width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;transition:background .18s,color .18s,transform .15s}
 .bnav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bnav-tab[data-route="home"] svg{width:24px;height:24px}
