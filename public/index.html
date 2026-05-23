@@ -145,12 +145,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 @media (hover:none){.hero-next-btn{opacity:.7}}
 .hero-card:hover{transform:translateY(-2px)}
 .hero-card:active{transform:scale(.99)}
-.hero-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.hero-grad{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(10,10,10,.35) 70%,rgba(10,10,10,.7));pointer-events:none}
-.hero-content{position:absolute;left:20px;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;color:#fff;z-index:2;pointer-events:none}
-.hero-kicker{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.5)}
-.hero-title{font-family:'Inter',sans-serif;font-size:22px;font-weight:800;line-height:1.15;letter-spacing:-.025em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.4);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.hero-meta{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.9);font-size:12px;font-weight:500}
+..hero-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(10,10,10,.45) 55%,rgba(10,10,10,.88) 100%);pointer-events:none}
+.hero-content{position:absolute;left:20px;right:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;color:#fff;z-index:2;pointer-events:none}
+.hero-kicker{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:.05em;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.hero-title{font-family:'Inter',sans-serif;font-size:22px;font-weight:800;line-height:1.15;letter-spacing:-.03em;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.45);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hero-meta{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.95);font-size:12px;font-weight:600}
 .hero-stars{display:inline-flex;align-items:center;gap:2px}
 .hero-stars .star{font-size:11px}
 .hero-stars .star-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#fff;margin-left:4px}
@@ -562,8 +562,8 @@ button.status-pill:hover{opacity:.75}
 @media (min-width:900px){.hd-side-arrow{display:flex}}
 /* Topbar smooth bg + blur transition */
 .topbar{transition:background .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
-/* Hero: frosted-glass topbar until user scrolls — keeps elements readable against any hero bg */
-body:has(.hero-desktop):not(.home-scrolled) .topbar{background:var(--bg) !important}
+/* Hero: transparent topbar until user scrolls — keeps elements on top of the hero bg */
+body:has(.hero-desktop):not(.home-scrolled) .topbar{background:rgba(255,255,255,.84) !important;border:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
 /* Once scrolled, solid white */
 .home-scrolled .topbar{background:var(--bg) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 /* Topbar desktop nav */
@@ -612,12 +612,16 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:var(--bg) !import
   .panel-start-btn svg,.panel-dl-btn svg{width:14px;height:14px}
   .panel-action-row{gap:10px;margin-top:10px}
   .btn-more-desc{font-size:13px}
-  .hero-desktop{margin-left:0 !important;margin-right:0 !important}
+  .hero-desktop{margin:0 -24px 24px;height:460px;width:calc(100% + 48px);}
   .topbar-lib-desktop{display:none !important}
 
   /* Topbar: logo | search (center, fixed 320px) | nav links */
   .topbar-r1{display:grid !important;grid-template-columns:auto minmax(0,320px) auto;align-items:center;gap:24px;padding:14px 24px 10px !important}
   .topbar-search-desktop{max-width:320px !important;width:320px;flex:none !important;justify-self:center}
+  .hero-title{font-size:30px}
+  .hero-meta{font-size:13px;gap:12px}
+  .hero-actions{gap:12px}
+  .hero-read{padding:12px 26px;font-size:14px}
   /* Desktop: correct view padding to match topbar height */
   #v-library,#v-search{padding-top:66px}
   #v-home{padding-top:0}
@@ -637,11 +641,11 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:var(--bg) !import
   #v-search .search-page-hdr{display:none}
 
   /* Desktop hero overrides — bigger, side-by-side layout. Top margin 0 since topbar is now fixed/floating */
-  .hero-desktop{margin:0 -24px 24px;height:380px}
+  .hero-desktop{margin:0 -24px 24px;height:460px;width:calc(100% + 48px);}
   .hd-bg-overlay{background:linear-gradient(90deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.85) 40%,rgba(255,255,255,.55) 75%,rgba(255,255,255,.35) 100%)}
   .hd-content{align-items:center;gap:32px;padding:60px 40px 40px}
-  .hd-thumb-wrap{width:180px;border-radius:10px}
-  .hd-info{gap:10px;max-width:720px}
+  .hd-thumb-wrap{width:240px;border-radius:10px}
+  .hd-info{gap:10px;max-width:760px}
   .hd-kicker{font-size:13px;text-transform:none;letter-spacing:-.005em;opacity:1}
   .hd-title{font-size:30px}
   .hd-meta-row{font-size:12px}
@@ -652,8 +656,8 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:var(--bg) !import
   .hd-dots{bottom:22px}
   /* Home view: hero starts at very top (behind topbar) — no top padding */
   #v-home{padding-top:0}
-  /* Desktop: frosted-glass topbar over hero (not scrolled). Search stays solid white. */
-  body:has(.hero-desktop):not(.home-scrolled) .topbar{background:var(--bg);border-bottom:none}
+  /* Home top: transparent topbar over hero until user scrolls */
+  body:has(#v-home.active):not(.home-scrolled) .topbar{background:rgba(255,255,255,.84) !important;border:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
   body:has(.hero-desktop) .topbar-search-desktop input{background:#fff;border-color:rgba(0,0,0,.12);box-shadow:0 4px 16px -8px rgba(0,0,0,.18)}
   /* (genre section now visible on desktop — sidebar removed) */
 }
