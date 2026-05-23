@@ -36,14 +36,14 @@ html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;font-feature-settings:'ss01','cv11';-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;letter-spacing:-.005em}
 /* Subtle film grain over background for depth */
 /* (grain texture removed — it broke backdrop-filter via mix-blend-mode stacking context) */
-.app-body,.topbar{position:relative;z-index:1}
+.app-body{position:relative;z-index:1}
 /* Hide all scrollbars (mobile & desktop) — kept scrollable, just invisible */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
 -webkit-tap-highlight-color:transparent;
 
 /* ─── TOPBAR ─── */
-.topbar{background:var(--bg);flex-shrink:0;position:relative;backdrop-filter:none;-webkit-backdrop-filter:none}
+.topbar{background:var(--bg);flex-shrink:0;position:fixed;top:0;left:0;right:0;z-index:20;backdrop-filter:none;-webkit-backdrop-filter:none}
 .topbar-r1{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;padding-top:max(12px, env(safe-area-inset-top, 12px))}
 .app-title{font-family:'Knewave',cursive;font-size:24px;font-weight:400;color:#0a0a0a;letter-spacing:.01em;line-height:1;text-transform:uppercase}
 .ttab-group{display:flex;align-items:center;gap:2px}
@@ -79,6 +79,10 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 .app-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .view{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0}
 .view.active{display:flex}
+/* Mobile non-home views: pad below fixed topbar (~44px) */
+#v-library,#v-search{padding-top:52px}
+/* Home view: hero extends to top behind transparent topbar */
+#v-home{padding-top:0}
 
 /* ─── SEARCH VIEW ─── */
 .search-hint{padding:40px 20px;text-align:center;color:var(--sub);font-size:14px;font-weight:600}
@@ -117,7 +121,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 .home-section{padding:18px 0 4px;flex-shrink:0;position:relative}
 .home-section:first-of-type{padding-top:8px}
 .home-section-head{margin-bottom:10px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.home-section-label{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.01em;line-height:1.2}
+.home-section-label{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.01em;line-height:1.2;flex:1}
 .view-all-btn{display:inline-flex;align-items:center;gap:2px;background:none;border:none;color:var(--sub);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.005em;cursor:pointer;padding:4px 4px 4px 10px;border-radius:99px;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s}
 .view-all-btn:hover{color:#0a0a0a;background:var(--surf)}
 .view-all-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -175,8 +179,8 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 /* Discovery horizontal strip */
 .disc-strip{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;padding-left:16px;padding-right:16px;scroll-padding:16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
 .disc-strip::-webkit-scrollbar{display:none}
-/* ~2 cards visible per row on mobile */
-.disc-card{flex-shrink:0;width:calc((100vw - 60px) / 2.2);max-width:190px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .25s cubic-bezier(.2,.8,.2,1);scroll-snap-align:start;position:relative}
+/* 3 cards visible per row on mobile */
+.disc-card{flex-shrink:0;width:calc((100vw - 56px) / 3);max-width:140px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .25s cubic-bezier(.2,.8,.2,1);scroll-snap-align:start;position:relative}
 .disc-card:hover{transform:translateY(-3px)}
 .disc-card:active{transform:scale(.97)}
 .disc-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;border-radius:6px;overflow:hidden;background:var(--surf);box-shadow:0 1px 0 rgba(60,50,30,.06),0 6px 18px -8px rgba(60,50,30,.18);transition:box-shadow .25s,transform .25s}
@@ -193,7 +197,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 .disc-rating-row{display:flex;align-items:center;gap:2px;margin-top:4px}
 .disc-rating-row .star{font-size:9px}
 .disc-rating-num{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:500;color:var(--sub);margin-left:2px;letter-spacing:.02em}
-.disc-title{margin-top:8px;font-size:13px;font-weight:700;color:var(--fg);line-height:1.32;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;letter-spacing:-.01em}
+.disc-title{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--fg);line-height:1.32;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;letter-spacing:-.005em}
 .disc-chapter-badge{position:absolute;bottom:6px;left:6px;background:rgba(10,10,10,.75);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.02em;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:3}
 /* (lead variant removed — all cards same size now) */
 /* Skeleton state for home cards */
@@ -527,12 +531,12 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── HERO BANNER (responsive) ─── */
 /* Mobile: side margins + rounded card, extends UP behind topbar via negative top margin */
-.hero-desktop{position:relative;margin:-40px 14px 20px;height:280px;overflow:hidden;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px}
+.hero-desktop{position:relative;margin:0 0 20px;height:280px;overflow:hidden;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:0 0 14px 14px}
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
-.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.75) 60%,rgba(255,255,255,.95) 100%);pointer-events:none}
-.hd-content{position:relative;height:100%;display:flex;align-items:flex-end;gap:16px;padding:60px 16px 18px;z-index:2}
+.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.55) 55%,rgba(255,255,255,.15) 100%);pointer-events:none}
+.hd-content{position:relative;height:100%;display:flex;align-items:flex-start;gap:16px;padding:52px 16px 18px;z-index:2}
 .hd-thumb-wrap{flex-shrink:0;width:128px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 14px 32px -8px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.15)}
 .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
 .hd-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;max-width:100%}
@@ -623,8 +627,6 @@ body:has(.hero-desktop) .topbar{background:transparent}
   .hd-tag{font-size:10px;padding:4px 9px}
   .hd-desc{display:-webkit-box;font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;color:rgba(0,0,0,.75);-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:580px}
   .hd-dots{bottom:22px}
-  /* Desktop: topbar floats fixed so hero can extend behind it */
-  .topbar{position:fixed !important;top:0;left:0;right:0;z-index:20}
   /* Home view: hero starts at very top (behind topbar) — no top padding */
   #v-home{padding-top:0}
   /* When hero shows, topbar becomes transparent over hero. Search input stays SOLID white for contrast. */
