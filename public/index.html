@@ -123,8 +123,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 /* ─── HERO FEATURED CAROUSEL ─── */
 .hero-card{position:relative;margin:16px 16px 8px;border-radius:10px;overflow:hidden;aspect-ratio:1/1;cursor:pointer;-webkit-tap-highlight-color:transparent;background:#0a0a0a;transition:transform .25s}
-.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .55s ease;pointer-events:none}
-.hero-slide.active{opacity:1;pointer-events:auto}
+/* Slides stacked, instant swap (no fade animation) */
+.hero-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
+.hero-slide.active{visibility:visible;pointer-events:auto}
 .hero-dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:4;pointer-events:auto}
 .hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;transition:all .25s;padding:0;-webkit-tap-highlight-color:transparent}
 .hero-dot.active{background:#fff;width:22px;border-radius:99px}
@@ -1390,10 +1391,9 @@ function buildHeroSlide(item, idx) {
   const cov = item.coverUrl ? esc(proxyUrl(item.coverUrl, item.coverReferer)) : '';
   const stars = item.rating ? starsHtml(item.rating) : '';
   const status = item.status ? `<span class="hero-status">${esc(item.status)}</span>` : '';
-  // First slide loads immediately; others load src when activated to avoid parallel-load failures
-  const imgSrc = idx === 0 ? `src="${cov}"` : `data-src="${cov}"`;
+  // All slides load src immediately (eager). visibility:hidden keeps inactive ones off-screen but loaded
   return `<div class="hero-slide${idx===0?' active':''}" data-idx="${idx}" data-id="${esc(item.id)}" data-source="${esc(item.source||'mdex')}">
-    ${cov ? `<img class="hero-cover" ${imgSrc} alt="" decoding="async">` : '<div class="hero-skel"></div>'}
+    ${cov ? `<img class="hero-cover" src="${cov}" alt="" loading="eager" decoding="async" fetchpriority="${idx===0?'high':'auto'}">` : '<div class="hero-skel"></div>'}
     <div class="hero-grad"></div>
     <div class="hero-content">
       <div class="hero-kicker">Trending Now</div>
@@ -1435,13 +1435,6 @@ function renderHero(items, container) {
     _heroIdx = (i + _heroLen) % _heroLen;
     slides.forEach((s, k) => s.classList.toggle('active', k === _heroIdx));
     dots.forEach((d, k) => d.classList.toggle('active', k === _heroIdx));
-    // Lazy-mount cover src on activation
-    const active = slides[_heroIdx];
-    const img = active?.querySelector('img[data-src]');
-    if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
-    // Prefetch next slide so swipe is instant
-    const next = slides[(_heroIdx + 1) % _heroLen]?.querySelector('img[data-src]');
-    if (next) { next.src = next.dataset.src; next.removeAttribute('data-src'); }
   }
 
   // Dot click → jump
@@ -1471,11 +1464,12 @@ function renderHero(items, container) {
     if (Math.abs(dx) > 50) show(_heroIdx + (dx < 0 ? 1 : -1));
   }, { passive: true });
 
-  // Prefetch all 5 manga details + first-2 cover images
-  pick.forEach((p, i) => {
+  // Force-warm ALL 5 covers + prefetch manga details
+  pick.forEach(p => {
     prefetchManga(p.id, p.source || 'mdex');
-    if (i < 2 && p.coverUrl) {
+    if (p.coverUrl) {
       const im = new Image();
+      im.decoding = 'async';
       im.src = proxyUrl(p.coverUrl, p.coverReferer);
     }
   });
