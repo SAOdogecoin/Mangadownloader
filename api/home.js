@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
     }
   } catch {}
 
-  function mapManga(m) {
+  function mapManga(m, includeExtra) {
     const attrs = m.attributes || {};
     const title = attrs.title?.en || Object.values(attrs.title || {})[0] || 'Untitled';
     const coverRel = (m.relationships || []).find(r => r.type === 'cover_art');
@@ -72,7 +72,13 @@ module.exports = async (req, res) => {
     const stat = statsMap[m.id];
     const rating = stat?.rating?.bayesian ? Math.round(stat.rating.bayesian * 10) / 10 : null;
     const lastChapter = attrs.lastChapter || null;
-    return { id: m.id, title, coverUrl, status: attrs.status || 'ongoing', year: attrs.year || null, rating, lastChapter };
+    const base = { id: m.id, title, coverUrl, status: attrs.status || 'ongoing', year: attrs.year || null, rating, lastChapter };
+    if (includeExtra) {
+      const rawDesc = attrs.description?.en || Object.values(attrs.description || {})[0] || '';
+      base.description = rawDesc.replace(/\[.*?\]/g, '').trim();
+      base.tags = (attrs.tags || []).slice(0, 3).map(t => ({ name: t.attributes?.name?.en || '', id: t.id })).filter(t => t.name);
+    }
+    return base;
   }
 
   // Dedupe recommended/seasonal vs trending (already-shown manga)
@@ -81,7 +87,7 @@ module.exports = async (req, res) => {
 
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   res.json({
-    trending: trending.map(mapManga),
+    trending: trending.map(m => mapManga(m, true)), // include description+tags for hero
     updated: updated.map(mapManga),
     newManga: newManga.map(mapManga),
     topRated: topRated.map(mapManga),

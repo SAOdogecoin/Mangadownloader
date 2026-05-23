@@ -549,6 +549,28 @@ button.status-pill:hover{opacity:.75}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
+
+  /* ── Desktop wide hero carousel ── */
+  .hero-desktop{position:relative;margin:8px 16px 24px;height:300px;border-radius:14px;overflow:hidden;background:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
+  .hd-slide.active{visibility:visible;pointer-events:auto}
+  .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(28px) brightness(.65) saturate(140%);transform:scale(1.12);opacity:.85}
+  .hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.7) 45%,rgba(255,255,255,.35) 100%);pointer-events:none}
+  .hd-content{position:relative;height:100%;display:flex;align-items:center;gap:32px;padding:28px 36px;z-index:2}
+  .hd-thumb-wrap{flex-shrink:0;width:170px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 16px 38px -10px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.18)}
+  .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
+  .hd-info{flex:1;display:flex;flex-direction:column;gap:10px;max-width:680px}
+  .hd-kicker{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:#0a0a0a;letter-spacing:-.005em}
+  .hd-title{font-family:'Inter',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.025em;line-height:1.1;color:#0a0a0a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hd-tags{display:flex;gap:8px;flex-wrap:wrap}
+  .hd-tag{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;color:#0a0a0a;background:rgba(0,0,0,.08);padding:4px 9px;border-radius:99px}
+  .hd-desc{font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;color:rgba(0,0,0,.7);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:560px}
+  .hd-nav{position:absolute;right:24px;bottom:20px;display:flex;align-items:center;gap:12px;z-index:3}
+  .hd-num{font-family:'Inter',sans-serif;font-size:12px;color:rgba(0,0,0,.65);letter-spacing:.04em}
+  .hd-num strong{color:#0a0a0a;font-weight:800;font-size:14px}
+  .hd-arrow{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .15s}
+  .hd-arrow:hover{background:#fff;transform:scale(1.05)}
+  .hd-arrow svg{width:14px;height:14px;stroke:#0a0a0a;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
   /* Hide in-page genre section on desktop (sidebar replaces it) */
   #v-search .search-genres-section{display:none}
 }
@@ -1575,15 +1597,11 @@ function renderHomeData(data, wrap) {
     </div>`;
     return;
   }
-  // Hero only on mobile (<900px). Desktop shows full trending as a list section.
+  // Mobile: no hero. Desktop: wide landscape carousel hero w/ 5 trending.
   const trending = data.trending || [];
   const isDesktop = window.innerWidth >= 900;
+  if (isDesktop) renderHeroDesktop(trending, wrap);
   let trendingForSection = trending;
-  if (!isDesktop) {
-    renderHero(trending, wrap);
-    const featuredIds = new Set(trending.filter(m => m.coverUrl).slice(0, 1).map(m => m.id));
-    trendingForSection = trending.filter(m => !featuredIds.has(m.id));
-  }
   if (isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap, 'followedCount');
   renderDiscSection('Latest Updates', data.updated, wrap, 'latestUploadedChapter');
   renderDiscSection('Recommended', data.recommended, wrap, 'followedCount');
@@ -1592,6 +1610,69 @@ function renderHomeData(data, wrap) {
   renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
   renderDiscSection('Top Rated', data.topRated, wrap, 'rating');
   if (!isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap, 'followedCount');
+}
+
+// ─── Desktop wide hero carousel ──────────────────────────────────────
+let _hdIdx = 0, _hdLen = 0;
+function renderHeroDesktop(items, container) {
+  if (!items?.length) return;
+  const pick = items.filter(m => m.coverUrl).slice(0, 5);
+  if (!pick.length) return;
+  _hdLen = pick.length;
+  _hdIdx = 0;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'hero-desktop';
+  wrap.innerHTML = pick.map((it, i) => buildHeroDesktopSlide(it, i)).join('') +
+    `<div class="hd-nav">
+      <span class="hd-num">NO. <strong id="hd-num">1</strong> / ${String(_hdLen).padStart(2,'0')}</span>
+      <button class="hd-arrow" id="hd-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+      <button class="hd-arrow" id="hd-next" aria-label="Next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+    </div>`;
+  container.appendChild(wrap);
+
+  const slides = wrap.querySelectorAll('.hd-slide');
+  function show(i) {
+    _hdIdx = (i + _hdLen) % _hdLen;
+    slides.forEach((s, k) => s.classList.toggle('active', k === _hdIdx));
+    document.getElementById('hd-num').textContent = String(_hdIdx + 1).padStart(2, '0');
+  }
+  document.getElementById('hd-prev').onclick = e => { e.stopPropagation(); show(_hdIdx - 1); };
+  document.getElementById('hd-next').onclick = e => { e.stopPropagation(); show(_hdIdx + 1); };
+
+  // Click slide → open panel
+  wrap.addEventListener('click', e => {
+    if (e.target.closest('.hd-arrow') || e.target.closest('.hd-num')) return;
+    const a = wrap.querySelector('.hd-slide.active');
+    if (a) openPanel(a.dataset.id, a.dataset.source || 'mdex');
+  });
+
+  // Prefetch all 5
+  pick.forEach(p => {
+    prefetchManga(p.id, p.source || 'mdex');
+    if (p.coverUrl) { const im = new Image(); im.src = proxyUrl(p.coverUrl, p.coverReferer); }
+  });
+}
+
+function buildHeroDesktopSlide(item, idx) {
+  const cov = item.coverUrl ? esc(proxyUrl(item.coverUrl, item.coverReferer)) : '';
+  const tagsHtml = (item.tags || []).slice(0, 3).map(t => `<span class="hd-tag">${esc((t.name || t || '').toUpperCase())}</span>`).join('');
+  const desc = item.description ? esc(item.description.slice(0, 220)) : '';
+  return `<div class="hd-slide${idx===0?' active':''}" data-id="${esc(item.id)}" data-source="${esc(item.source||'mdex')}">
+    ${cov ? `<img class="hd-bg" src="${cov}" alt="" loading="eager" decoding="async">` : ''}
+    <div class="hd-bg-overlay"></div>
+    <div class="hd-content">
+      <div class="hd-thumb-wrap">
+        ${cov ? `<img class="hd-thumb" src="${cov}" alt="" loading="eager">` : '<div class="hd-thumb-ph"></div>'}
+      </div>
+      <div class="hd-info">
+        <div class="hd-kicker">Popular New Titles</div>
+        <div class="hd-title">${esc(item.title)}</div>
+        ${tagsHtml ? `<div class="hd-tags">${tagsHtml}</div>` : ''}
+        ${desc ? `<div class="hd-desc">${desc}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderHomeSkeleton(wrap) {
