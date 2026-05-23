@@ -313,11 +313,15 @@ button.status-pill:hover{opacity:.75}
 .reader-meta{flex:1;min-width:0;text-align:center}
 .reader-title-txt{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reader-ch-txt{font-size:10px;color:rgba(255,255,255,.6)}
-.reader-loc-btn{background:rgba(255,255,255,.15);border:none;color:#fff;font-family:inherit;font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-.reader-loc-btn:active{background:rgba(255,255,255,.25)}
-.reader-mode-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s;margin-right:6px}
+.reader-mode-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
 .reader-mode-btn:active{background:rgba(255,255,255,.25)}
 .reader-mode-btn.active{background:var(--org);color:#fff}
+.reader-toc-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.reader-toc-btn:active{background:rgba(255,255,255,.25)}
+.reader-toc-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Page counter — bottom center floating pill */
+.reader-pg-counter{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:6px 18px;border-radius:99px;z-index:4;pointer-events:none;transition:opacity .2s;letter-spacing:.06em;white-space:nowrap}
+.reader-pg-counter.hide{opacity:0}
 .reader-mode-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* Reader area */
@@ -780,7 +784,9 @@ button.status-pill:hover{opacity:.75}
     <button class="reader-mode-btn" id="reader-mode-btn" onclick="toggleReadMode()" title="Toggle reading mode" aria-label="Toggle reading mode">
       <svg id="reader-mode-icon" viewBox="0 0 24 24"></svg>
     </button>
-    <button class="reader-loc-btn" id="reader-loc-btn" onclick="openToc()">p.1/1</button>
+    <button class="reader-toc-btn" onclick="openToc()" title="Chapters" aria-label="Chapters list">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </div>
 
   <div class="reader-area" id="reader-area">
@@ -799,6 +805,9 @@ button.status-pill:hover{opacity:.75}
 
   <!-- Progress bar -->
   <div class="reader-progress"><div class="reader-progress-fill" id="progress-fill"></div></div>
+
+  <!-- Page counter bottom-center -->
+  <div class="reader-pg-counter" id="reader-pg-counter">1 / 1</div>
 
   <!-- Next chapter -->
   <button class="next-ch-btn" id="next-ch-btn" onclick="goNextChapter()">Next Chapter</button>
@@ -2429,7 +2438,7 @@ function showPage(idx) {
 
   // Update UI
   const total = pages.length;
-  document.getElementById('reader-loc-btn').textContent = `${idx + 1}/${total}`;
+  document.getElementById('reader-pg-counter').textContent = `${idx + 1} / ${total}`;
   const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
 
@@ -2486,7 +2495,7 @@ async function showVertical(startIdx) {
         const idx = parseInt(e.target.dataset.idx, 10);
         if (!isNaN(idx) && idx !== readerState.pageIdx) {
           readerState.pageIdx = idx;
-          document.getElementById('reader-loc-btn').textContent = `${idx + 1}/${total}`;
+          document.getElementById('reader-pg-counter').textContent = `${idx + 1} / ${total}`;
           const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
           document.getElementById('progress-fill').style.width = pct + '%';
           saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
@@ -2515,7 +2524,7 @@ async function showVertical(startIdx) {
   });
 
   // Update progress bar initial state
-  document.getElementById('reader-loc-btn').textContent = `${startIdx + 1}/${total}`;
+  document.getElementById('reader-pg-counter').textContent = `${startIdx + 1} / ${total}`;
   const pct = total > 1 ? (startIdx / (total - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
   updateNextChBtn();
@@ -2615,6 +2624,7 @@ function closeReader() {
   clearTimeout(readerState.topBarTimer);
   document.getElementById('next-ch-btn').style.display = 'none';
   document.getElementById('reader-top').classList.remove('hide');
+  document.getElementById('reader-pg-counter').classList.remove('hide');
   // Refresh panel chapter highlights
   if (currentMangaData) renderPanel(currentMangaData);
 }
@@ -2623,12 +2633,14 @@ function toggleTopBar() {
   const bar = document.getElementById('reader-top');
   readerState.topBarVisible = !readerState.topBarVisible;
   bar.classList.toggle('hide', !readerState.topBarVisible);
+  document.getElementById('reader-pg-counter').classList.toggle('hide', !readerState.topBarVisible);
   if (readerState.topBarVisible) resetTopBarTimer();
 }
 
 function autoHideTopBar() {
   readerState.topBarVisible = true;
   document.getElementById('reader-top').classList.remove('hide');
+  document.getElementById('reader-pg-counter').classList.remove('hide');
   resetTopBarTimer();
 }
 
