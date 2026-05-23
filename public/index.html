@@ -44,7 +44,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 /* ─── TOPBAR ─── */
 .topbar{background:var(--bg);flex-shrink:0;position:relative}
-.topbar-r1{padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between}
+.topbar-r1{padding:0 16px;height:40px;display:flex;align-items:center;justify-content:space-between}
 .app-title{font-family:'Inter',sans-serif;font-size:22px;font-weight:800;color:#0a0a0a;letter-spacing:-.04em;line-height:1;font-feature-settings:'ss01','cv11'}
 .ttab-group{display:flex;align-items:center;gap:2px}
 .ttab-icon{width:44px;height:44px;border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:color .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative}
@@ -142,7 +142,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .hero-stars .star-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#fff;margin-left:4px}
 .hero-status{display:inline-block;padding:2px 8px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:capitalize}
 .hero-actions{display:flex;gap:10px;margin-top:6px;pointer-events:auto}
-.hero-read{display:inline-flex;align-items:center;gap:6px;background:var(--org);color:#fff;border:none;padding:11px 22px;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em;box-shadow:0 8px 22px -6px rgba(10,10,10,.55);transition:transform .15s}
+.hero-read{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);color:#fff;border:1px solid rgba(255,255,255,.3);padding:10px 22px;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em;transition:background .15s,transform .15s}
+.hero-read:hover{background:rgba(255,255,255,.28);transform:translateY(-1px)}
 .hero-read:hover{transform:translateY(-1px)}
 .hero-read svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.2}
 .hero-skel{position:absolute;inset:0;background:linear-gradient(90deg,var(--surf) 0%,rgba(0,0,0,.04) 50%,var(--surf) 100%);background-size:200% 100%;animation:skelShim 1.6s linear infinite}
