@@ -82,8 +82,11 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .view{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0}
 .view.active{display:flex}
 /* Pad below fixed topbar. Mobile topbar ~50px, desktop ~65px (set per breakpoint) */
-#v-library,#v-search{padding-top:52px}
+#v-library{padding-top:52px}
 #v-home{padding-top:0}
+/* Search: header stays pinned; inner body scrolls */
+#v-search{overflow:hidden;padding-top:52px;flex-direction:column}
+#search-body{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column}
 
 /* ─── SEARCH VIEW ─── */
 .search-hint{padding:40px 20px;text-align:center;color:var(--sub);font-size:14px;font-weight:600}
@@ -523,7 +526,7 @@ button.status-pill:hover{opacity:.75}
 .btn-dl-selected:not(:disabled):hover{background:var(--blk-h)}
 
 /* ─── SEARCH PAGE ─── */
-.search-page-hdr{padding:6px 16px 10px;flex-shrink:0;background:transparent;position:sticky;top:52px;z-index:5}
+.search-page-hdr{padding:6px 16px 10px;flex-shrink:0;background:transparent;z-index:5}
 .search-page-bar{display:flex;gap:8px;align-items:center}
 .search-wrap-page{position:relative;flex:1;display:flex;align-items:center}
 .search-page-icon{position:absolute;left:14px;width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
@@ -730,18 +733,20 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
         <button class="btn-search-page" onclick="doSearch()">Search</button>
       </div>
     </div>
-    <div class="search-loading" id="search-loading" style="display:none">
-      <div class="spin"></div> Searching…
-    </div>
-    <div class="results-grid" id="results-grid"></div>
-    <div id="load-more-wrap" style="display:none;padding:20px;text-align:center">
-      <div class="spin"></div>
-    </div>
-    <div id="results-sentinel" style="height:1px"></div>
-    <!-- Genres section, visible when results empty -->
-    <div class="search-genres-section" id="search-genres-section">
-      <div class="search-genres-kicker">Browse by genre</div>
-      <div class="genre-grid" id="genre-grid"></div>
+    <div id="search-body">
+      <div class="search-loading" id="search-loading" style="display:none">
+        <div class="spin"></div> Searching…
+      </div>
+      <div class="results-grid" id="results-grid"></div>
+      <div id="load-more-wrap" style="display:none;padding:20px;text-align:center">
+        <div class="spin"></div>
+      </div>
+      <div id="results-sentinel" style="height:1px"></div>
+      <!-- Genres section, visible when results empty -->
+      <div class="search-genres-section" id="search-genres-section">
+        <div class="search-genres-kicker">Browse by genre</div>
+        <div class="genre-grid" id="genre-grid"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1629,9 +1634,8 @@ function _initSentinel() {
   if (_sentinelObs) _sentinelObs.disconnect();
   const sentinel = document.getElementById('results-sentinel');
   if (!sentinel) return;
-  // root must be the actual scroll container (.view), not the viewport —
-  // IntersectionObserver scroll tracking only fires from the scrolling element
-  const scroller = document.getElementById('v-search');
+  // root must be the actual scroll container (#search-body), not the viewport
+  const scroller = document.getElementById('search-body');
   _sentinelObs = new IntersectionObserver(([e]) => {
     if (e.isIntersecting) loadMore();
   }, { root: scroller, rootMargin: '300px' });
@@ -2875,7 +2879,7 @@ window.addEventListener('hashchange', () => {
 });
 
 // Search topbar: transparent → frosted glass on scroll
-document.getElementById('v-search').addEventListener('scroll', function() {
+document.getElementById('search-body').addEventListener('scroll', function() {
   document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 8);
 }, { passive: true });
 
