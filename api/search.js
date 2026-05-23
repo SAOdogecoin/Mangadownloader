@@ -14,8 +14,10 @@ function mapMangaItem(m, statsMap = {}) {
   const tags = (attrs.tags || []).slice(0, 3).map(t => ({ name: t.attributes?.name?.en || '', id: t.id })).filter(t => t.name);
   const stat = statsMap[m.id];
   const rating = stat?.rating?.bayesian ? Math.round(stat.rating.bayesian * 10) / 10 : null;
-  const lastChapter = attrs.lastChapter || null;
-  return { id: m.id, title, description, coverUrl, status: statusMap[attrs.status] || 'ongoing', year: attrs.year || null, tags, rating, lastChapter };
+  const latestChRel = (m.relationships || []).find(r => r.type === 'chapter');
+  const lastChapter = latestChRel?.attributes?.chapter || attrs.lastChapter || null;
+  const latestChapterAt = latestChRel?.attributes?.publishAt || null;
+  return { id: m.id, title, description, coverUrl, status: statusMap[attrs.status] || 'ongoing', year: attrs.year || null, tags, rating, lastChapter, latestChapterAt };
 }
 
 async function fetchAuthorIds(q) {
@@ -48,9 +50,9 @@ module.exports = async (req, res) => {
     let titleUrl = `${BASE}/manga?limit=${limit}&offset=${offset}&${COMMON}`;
     if (q.trim()) titleUrl += `&title=${encodeURIComponent(q)}&order[relevance]=desc`;
     else if (sort.trim()) {
-      // Whitelisted sort orders to map to MangaDex
       const map = { followedCount:'order[followedCount]=desc', rating:'order[rating]=desc', latestUploadedChapter:'order[latestUploadedChapter]=desc', createdAt:'order[createdAt]=desc' };
       titleUrl += '&' + (map[sort] || map.followedCount);
+      if (sort === 'latestUploadedChapter') titleUrl += '&includes[]=latest_uploaded_chapter';
     } else titleUrl += `&order[followedCount]=desc`;
     if (tagId.trim()) titleUrl += `&includedTags[]=${encodeURIComponent(tagId)}`;
     if (status.trim()) titleUrl += `&status[]=${encodeURIComponent(status)}`;

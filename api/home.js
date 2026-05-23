@@ -5,9 +5,10 @@ const COMMON = `includes[]=cover_art&includes[]=author&includes[]=artist&availab
 // MangaDex tag IDs
 const TAG_SELF_PUBLISHED = '891cf039-b895-47f0-9229-bef4c96eccd4';
 
-async function fetchSection(extra) {
+async function fetchSection(extra, withChapter = false) {
   try {
-    const r = await fetch(`${BASE}/manga?${COMMON}&${extra}`, { headers: HEADERS });
+    const inc = withChapter ? '&includes[]=latest_uploaded_chapter' : '';
+    const r = await fetch(`${BASE}/manga?${COMMON}${inc}&${extra}`, { headers: HEADERS });
     if (!r.ok) return [];
     const d = await r.json();
     return d.data || [];
@@ -38,7 +39,7 @@ module.exports = async (req, res) => {
 
   const [trending, updated, newManga, topRated, recommended, selfPublished, seasonal, popularNew] = await Promise.all([
     fetchSection('order[followedCount]=desc'),
-    fetchSection('order[latestUploadedChapter]=desc'),
+    fetchSection('order[latestUploadedChapter]=desc', true),
     fetchSection('order[createdAt]=desc'),
     fetchSection('order[rating]=desc'),
     fetchSection('order[rating]=desc'),
@@ -64,7 +65,7 @@ module.exports = async (req, res) => {
     }
   } catch {}
 
-  function mapManga(m, includeExtra) {
+  function mapManga(m, includeExtra, includeChapter) {
     const attrs = m.attributes || {};
     const title = attrs.title?.en || Object.values(attrs.title || {})[0] || 'Untitled';
     const coverRel = (m.relationships || []).find(r => r.type === 'cover_art');
@@ -72,8 +73,10 @@ module.exports = async (req, res) => {
     const coverUrl = coverFileName ? `https://uploads.mangadex.org/covers/${m.id}/${coverFileName}.256.jpg` : null;
     const stat = statsMap[m.id];
     const rating = stat?.rating?.bayesian ? Math.round(stat.rating.bayesian * 10) / 10 : null;
-    const lastChapter = attrs.lastChapter || null;
-    const base = { id: m.id, title, coverUrl, status: attrs.status || 'ongoing', year: attrs.year || null, rating, lastChapter };
+    const latestChRel = includeChapter ? (m.relationships || []).find(r => r.type === 'chapter') : null;
+    const lastChapter = latestChRel?.attributes?.chapter || attrs.lastChapter || null;
+    const latestChapterAt = latestChRel?.attributes?.publishAt || null;
+    const base = { id: m.id, title, coverUrl, status: attrs.status || 'ongoing', year: attrs.year || null, rating, lastChapter, latestChapterAt };
     if (includeExtra) {
       const rawDesc = attrs.description?.en || Object.values(attrs.description || {})[0] || '';
       base.description = rawDesc.replace(/\[.*?\]/g, '').trim();
@@ -92,7 +95,7 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   res.json({
     trending: trending.map(mapManga),
-    updated: updated.map(mapManga),
+    updated: updated.map(m => mapManga(m, false, true)),
     newManga: newManga.map(mapManga),
     topRated: topRated.map(mapManga),
     recommended: recommendedDedup.map(mapManga),

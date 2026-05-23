@@ -596,6 +596,8 @@ button.status-pill:hover{opacity:.75}
 .btn-search-page:active{transform:translateY(0)}
 .search-genres-section{padding:16px 16px 24px}
 .search-genres-kicker{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.01em;margin-bottom:12px}
+/* Search context title */
+.search-ctx-title{padding:14px 16px 6px;font-size:20px;font-weight:800;color:var(--fg);letter-spacing:-.025em;flex-shrink:0}
 .search-genres-section.hidden{display:none}
 /* Recent searches */
 .recent-searches-wrap{padding:14px 16px 2px;flex-shrink:0}
@@ -823,6 +825,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       </div>
     </div>
     <div id="search-body">
+      <div class="search-ctx-title" id="search-context-title" style="display:none"></div>
       <div class="search-loading" id="search-loading" style="display:none">
         <div class="spin"></div> Searching…
       </div>
@@ -1144,8 +1147,8 @@ function doDesktopSearch() {
 function selectGenreAndSearch(id) {
   activeTagId = id;
   activeStatus = '';
-  document.getElementById('search-input').value = '';
-  document.getElementById('btn-clear-input').style.display = 'none';
+  const inp = document.getElementById('search-input');
+  if (inp) { inp.value = ''; document.getElementById('btn-clear-input').style.display = 'none'; }
   closeDropdown();
   doSearch();
 }
@@ -1153,8 +1156,8 @@ function selectGenreAndSearch(id) {
 function selectStatusSearch(status) {
   activeStatus = status;
   activeTagId = '';
-  document.getElementById('search-input').value = '';
-  document.getElementById('btn-clear-input').style.display = 'none';
+  const inp = document.getElementById('search-input');
+  if (inp) { inp.value = ''; document.getElementById('btn-clear-input').style.display = 'none'; }
   closeDropdown();
   closePanel();
   doSearch();
@@ -1184,19 +1187,8 @@ function onSearchInputChange() {
   scheduleAc(q.trim(), 'main');
 }
 function clearSearchInput() {
-  const inp = document.getElementById('search-input');
-  if (inp) inp.value = '';
-  onSearchInputChange();
-  closeAc('main');
-  // Kill any in-progress search
-  if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
-  lastQuery = ''; lastTagId = ''; lastStatus = ''; _hasMore = false; _loadingMore = false;
-  document.getElementById('search-loading').style.display = 'none';
-  document.getElementById('results-grid').innerHTML = '';
-  document.getElementById('load-more-wrap').style.display = 'none';
-  document.getElementById('search-genres-section')?.classList.remove('hidden');
-  renderRecentSearches();
-  inp?.focus();
+  clearSearchAndReset();
+  document.getElementById('search-input')?.focus();
 }
 
 // ─── Autocomplete / predictive search ────────────────────────────────────────
@@ -1595,13 +1587,17 @@ async function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q && !activeTagId && !activeStatus) return;
   if (q) saveRecentSearch(q);
+  // Set title before navigate so reset doesn't wipe it
+  const genreName = activeTagId ? (GENRES.find(g => g.id === activeTagId)?.name || '') : '';
+  const titleText = q || genreName || (activeStatus ? activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1) : 'Search');
   lastQuery = q;
   lastTagId = activeTagId;
   lastStatus = activeStatus;
   lastSort = ''; lastSince = ''; lastOffset = 0;
   _loadingMore = false; _hasMore = true;
   if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
-  navigate('search');
+  if (_currentRoute !== 'search') navigate('search');
+  setSearchTitle(titleText);
   document.getElementById('search-genres-section')?.classList.add('hidden');
   document.getElementById('recent-searches-wrap')?.classList.add('hidden');
   document.getElementById('search-loading').style.display = 'flex';
@@ -1674,7 +1670,7 @@ function resultCardHtml(r) {
     ${r.year ? `<div class="result-meta">${r.year}</div>` : ''}
     <div class="panel-tags" style="margin-top:4px;margin-bottom:0">${tagBtns}</div>
     ${ratingRowHtml(r.rating)}
-    ${r.lastChapter ? `<div class="result-meta" style="color:var(--org-text);font-weight:700;margin-top:2px">Ch.${esc(r.lastChapter)}</div>` : ''}
+    ${r.lastChapter ? `<div class="result-meta" style="color:var(--org-text);font-weight:700;margin-top:2px">Ch.${esc(r.lastChapter)}${r.latestChapterAt ? '<span style="color:var(--sub);font-weight:500;font-size:10px"> · ' + timeAgo(r.latestChapterAt) + '</span>' : ''}</div>` : ''}
   </div>`;
 }
 
@@ -1721,24 +1717,51 @@ function mcCardHtml(m, badge) {
 }
 
 let _currentRoute = 'home';
+let _resetSearchOnReturn = false;
+
+function setSearchTitle(text) {
+  const el = document.getElementById('search-context-title');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.display = text ? 'block' : 'none';
+}
+
+function clearSearchAndReset() {
+  const inp = document.getElementById('search-input');
+  if (inp) { inp.value = ''; onSearchInputChange(); }
+  closeAc('main');
+  if (_sentinelObs) { _sentinelObs.disconnect(); _sentinelObs = null; }
+  lastQuery = ''; lastTagId = ''; lastStatus = ''; _hasMore = false; _loadingMore = false;
+  document.getElementById('search-loading').style.display = 'none';
+  document.getElementById('results-grid').innerHTML = '';
+  document.getElementById('load-more-wrap').style.display = 'none';
+  document.getElementById('search-genres-section')?.classList.remove('hidden');
+  document.getElementById('recent-searches-wrap')?.classList.remove('hidden');
+  renderRecentSearches();
+  setSearchTitle('');
+}
 
 function navigate(route, { pushState = true } = {}) {
   // Legacy redirect: genres → search (merged)
   if (route === 'genres') route = 'search';
+  const prev = _currentRoute;
+  // When leaving search, mark for reset on return
+  if (prev === 'search' && route !== 'search') _resetSearchOnReturn = true;
   _currentRoute = route;
   const viewMap = { home: 'v-home', library: 'v-library', search: 'v-search' };
   const viewId = viewMap[route] || 'v-home';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
   document.querySelectorAll('.bnav-tab,.desktop-nav-list button,.topbar-desktop-nav button[data-route]').forEach(p => p.classList.toggle('active', p.dataset.route === route));
-  // Remove home-scrolled when leaving home so topbar starts white on other pages
   if (route !== 'home') document.body.classList.remove('home-scrolled');
-  // Reset search topbar blur when leaving search
   if (route !== 'search') document.querySelector('.topbar').classList.remove('topbar-scrolled');
-  // Track active route on body for CSS targeting
   document.body.dataset.route = route;
   if (pushState) history.pushState(null, '', '#' + route);
   if (route === 'library') renderLibraryPage();
-  if (route === 'search') renderGenrePage();
+  if (route === 'search') {
+    renderGenrePage();
+    // Auto-reset when returning to search from another page
+    if (_resetSearchOnReturn) { _resetSearchOnReturn = false; clearSearchAndReset(); }
+  }
   if (route === 'home') loadDiscoverySections();
 }
 
@@ -1887,8 +1910,9 @@ function discCardHtml(m, showChapter) {
     ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl, m.coverReferer))}" alt="" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="disc-ph">${SVG_BOOK}</div>`;
   const stars = m.rating ? starsHtml(m.rating) : '';
+  const chTime = (showChapter && m.latestChapterAt) ? ' · ' + timeAgo(m.latestChapterAt) : '';
   const chapterBadge = (showChapter && m.lastChapter)
-    ? `<div class="disc-chapter-badge">Ch.${esc(m.lastChapter)}</div>` : '';
+    ? `<div class="disc-chapter-badge">Ch.${esc(m.lastChapter)}${chTime}</div>` : '';
   return `<div class="disc-card" data-id="${esc(m.id)}" data-source="${esc(m.source || 'mdex')}">
     <div class="disc-cover-wrap">${img}${chapterBadge}</div>
     <div class="disc-title">${esc(m.title)}</div>
@@ -1968,7 +1992,8 @@ function _initSentinel() {
 }
 
 async function viewAllSection(sortKey, label) {
-  navigate('search');
+  if (_currentRoute !== 'search') navigate('search');
+  setSearchTitle(label);
   // Reset state
   lastQuery = ''; lastTagId = ''; lastStatus = ''; lastSort = ''; lastSince = ''; lastOffset = 0;
   _loadingMore = false; _hasMore = true;
