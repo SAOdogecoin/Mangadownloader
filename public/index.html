@@ -523,14 +523,14 @@ button.status-pill:hover{opacity:.75}
 .btn-dl-selected:not(:disabled):hover{background:var(--blk-h)}
 
 /* ─── SEARCH PAGE ─── */
-.search-page-hdr{padding:14px 16px 8px;flex-shrink:0;background:var(--bg);position:sticky;top:0;z-index:5}
+.search-page-hdr{padding:6px 16px 10px;flex-shrink:0;background:transparent;position:sticky;top:52px;z-index:5}
 .search-page-bar{display:flex;gap:8px;align-items:center}
 .search-wrap-page{position:relative;flex:1;display:flex;align-items:center}
 .search-page-icon{position:absolute;left:14px;width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
-.search-input-page{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:14px;color:var(--fg);padding:11px 38px 11px 38px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:-.005em}
+.search-input-page{width:100%;background:rgba(255,255,255,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid rgba(0,0,0,.07);border-radius:99px;font-family:inherit;font-size:14px;color:var(--fg);padding:11px 38px 11px 38px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:-.005em;box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .search-input-page:focus{border-color:var(--org-text);box-shadow:0 0 0 3px var(--org-s)}
 .search-input-page::placeholder{color:var(--sub)}
-.btn-clear-input-page{position:absolute;right:10px;width:24px;height:24px;border:none;background:var(--surf);cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.btn-clear-input-page{position:absolute;right:10px;width:24px;height:24px;border:none;background:rgba(0,0,0,.06);cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent}
 .btn-clear-input-page:hover{color:var(--fg);background:var(--border)}
 .btn-clear-input-page svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5}
 .btn-search-page{padding:11px 22px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:-.005em;transition:transform .15s,box-shadow .25s;white-space:nowrap;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 14px -4px rgba(60,50,30,.2)}
@@ -574,15 +574,15 @@ button.status-pill:hover{opacity:.75}
 @media (min-width:900px){.hd-side-arrow{display:flex}}
 /* Topbar smooth bg + blur transition */
 .topbar{transition:background .3s,box-shadow .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
-/* Keep the topbar fully opaque above the hero */
-.topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
+/* Keep the topbar opaque above the hero — no !important so home-scrolled blur can override */
+.topbar{background:#fff;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
 .topbar > *{position:relative;z-index:10000}
 /* Library: solid white */
 body[data-route="library"] .topbar{background:#fff !important;box-shadow:none;border-bottom:none}
 /* Search: transparent until scrolled, then frosted glass */
 body[data-route="search"] .topbar{background:rgba(255,255,255,0) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);box-shadow:none;border-bottom:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s}
 body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-.home-scrolled .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
+.home-scrolled .topbar{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 24px -12px rgba(0,0,0,.1)}
 /* Topbar desktop nav */
 .topbar-desktop-nav{display:none}
 
