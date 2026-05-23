@@ -1471,15 +1471,20 @@ function renderHomeData(data, wrap) {
     </div>`;
     return;
   }
-  // Hero carousel — up to 5 trending with covers, manual nav only
+  // Hero only on mobile (<900px). Desktop shows full trending as a list section.
   const trending = data.trending || [];
-  renderHero(trending, wrap);
-  const featuredIds = new Set(trending.filter(m => m.coverUrl).slice(0, 5).map(m => m.id));
-  const trendingRest = trending.filter(m => !featuredIds.has(m.id));
+  const isDesktop = window.innerWidth >= 900;
+  let trendingForSection = trending;
+  if (!isDesktop) {
+    renderHero(trending, wrap);
+    const featuredIds = new Set(trending.filter(m => m.coverUrl).slice(0, 1).map(m => m.id));
+    trendingForSection = trending.filter(m => !featuredIds.has(m.id));
+  }
+  if (isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap);
   renderDiscSection('Latest Updates', data.updated, wrap);
   renderDiscSection('New Releases', data.newManga, wrap);
   renderDiscSection('Top Rated', data.topRated, wrap);
-  renderDiscSection('Trending Now', trendingRest, wrap);
+  if (!isDesktop) renderDiscSection('Trending Now', trendingForSection, wrap);
 }
 
 function renderHomeSkeleton(wrap) {
