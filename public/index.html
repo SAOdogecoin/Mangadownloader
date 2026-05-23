@@ -170,6 +170,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .disc-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;border-radius:6px;overflow:hidden;background:var(--surf);box-shadow:0 1px 0 rgba(60,50,30,.06),0 6px 18px -8px rgba(60,50,30,.18);transition:box-shadow .25s,transform .25s}
 .disc-card:hover .disc-cover-wrap{box-shadow:0 1px 0 rgba(60,50,30,.08),0 14px 30px -10px rgba(60,50,30,.28),0 0 0 1.5px var(--org)}
 .disc-cover-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.35));pointer-events:none;opacity:0;transition:opacity .25s}
+.cr-resume-badge{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:50%;background:var(--org);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:2}
+.cr-resume-badge svg{width:11px;height:11px;margin-left:1px}
+.cr-chapter{margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--org-text);letter-spacing:.02em}
 .disc-card:hover .disc-cover-wrap::after{opacity:1}
 .disc-cover{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
 .disc-card:hover .disc-cover{transform:scale(1.04)}
@@ -1276,23 +1279,49 @@ function renderHomeState() {
 function renderContinueReading() {
   const wrap = document.getElementById('cr-wrap');
   if (!wrap) return;
-  const recent = allManga.filter(m => m.lastReadChapterId).slice(0, 12);
+  const recent = allManga
+    .filter(m => m.lastReadChapterId)
+    .sort((a, b) => (b.lastReadAt || 0) - (a.lastReadAt || 0))
+    .slice(0, 12);
   if (!recent.length) { wrap.innerHTML = ''; return; }
   wrap.innerHTML = `<div class="home-section">
-    <div class="home-section-label">Continue Reading</div>
-    <div class="mc-grid">${recent.map(m => mcCardHtml(m, m.lastReadChapter ? `Ch.${m.lastReadChapter}` : null)).join('')}</div>
+    <div class="home-section-head"><div class="home-section-label">Continue Reading</div></div>
+    <div class="disc-strip">${recent.map(crCardHtml).join('')}</div>
   </div>`;
-  // CR items open the reader directly at last read position
-  wrap.querySelectorAll('.mc-card').forEach(el => {
+  // CR items resume reader at saved chapter+page
+  wrap.querySelectorAll('.disc-card').forEach(el => {
     const m = allManga.find(x => x.id === el.dataset.id);
-    el.addEventListener('click', () => {
-      if (m && m.lastReadChapterId) {
-        startRead(m.id, m.lastReadChapterId, m.lastReadChapter || '', '');
-      } else {
-        openPanel(el.dataset.id);
-      }
+    el.addEventListener('click', async () => {
+      if (!m?.lastReadChapterId) { openPanel(el.dataset.id); return; }
+      // Fetch fresh manga data for chapter list (so next-chapter nav works)
+      try {
+        const src = m.source === 'mp' ? 'mp' : m.source === 'bato' ? 'bato' : 'mdex';
+        const apiUrl =
+          src === 'mp'   ? `/api/mangaplus?action=manga&id=${encodeURIComponent(m.id)}` :
+          src === 'bato' ? `/api/bato?action=manga&id=${encodeURIComponent(m.id)}` :
+          `/api/manga?id=${m.id}`;
+        const data = await fetch(apiUrl).then(r => r.json());
+        if (data && !data.error) currentMangaData = data;
+        else currentMangaData = { manga: m, chapters: [] };
+      } catch { currentMangaData = { manga: m, chapters: [] }; }
+      startRead(m.id, m.lastReadChapterId, m.lastReadChapter || '', '');
     });
   });
+}
+
+function crCardHtml(m) {
+  const img = m.coverUrl
+    ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl, m.coverReferer))}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="disc-ph">${SVG_BOOK}</div>`;
+  const chap = m.lastReadChapter ? `<div class="cr-chapter">Ch.${esc(m.lastReadChapter)}</div>` : '';
+  return `<div class="disc-card" data-id="${esc(m.id)}">
+    <div class="disc-cover-wrap">
+      ${img}
+      <div class="cr-resume-badge"><svg viewBox="0 0 24 24" fill="#0a0a0a"><polygon points="5 3 19 12 5 21"/></svg></div>
+    </div>
+    <div class="disc-title">${esc(m.title)}</div>
+    ${chap}
+  </div>`;
 }
 
 function renderLibraryPage() {
@@ -2202,6 +2231,7 @@ async function saveProgress(mangaId, chapterId, chapterNum, pageIdx) {
   saved.lastReadChapterId = chapterId;
   saved.lastReadPage = pageIdx;
   saved.lastReadChapter = chapterNum;
+  saved.lastReadAt = Date.now();
   await IDB.save(saved);
 }
 
