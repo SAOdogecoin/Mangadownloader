@@ -453,18 +453,18 @@ button.status-pill:hover{opacity:.75}
 /* ─── NAV TABS (legacy, hidden) ─── */
 .topbar-r3, .nav-tabs-row{display:none !important}
 
-/* ─── BOTTOM TAB NAV (flat bar, selected = black pill w/ white icon) ─── */
-.bnav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--border);z-index:50;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0));gap:4px}
-.bnav-tab{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0;background:none;border:none;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;transition:background .18s,color .18s,transform .15s}
-.bnav-tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.bnav-tab[data-route="home"] svg{width:26px;height:26px}
+/* ─── BOTTOM TAB NAV (floating pill, centered, selected = black circle) ─── */
+.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:99px;padding:6px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50}
+.bnav-tab{width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;transition:background .18s,color .18s,transform .15s}
+.bnav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bnav-tab[data-route="home"] svg{width:24px;height:24px}
 .bnav-tab span{display:none}
-.bnav-tab:active{transform:scale(.94)}
+.bnav-tab:active{transform:scale(.92)}
 .bnav-tab.active{background:#0a0a0a;color:#fff}
 .bnav-tab.active svg{stroke:#fff;fill:none;stroke-width:2}
 /* App body padding-bottom to clear bottom nav */
-.app-body{padding-bottom:64px}
-@supports(padding:max(0px)){.app-body{padding-bottom:max(64px,calc(64px + env(safe-area-inset-bottom)))}}
+.app-body{padding-bottom:88px}
+@supports(padding:max(0px)){.app-body{padding-bottom:max(88px,calc(88px + env(safe-area-inset-bottom)))}}
 .nav-pill.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(10,10,10,.6)}
 
 /* ─── GENRE PAGE ─── */
@@ -1415,66 +1415,17 @@ function buildHeroSlide(item, idx) {
 
 function renderHero(items, container) {
   if (!items?.length) return;
-  const pick = items.filter(m => m.coverUrl).slice(0, 5);
-  if (!pick.length) return;
-  _heroLen = pick.length;
-  _heroIdx = 0;
-
+  const item = items.find(m => m.coverUrl) || items[0];
+  if (!item) return;
   const wrap = document.createElement('div');
   wrap.className = 'hero-card';
-  wrap.innerHTML =
-    pick.map((it, i) => buildHeroSlide(it, i)).join('') +
-    `<button class="hero-next-btn" type="button" aria-label="Next slide">
-      <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
-    </button>` +
-    `<div class="hero-dots">${pick.map((_,i)=>`<button class="hero-dot${i===0?' active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`).join('')}</div>`;
+  wrap.innerHTML = buildHeroSlide(item, 0);
   container.appendChild(wrap);
-
-  const slides = wrap.querySelectorAll('.hero-slide');
-  const dots = wrap.querySelectorAll('.hero-dot');
-
-  function show(i) {
-    _heroIdx = (i + _heroLen) % _heroLen;
-    slides.forEach((s, k) => s.classList.toggle('active', k === _heroIdx));
-    dots.forEach((d, k) => d.classList.toggle('active', k === _heroIdx));
-  }
-
-  // Dot click → jump
-  dots.forEach(d => d.addEventListener('click', e => {
-    e.stopPropagation();
-    show(parseInt(d.dataset.i, 10));
-  }));
-
-  // Right-arrow → next
-  wrap.querySelector('.hero-next-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    show(_heroIdx + 1);
-  });
-
-  // Tap slide body → open panel for the active slide
   wrap.addEventListener('click', e => {
-    if (e.target.closest('.hero-dot') || e.target.closest('.hero-read') || e.target.closest('.hero-next-btn')) return;
-    const a = wrap.querySelector('.hero-slide.active');
-    if (a) openPanel(a.dataset.id, a.dataset.source || 'mdex');
+    if (e.target.closest('.hero-read')) return;
+    openPanel(item.id, item.source || 'mdex');
   });
-
-  // Swipe nav
-  let touchX = 0;
-  wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
-  wrap.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 50) show(_heroIdx + (dx < 0 ? 1 : -1));
-  }, { passive: true });
-
-  // Force-warm ALL 5 covers + prefetch manga details
-  pick.forEach(p => {
-    prefetchManga(p.id, p.source || 'mdex');
-    if (p.coverUrl) {
-      const im = new Image();
-      im.decoding = 'async';
-      im.src = proxyUrl(p.coverUrl, p.coverReferer);
-    }
-  });
+  prefetchManga(item.id, item.source || 'mdex');
 }
 
 const HOME_CACHE_TTL = 60 * 60 * 1000; // 60 min — generous, background refresh keeps it warm
