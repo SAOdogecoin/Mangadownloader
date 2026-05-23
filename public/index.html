@@ -530,7 +530,7 @@ button.status-pill:hover{opacity:.75}
 
 /* ─── HERO BANNER (responsive) ─── */
 /* Mobile: side margins + rounded card, extends UP behind topbar via negative top margin */
-.hero-desktop{position:relative;margin:0 0 20px;height:280px;overflow:hidden;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:0 0 14px 14px}
+.hero-desktop{position:relative;margin:0 0 20px;height:280px;overflow:hidden;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:0}
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
@@ -588,8 +588,20 @@ body:has(.hero-desktop):not(.home-scrolled) .topbar{background:transparent !impo
 
   /* Views: full width, just topbar height padding */
   .view{padding-left:24px !important;padding-right:24px !important;padding-top:62px}
-  .disc-card{width:160px;max-width:160px}
+  /* Bigger cards + typography on desktop */
+  .disc-card{width:200px;max-width:200px}
   .disc-strip{padding-left:24px;padding-right:24px}
+  .disc-title{font-size:13px;font-weight:700;letter-spacing:-.01em}
+  .disc-rating-row .star{font-size:11px}
+  .disc-rating-num{font-size:11px}
+  .home-section-label{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  /* Bigger panel header on desktop */
+  .panel-cover{width:120px;height:180px}
+  .panel-cover-ph{width:120px;height:180px}
+  .panel-title{font-size:20px}
+  .panel-meta{font-size:13px}
+  .panel-desc{font-size:14px}
+  .panel-tag{font-size:11px;padding:3px 10px}
   .hero-desktop{margin-left:0 !important;margin-right:0 !important}
   .topbar-lib-desktop{display:none !important}
 
@@ -1697,7 +1709,7 @@ function renderHomeData(data, wrap) {
 let _hdIdx = 0, _hdLen = 0;
 function renderHeroDesktop(items, container) {
   if (!items?.length) return;
-  const pick = items.filter(m => m.coverUrl).slice(0, 3);
+  const pick = items.filter(m => m.coverUrl).slice(0, 10);
   if (!pick.length) return;
   _hdLen = pick.length;
   _hdIdx = 0;
