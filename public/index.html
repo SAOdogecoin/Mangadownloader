@@ -43,7 +43,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--b
 -webkit-tap-highlight-color:transparent;
 
 /* ─── TOPBAR ─── */
-.topbar{background:var(--bg);flex-shrink:0;position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transform:translateZ(0);will-change:transform;isolation:isolate}
+.topbar{background:var(--bg);flex-shrink:0;position:fixed;top:0;left:0;right:0;z-index:9999;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transform:translateZ(0);will-change:transform;isolation:isolate}
 .topbar-r1{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;padding-top:max(12px, env(safe-area-inset-top, 12px))}
 .app-title{font-family:'Knewave',cursive;font-size:24px;font-weight:400;color:#0a0a0a;letter-spacing:.01em;line-height:1;text-transform:uppercase}
 .ttab-group{display:flex;align-items:center;gap:2px}
@@ -562,8 +562,8 @@ button.status-pill:hover{opacity:.75}
 @media (min-width:900px){.hd-side-arrow{display:flex}}
 /* Topbar smooth bg + blur transition */
 .topbar{transition:background .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
-/* Hero: transparent topbar until user scrolls — keeps elements on top of the hero bg */
-body:has(.hero-desktop):not(.home-scrolled) .topbar{background:rgba(255,255,255,.84) !important;border:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+/* Hero: semi-opaque topbar until user scrolls — keeps text above the hero image */
+body:has(.hero-desktop):not(.home-scrolled) .topbar{background:rgba(255,255,255,.96) !important;border-bottom:1px solid rgba(0,0,0,.06);backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
 /* Once scrolled, solid white */
 .home-scrolled .topbar{background:var(--bg) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 /* Topbar desktop nav */
