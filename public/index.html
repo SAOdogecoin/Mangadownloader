@@ -561,12 +561,14 @@ button.status-pill:hover{opacity:.75}
 .hd-side-arrow:hover{background:#fff;transform:translateY(-50%) scale(1.06)}
 .hd-side-arrow svg{width:14px;height:14px;stroke:#0a0a0a;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 @media (min-width:900px){.hd-side-arrow{display:flex}}
-/* Hero hides topbar bg so it bleeds through */
-body:has(.hero-desktop) .topbar{background:transparent}
-/* Mobile topbar over hero: title needs contrast */
-@media (max-width:899px){
-  body:has(.hero-desktop) .topbar-r1{background:transparent}
-}
+/* Topbar smooth bg transition */
+.topbar{transition:background .25s}
+/* Hero: transparent topbar until user scrolls */
+body:has(.hero-desktop):not(.home-scrolled) .topbar{background:transparent !important}
+/* Once scrolled, always white */
+.home-scrolled .topbar{background:var(--bg) !important}
+/* Topbar desktop nav */
+.topbar-desktop-nav{display:none}
 
 /* ─── DESKTOP LAYOUT (>=900px) ─── */
 .topbar-search-desktop,.topbar-lib-desktop,.desktop-sidebar{display:none}
@@ -581,34 +583,31 @@ body:has(.hero-desktop) .topbar{background:transparent}
   .topbar-lib-desktop{display:inline-flex;align-items:center;padding:9px 18px;border-radius:99px;background:#0a0a0a;color:#fff;font:700 13px 'Inter',sans-serif;letter-spacing:-.005em;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
   .topbar-lib-desktop:hover{background:#1c1c1c}
 
-  /* Left sidebar gone — hide it */
+  /* Sidebars: all gone on desktop */
   .desktop-leftbar{display:none !important}
+  .desktop-sidebar{display:none !important}
 
-  /* Right sidebar — Browse nav on top, Genres below */
-  .desktop-sidebar{display:block;position:fixed;right:0;top:62px;bottom:0;width:240px;padding:20px 20px 24px;overflow-y:auto;border-left:1px solid var(--border);background:var(--bg);z-index:5}
-  .desktop-sidebar h3{font:700 14px 'Inter',sans-serif;letter-spacing:-.01em;margin-bottom:10px;color:#0a0a0a}
-  .desktop-sidebar-sep{height:1px;background:var(--border);margin:16px 0}
-  .desktop-nav-list{display:flex;flex-direction:column;gap:2px}
-  .desktop-nav-list button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 12px;font:600 13px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;letter-spacing:-.005em}
-  .desktop-nav-list button:hover{background:var(--surf)}
-  .desktop-nav-list button.active{background:#0a0a0a;color:#fff}
-  .desktop-nav-list button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-  .desktop-genre-list{display:flex;flex-direction:column;gap:6px}
-  .desktop-genre-list button{text-align:left;background:none;border:1px solid var(--border);border-radius:99px;padding:7px 14px;font:500 12px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-  .desktop-genre-list button:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
-
-  /* No left sidebar — only right sidebar padding */
-  .view{padding-left:24px !important;padding-right:264px !important;padding-top:62px}
-  /* Fixed card width on desktop so horizontal scroll works in content column */
+  /* Views: full width, just topbar height padding */
+  .view{padding-left:24px !important;padding-right:24px !important;padding-top:62px}
   .disc-card{width:160px;max-width:160px}
   .disc-strip{padding-left:24px;padding-right:24px}
-  /* Hero full width (no left sidebar) */
   .hero-desktop{margin-left:0 !important;margin-right:0 !important}
-  /* Topbar Library button hidden — sidebar handles nav */
   .topbar-lib-desktop{display:none !important}
-  /* Topbar: search centered via grid */
-  .topbar-r1{display:grid !important;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
-  .topbar-search-desktop{max-width:none !important;width:100%}
+
+  /* Topbar: logo | search (center, capped) | nav links */
+  .topbar-r1{display:grid !important;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:14px 24px 10px !important}
+  .topbar-search-desktop{max-width:440px;width:100%;justify-self:center}
+
+  /* Desktop nav links (right side of topbar) */
+  .topbar-desktop-nav{display:flex;align-items:center;gap:2px}
+  .topbar-desktop-nav button{border:none;background:none;font:600 13px 'Inter',sans-serif;color:var(--sub);padding:8px 14px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;letter-spacing:-.005em;white-space:nowrap}
+  .topbar-desktop-nav button:hover{color:#0a0a0a;background:var(--surf)}
+  .topbar-desktop-nav button.active{color:#0a0a0a}
+  /* Genres button special style */
+  .topbar-desktop-nav .genres-btn{border:1.5px solid var(--border);padding:7px 14px;border-radius:99px}
+  .topbar-desktop-nav .genres-btn:hover{border-color:#0a0a0a;background:none}
+  /* Show genres section again on desktop search (no sidebar) */
+  #v-search .search-genres-section{display:block !important}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -640,13 +639,17 @@ body:has(.hero-desktop) .topbar{background:transparent}
 <body>
 
 <div class="topbar">
-  <div class="topbar-r1" style="justify-content:space-between">
+  <div class="topbar-r1">
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
     <div class="topbar-search-desktop">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="topbar-search-input" type="text" placeholder="Search manga…" onkeydown="if(event.key==='Enter')doDesktopSearch()"/>
     </div>
-    <button class="topbar-lib-desktop" onclick="navigate('library')">Library</button>
+    <nav class="topbar-desktop-nav">
+      <button data-route="home" onclick="navigate('home')">Home</button>
+      <button data-route="library" onclick="navigate('library')">Library</button>
+      <button class="genres-btn" onclick="navigate('search')">Genres</button>
+    </nav>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
@@ -1407,7 +1410,9 @@ function navigate(route, { pushState = true } = {}) {
   const viewMap = { home: 'v-home', library: 'v-library', search: 'v-search' };
   const viewId = viewMap[route] || 'v-home';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
-  document.querySelectorAll('.bnav-tab,.desktop-nav-list button').forEach(p => p.classList.toggle('active', p.dataset.route === route));
+  document.querySelectorAll('.bnav-tab,.desktop-nav-list button,.topbar-desktop-nav button[data-route]').forEach(p => p.classList.toggle('active', p.dataset.route === route));
+  // Remove home-scrolled when leaving home so topbar starts white on other pages
+  if (route !== 'home') document.body.classList.remove('home-scrolled');
   if (pushState) history.pushState(null, '', '#' + route);
   if (route === 'library') renderLibraryPage();
   if (route === 'search') renderGenrePage();
@@ -1684,7 +1689,6 @@ function renderHomeData(data, wrap) {
   renderDiscSection('Latest Updates', data.updated, wrap, 'latestUploadedChapter', {showChapter:true});
   renderDiscSection('Recommended', data.recommended, wrap, 'followedCount');
   renderDiscSection('Popular New Titles', popularNew, wrap, 'followedCount');
-  renderDiscSection('Trending Now', data.trending || [], wrap, 'followedCount');
   renderDiscSection('Top Rated', data.topRated, wrap, 'rating');
   if (data.seasonName) renderDiscSection(`Seasonal — ${data.seasonName}`, data.seasonal, wrap, 'seasonal');
   renderDiscSection('New Releases', data.newManga, wrap, 'createdAt');
@@ -1782,6 +1786,14 @@ function renderHomeSkeleton(wrap) {
   </div>`;
   wrap.innerHTML = `<div class="hero-card"><div class="hero-skel"></div></div>` + skelSection('Trending Now') + skelSection('Latest Updates');
 }
+
+// Scroll listener: home-scrolled class drives topbar bg
+(function(){
+  const vHome = document.getElementById('v-home');
+  if (vHome) vHome.addEventListener('scroll', () => {
+    document.body.classList.toggle('home-scrolled', vHome.scrollTop > 40);
+  }, { passive: true });
+})();
 
 async function loadDiscoverySections({ forceRefresh = false } = {}) {
   const wrap = document.getElementById('discover-wrap');

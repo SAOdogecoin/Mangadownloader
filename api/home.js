@@ -86,9 +86,8 @@ module.exports = async (req, res) => {
     return base;
   }
 
-  // Dedupe recommended vs trending+updated (different sort order = high-rated manga not in other sections)
-  const shownIds = new Set([...trending, ...updated].map(m => m.id));
-  const recommendedDedup = recommended.filter(m => !shownIds.has(m.id));
+  // No dedup — recommended (top-rated) shows as-is
+  const recommendedDedup = recommended;
 
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   res.json({
