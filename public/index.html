@@ -565,7 +565,7 @@ body:has(.hero-desktop) .topbar{background:transparent}
 }
 
 /* ─── DESKTOP LAYOUT (>=900px) ─── */
-.topbar-search-desktop,.topbar-lib-desktop,.desktop-sidebar,.desktop-leftbar{display:none}
+.topbar-search-desktop,.topbar-lib-desktop,.desktop-sidebar{display:none}
 @media (min-width:900px){
   .bnav{display:none !important}
   .topbar-r1{gap:24px;padding:14px 24px 10px}
@@ -577,31 +577,34 @@ body:has(.hero-desktop) .topbar{background:transparent}
   .topbar-lib-desktop{display:inline-flex;align-items:center;padding:9px 18px;border-radius:99px;background:#0a0a0a;color:#fff;font:700 13px 'Inter',sans-serif;letter-spacing:-.005em;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
   .topbar-lib-desktop:hover{background:#1c1c1c}
 
-  /* Left sidebar — page navigation */
-  .desktop-leftbar{display:block;position:fixed;left:0;top:62px;bottom:0;width:200px;padding:20px 16px 24px;overflow-y:auto;border-right:1px solid var(--border);background:var(--bg);z-index:5}
-  .desktop-leftbar h3{font:700 14px 'Inter',sans-serif;letter-spacing:-.01em;margin-bottom:12px;color:#0a0a0a;padding-left:6px}
+  /* Left sidebar gone — hide it */
+  .desktop-leftbar{display:none !important}
+
+  /* Right sidebar — Browse nav on top, Genres below */
+  .desktop-sidebar{display:block;position:fixed;right:0;top:62px;bottom:0;width:240px;padding:20px 20px 24px;overflow-y:auto;border-left:1px solid var(--border);background:var(--bg);z-index:5}
+  .desktop-sidebar h3{font:700 14px 'Inter',sans-serif;letter-spacing:-.01em;margin-bottom:10px;color:#0a0a0a}
+  .desktop-sidebar-sep{height:1px;background:var(--border);margin:16px 0}
   .desktop-nav-list{display:flex;flex-direction:column;gap:2px}
   .desktop-nav-list button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 12px;font:600 13px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;letter-spacing:-.005em}
   .desktop-nav-list button:hover{background:var(--surf)}
   .desktop-nav-list button.active{background:#0a0a0a;color:#fff}
   .desktop-nav-list button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-
-  /* Right sidebar for genres */
-  .desktop-sidebar{display:block;position:fixed;right:0;top:62px;bottom:0;width:240px;padding:20px 24px 24px;overflow-y:auto;border-left:1px solid var(--border);background:var(--bg);z-index:5}
-  .desktop-sidebar h3{font:700 14px 'Inter',sans-serif;letter-spacing:-.01em;margin-bottom:12px;color:#0a0a0a}
   .desktop-genre-list{display:flex;flex-direction:column;gap:6px}
   .desktop-genre-list button{text-align:left;background:none;border:1px solid var(--border);border-radius:99px;padding:7px 14px;font:500 12px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
   .desktop-genre-list button:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
 
-  /* Reserve space for both sidebars + topbar height in all views */
-  .view{padding-left:220px !important;padding-right:264px !important;padding-top:62px}
+  /* No left sidebar — only right sidebar padding */
+  .view{padding-left:24px !important;padding-right:264px !important;padding-top:62px}
   /* Fixed card width on desktop so horizontal scroll works in content column */
   .disc-card{width:160px;max-width:160px}
   .disc-strip{padding-left:24px;padding-right:24px}
-  /* Hero too should respect left sidebar */
+  /* Hero full width (no left sidebar) */
   .hero-desktop{margin-left:0 !important;margin-right:0 !important}
-  /* Topbar Library button now redundant w/ left sidebar — hide */
+  /* Topbar Library button hidden — sidebar handles nav */
   .topbar-lib-desktop{display:none !important}
+  /* Topbar: search centered via grid */
+  .topbar-r1{display:grid !important;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
+  .topbar-search-desktop{max-width:none !important;width:100%}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -646,7 +649,7 @@ body:has(.hero-desktop) .topbar{background:transparent}
   <div class="topbar-r3" id="nav-pills-old"></div>
 </div>
 
-<aside class="desktop-leftbar" id="desktop-leftbar">
+<aside class="desktop-sidebar" id="desktop-sidebar">
   <h3>Browse</h3>
   <nav class="desktop-nav-list">
     <button data-route="home" onclick="navigate('home')">
@@ -662,9 +665,7 @@ body:has(.hero-desktop) .topbar{background:transparent}
       <span>Search</span>
     </button>
   </nav>
-</aside>
-
-<aside class="desktop-sidebar" id="desktop-sidebar">
+  <div class="desktop-sidebar-sep"></div>
   <h3>Genres</h3>
   <div class="desktop-genre-list" id="desktop-genre-list"></div>
 </aside>
