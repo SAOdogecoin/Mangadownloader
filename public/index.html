@@ -546,12 +546,16 @@ button.status-pill:hover{opacity:.75}
 .hd-tags{display:flex;gap:6px;flex-wrap:wrap}
 .hd-tag{font-family:'Inter',sans-serif;font-size:9px;font-weight:700;letter-spacing:.06em;color:#0a0a0a;background:rgba(0,0,0,.08);padding:3px 7px;border-radius:99px}
 .hd-desc{display:none}
-.hd-nav{position:absolute;right:14px;top:60px;display:flex;align-items:center;gap:8px;z-index:3}
-.hd-num{font-family:'Inter',sans-serif;font-size:11px;color:rgba(0,0,0,.7);letter-spacing:.04em}
-.hd-num strong{color:#0a0a0a;font-weight:800;font-size:12px}
-.hd-arrow{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .15s}
-.hd-arrow:hover{background:#fff;transform:scale(1.05)}
-.hd-arrow svg{width:12px;height:12px;stroke:#0a0a0a;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+/* Dot pagination */
+.hd-dots{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:6px;z-index:4}
+.hd-dot{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.25);border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;transition:all .2s}
+.hd-dot.active{background:#0a0a0a;width:22px;border-radius:99px}
+.hd-dot:hover:not(.active){background:rgba(0,0,0,.5)}
+/* Desktop-only mid-right arrow */
+.hd-side-arrow{display:none;position:absolute;right:16px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(0,0,0,.1);align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:4;transition:background .15s,transform .15s}
+.hd-side-arrow:hover{background:#fff;transform:translateY(-50%) scale(1.06)}
+.hd-side-arrow svg{width:14px;height:14px;stroke:#0a0a0a;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+@media (min-width:900px){.hd-side-arrow{display:flex}}
 /* Hero hides topbar bg so it bleeds through */
 body:has(.hero-desktop) .topbar{background:transparent}
 /* Mobile topbar over hero: title needs contrast */
@@ -611,9 +615,7 @@ body:has(.hero-desktop) .topbar{background:transparent}
   .hd-author{max-width:300px}
   .hd-tag{font-size:10px;padding:4px 9px}
   .hd-desc{display:-webkit-box;font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;color:rgba(0,0,0,.75);-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:580px}
-  .hd-nav{right:32px;bottom:24px;top:auto}
-  .hd-arrow{width:36px;height:36px}
-  .hd-arrow svg{width:14px;height:14px}
+  .hd-dots{bottom:22px}
   /* When hero shows, topbar becomes transparent over hero. Search input stays SOLID white for contrast. */
   body:has(.hero-desktop) .topbar{background:transparent;border-bottom:none}
   body:has(.hero-desktop) .topbar-search-desktop input{background:#fff;border-color:rgba(0,0,0,.12);box-shadow:0 4px 16px -8px rgba(0,0,0,.18)}
@@ -1679,7 +1681,7 @@ function renderHomeData(data, wrap) {
 let _hdIdx = 0, _hdLen = 0;
 function renderHeroDesktop(items, container) {
   if (!items?.length) return;
-  const pick = items.filter(m => m.coverUrl).slice(0, 10);
+  const pick = items.filter(m => m.coverUrl).slice(0, 3);
   if (!pick.length) return;
   _hdLen = pick.length;
   _hdIdx = 0;
@@ -1687,25 +1689,37 @@ function renderHeroDesktop(items, container) {
   const wrap = document.createElement('div');
   wrap.className = 'hero-desktop';
   wrap.innerHTML = pick.map((it, i) => buildHeroDesktopSlide(it, i)).join('') +
-    `<div class="hd-nav">
-      <span class="hd-num">NO. <strong id="hd-num">01</strong> / ${String(_hdLen).padStart(2,'0')}</span>
-      <button class="hd-arrow" id="hd-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-      <button class="hd-arrow" id="hd-next" aria-label="Next"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
-    </div>`;
+    `<div class="hd-dots">${pick.map((_,i)=>`<button class="hd-dot${i===0?' active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`).join('')}</div>` +
+    `<button class="hd-side-arrow" id="hd-side-next" aria-label="Next slide">
+       <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+     </button>`;
   container.appendChild(wrap);
 
   const slides = wrap.querySelectorAll('.hd-slide');
+  const dots = wrap.querySelectorAll('.hd-dot');
   function show(i) {
     _hdIdx = (i + _hdLen) % _hdLen;
     slides.forEach((s, k) => s.classList.toggle('active', k === _hdIdx));
-    document.getElementById('hd-num').textContent = String(_hdIdx + 1).padStart(2, '0');
+    dots.forEach((d, k) => d.classList.toggle('active', k === _hdIdx));
   }
-  document.getElementById('hd-prev').onclick = e => { e.stopPropagation(); show(_hdIdx - 1); };
-  document.getElementById('hd-next').onclick = e => { e.stopPropagation(); show(_hdIdx + 1); };
+  // Desktop side arrow → next
+  document.getElementById('hd-side-next').onclick = e => { e.stopPropagation(); show(_hdIdx + 1); };
+  // Dot click → jump
+  dots.forEach(d => d.addEventListener('click', e => {
+    e.stopPropagation();
+    show(parseInt(d.dataset.i, 10));
+  }));
+  // Mobile swipe
+  let touchX = 0;
+  wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  wrap.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) show(_hdIdx + (dx < 0 ? 1 : -1));
+  }, { passive: true });
 
   // Click slide → open panel
   wrap.addEventListener('click', e => {
-    if (e.target.closest('.hd-arrow') || e.target.closest('.hd-num')) return;
+    if (e.target.closest('.hd-dot') || e.target.closest('.hd-side-arrow')) return;
     const a = wrap.querySelector('.hd-slide.active');
     if (a) openPanel(a.dataset.id, a.dataset.source || 'mdex');
   });
