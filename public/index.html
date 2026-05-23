@@ -178,10 +178,10 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .mc-sub{font-size:9.5px;color:var(--fg);font-weight:700;margin-top:1px}
 
 /* Discovery horizontal strip */
-.disc-strip{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;padding-left:16px;padding-right:16px;scroll-padding:16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.disc-strip{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;padding-left:16px;padding-right:16px;-webkit-overflow-scrolling:touch}
 .disc-strip::-webkit-scrollbar{display:none}
 /* 3 cards visible per row on mobile */
-.disc-card{flex-shrink:0;width:calc((100vw - 56px) / 3);max-width:140px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .25s cubic-bezier(.2,.8,.2,1);scroll-snap-align:start;position:relative}
+.disc-card{flex-shrink:0;width:calc((100vw - 56px) / 3);max-width:140px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .25s cubic-bezier(.2,.8,.2,1);position:relative}
 .disc-card:hover{transform:translateY(-3px)}
 .disc-card:active{transform:scale(.97)}
 .disc-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;border-radius:6px;overflow:hidden;background:var(--surf);box-shadow:0 1px 0 rgba(60,50,30,.06),0 6px 18px -8px rgba(60,50,30,.18);transition:box-shadow .25s,transform .25s}
@@ -2877,8 +2877,7 @@ window.addEventListener('hashchange', () => {
 // Zero-latency: applies partial scroll immediately, then eases remainder via rAF
 (function() {
   const state = new WeakMap(); // per-strip: { target, raf }
-  const EASE = 0.14;
-  const IMMEDIATE = 0.35; // fraction applied instantly per event (kills dead-zone feel)
+  const EASE = 0.18;
 
   function tick(strip) {
     const s = state.get(strip);
@@ -2900,7 +2899,9 @@ window.addEventListener('hashchange', () => {
     if (!strip) return;
     const max = strip.scrollWidth - strip.clientWidth;
     if (max <= 0) return;
-    const delta = e.deltaY;
+    // Normalize deltaMode: 0=px (use as-is), 1=lines (~40px/line), 2=page (~600px)
+    const raw = e.deltaY;
+    const delta = e.deltaMode === 1 ? raw * 40 : e.deltaMode === 2 ? raw * 600 : raw;
     const cur = state.has(strip) ? state.get(strip).target : strip.scrollLeft;
     const atStart = cur <= 0 && delta > 0;
     const atEnd = cur >= max - 1 && delta < 0;
@@ -2909,8 +2910,8 @@ window.addEventListener('hashchange', () => {
     let s = state.get(strip);
     if (!s) { s = { target: strip.scrollLeft, raf: null }; state.set(strip, s); }
     s.target -= delta;
-    // Apply a fraction immediately so the strip moves on the same frame as the event
-    strip.scrollLeft += -delta * IMMEDIATE;
+    // Apply full delta immediately — no snap fighting, no dead-zone
+    strip.scrollLeft -= delta;
     cancelAnimationFrame(s.raf);
     s.raf = requestAnimationFrame(() => tick(strip));
   }, { passive: false });
