@@ -127,8 +127,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .hero-slide.active{opacity:1;pointer-events:auto}
 .hero-dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:4;pointer-events:auto}
 .hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;transition:all .25s;padding:0;-webkit-tap-highlight-color:transparent}
-.hero-dot.active{background:var(--org);width:22px;border-radius:99px}
+.hero-dot.active{background:#fff;width:22px;border-radius:99px}
 .hero-dot:hover:not(.active){background:rgba(255,255,255,.7)}
+/* Hero next-arrow button (mid-right, fades in on hover or recent swipe) */
+.hero-next-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:4;opacity:0;transition:opacity .25s,background .15s,transform .15s}
+.hero-card:hover .hero-next-btn{opacity:1}
+.hero-next-btn:hover{background:rgba(255,255,255,.32);transform:translateY(-50%) scale(1.05)}
+.hero-next-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:none){.hero-next-btn{opacity:.7}}
 .hero-card:hover{transform:translateY(-2px)}
 .hero-card:active{transform:scale(.99)}
 .hero-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -1407,18 +1413,72 @@ function buildHeroSlide(item, idx) {
 
 function renderHero(items, container) {
   if (!items?.length) return;
-  const item = items.find(m => m.coverUrl) || items[0];
-  if (!item) return;
+  const pick = items.filter(m => m.coverUrl).slice(0, 5);
+  if (!pick.length) return;
+  _heroLen = pick.length;
+  _heroIdx = 0;
+
   const wrap = document.createElement('div');
   wrap.className = 'hero-card';
-  wrap.innerHTML = buildHeroSlide(item, 0);
+  wrap.innerHTML =
+    pick.map((it, i) => buildHeroSlide(it, i)).join('') +
+    `<button class="hero-next-btn" type="button" aria-label="Next slide">
+      <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+    </button>` +
+    `<div class="hero-dots">${pick.map((_,i)=>`<button class="hero-dot${i===0?' active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`).join('')}</div>`;
   container.appendChild(wrap);
-  // Ensure src is set (buildHeroSlide does this for idx=0)
-  wrap.addEventListener('click', e => {
-    if (e.target.closest('.hero-read')) return;
-    openPanel(item.id, item.source || 'mdex');
+
+  const slides = wrap.querySelectorAll('.hero-slide');
+  const dots = wrap.querySelectorAll('.hero-dot');
+
+  function show(i) {
+    _heroIdx = (i + _heroLen) % _heroLen;
+    slides.forEach((s, k) => s.classList.toggle('active', k === _heroIdx));
+    dots.forEach((d, k) => d.classList.toggle('active', k === _heroIdx));
+    // Lazy-mount cover src on activation
+    const active = slides[_heroIdx];
+    const img = active?.querySelector('img[data-src]');
+    if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+    // Prefetch next slide so swipe is instant
+    const next = slides[(_heroIdx + 1) % _heroLen]?.querySelector('img[data-src]');
+    if (next) { next.src = next.dataset.src; next.removeAttribute('data-src'); }
+  }
+
+  // Dot click → jump
+  dots.forEach(d => d.addEventListener('click', e => {
+    e.stopPropagation();
+    show(parseInt(d.dataset.i, 10));
+  }));
+
+  // Right-arrow → next
+  wrap.querySelector('.hero-next-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    show(_heroIdx + 1);
   });
-  prefetchManga(item.id, item.source || 'mdex');
+
+  // Tap slide body → open panel for the active slide
+  wrap.addEventListener('click', e => {
+    if (e.target.closest('.hero-dot') || e.target.closest('.hero-read') || e.target.closest('.hero-next-btn')) return;
+    const a = wrap.querySelector('.hero-slide.active');
+    if (a) openPanel(a.dataset.id, a.dataset.source || 'mdex');
+  });
+
+  // Swipe nav
+  let touchX = 0;
+  wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  wrap.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) show(_heroIdx + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  // Prefetch all 5 manga details + first-2 cover images
+  pick.forEach((p, i) => {
+    prefetchManga(p.id, p.source || 'mdex');
+    if (i < 2 && p.coverUrl) {
+      const im = new Image();
+      im.src = proxyUrl(p.coverUrl, p.coverReferer);
+    }
+  });
 }
 
 const HOME_CACHE_TTL = 60 * 60 * 1000; // 60 min — generous, background refresh keeps it warm
@@ -1460,11 +1520,11 @@ function renderHomeData(data, wrap) {
     </div>`;
     return;
   }
-  // Static hero — top trending with a cover
+  // Hero carousel — up to 5 trending with covers, manual nav only
   const trending = data.trending || [];
-  const featured = trending.find(m => m.coverUrl) || trending[0];
   renderHero(trending, wrap);
-  const trendingRest = trending.filter(m => m.id !== featured?.id);
+  const featuredIds = new Set(trending.filter(m => m.coverUrl).slice(0, 5).map(m => m.id));
+  const trendingRest = trending.filter(m => !featuredIds.has(m.id));
   renderDiscSection('Latest Updates', data.updated, wrap);
   renderDiscSection('New Releases', data.newManga, wrap);
   renderDiscSection('Top Rated', data.topRated, wrap);
