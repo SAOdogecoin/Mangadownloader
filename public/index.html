@@ -598,17 +598,18 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-hdr{transition:padding .2s}
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 /* ─── DETAIL COLLAPSED HEADER ─── */
-.panel-collapsed .panel-hdr{padding:10px 14px 10px;flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border)}
+.panel-collapsed .panel-hdr{flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border)}
 .panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{display:none !important}
 .panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{display:none !important}
 .panel-collapsed .panel-info{display:block !important;flex:none;width:100%;padding-top:0;overflow:visible}
 .panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:8px;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
-.panel-collapsed .panel-action-row{flex-wrap:nowrap !important;margin-top:0;gap:6px;display:flex !important;flex-direction:row !important}
+.panel-collapsed .panel-action-row{flex-wrap:nowrap !important;margin-top:0;gap:8px;display:flex !important;flex-direction:row !important}
 .panel-collapsed .panel-action-row button span{display:none !important}
-.panel-collapsed .panel-action-row button{padding:8px 10px !important;gap:0 !important;flex-shrink:0;min-width:36px;justify-content:center}
+.panel-collapsed .panel-action-row button{padding:8px 12px !important;gap:0 !important;flex-shrink:0;min-width:40px;justify-content:center}
 .panel-action-collapsed{display:none !important}
 .panel-collapsed .panel-action-collapsed{display:none !important}
-body[data-route="detail"] .panel-collapsed .panel-hdr{padding-top:10px !important}
+/* Push collapsed content below the fixed topbar (~52px) + safe area */
+body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 12px !important}
 /* ─── DETAIL DESC SECTION ─── */
 .panel-desc-section{padding:14px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-desc-section .panel-desc{font-size:13px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
