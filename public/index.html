@@ -319,7 +319,7 @@ button.status-pill:hover{opacity:.75}
 /* ─── DETAIL PAGE (full-screen) ─── */
 .topbar-back-btn{display:none}
 body[data-route="detail"] .topbar{background:rgba(255,255,255,0) !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;transition:background .3s,box-shadow .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
-body[data-route="detail"] .topbar.topbar-scrolled{background:rgba(255,255,255,.93) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important;box-shadow:0 1px 0 var(--border) !important}
+body[data-route="detail"] .topbar.topbar-scrolled{background:#fff !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:0 1px 0 var(--border) !important}
 body[data-route="detail"] .bnav{display:none !important}
 body[data-route="detail"] .panel-bg{display:none !important}
 body[data-route="detail"] .panel-drag{display:none !important}
@@ -329,10 +329,6 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-inset-top,0px) + 62px))}
 .panel-hdr-bg{position:absolute;inset:-15%;background-size:cover;background-position:center top;filter:blur(30px) brightness(.72) saturate(.6);z-index:-1;pointer-events:none}
 .panel-hdr-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.82) 55%,rgba(255,255,255,1) 100%);z-index:0;pointer-events:none}
-.panel-back-btn{position:absolute;top:max(14px,env(safe-area-inset-top,14px));left:14px;z-index:2;background:rgba(255,255,255,.78);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .15s}
-.panel-back-btn:hover{background:rgba(255,255,255,.96)}
-.panel-back-btn svg{width:20px;height:20px;stroke:#0a0a0a;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.panel-collapsed .panel-back-btn{display:none}
 
 /* ─── READER ─── */
 .reader-overlay{position:fixed;inset:0;background:#000;z-index:10001;display:flex;flex-direction:column}
@@ -557,10 +553,12 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .nav-pill.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(10,10,10,.6)}
 
 /* ─── GENRE PAGE ─── */
-.genre-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding:16px}
-.genre-card{padding:14px 10px;border:1.5px solid var(--border);border-radius:12px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--fg);background:var(--card);-webkit-tap-highlight-color:transparent;transition:all .15s;font-family:inherit}
-.genre-card:hover{border-color:var(--org-text);color:var(--org-text);background:var(--org-s)}
-.genre-card:active{transform:scale(.96)}
+.genre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px}
+.genre-card{position:relative;height:110px;border:none;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--surf);background-size:cover;background-position:center;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .15s;font-family:inherit;padding:0}
+.genre-card::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.62) 100%);z-index:1}
+.genre-card:active{transform:scale(.96);opacity:.9}
+.genre-card-name{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;font-size:13px;font-weight:800;color:#fff;text-align:left;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);line-height:1.2}
+.genre-card-skel{position:absolute;inset:0;background:var(--surf)}
 
 /* ─── THEME TOGGLE ─── (removed) ─── */
 
@@ -767,8 +765,6 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   #v-home{padding-top:0}
   body[data-route="detail"] #panel{padding-top:0}
   body[data-route="detail"] .panel-hdr{padding-top:76px}
-  .panel-back-btn{top:18px}
-
   /* Desktop nav links (right side of topbar) */
   .topbar-desktop-nav{display:flex;align-items:center;gap:2px}
   .topbar-desktop-nav button{border:none;background:none;font:600 15px 'Inter',sans-serif;color:#0a0a0a;padding:8px 14px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;letter-spacing:-.01em;white-space:nowrap;text-decoration:none}
@@ -778,6 +774,8 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .topbar-desktop-nav .genres-btn:hover{background:var(--surf)}
   /* Genres section visible on desktop search (sidebar gone); JS hidden class still works */
   #v-search .search-genres-section:not(.hidden){display:block}
+  .genre-grid{grid-template-columns:repeat(4,1fr);gap:12px}
+  .genre-card{height:130px}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -1150,14 +1148,45 @@ const VIEWALL_INITIAL = 40; // fills screen on first load
 let _searchSource = 'mdex'; // MangaDex primary
 let _panelSource = 'mdex';
 
+const _genreCoverCache = {};
+let _genreObs = null;
+
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
   if (grid && !grid.children.length) {
     const tagItems = GENRES.filter(g => g.type === 'tag');
-    grid.innerHTML = tagItems.map(g => `<button class="genre-card" onclick="selectGenreAndSearch('${g.id}')">${esc(g.name)}</button>`).join('');
+    grid.innerHTML = tagItems.map(g =>
+      `<button class="genre-card" data-tid="${esc(g.id)}" onclick="selectGenreAndSearch('${esc(g.id)}')"><span class="genre-card-name">${esc(g.name)}</span></button>`
+    ).join('');
+    _observeGenreCards();
   }
   renderRecentSearches();
   renderDesktopSidebarGenres();
+}
+
+function _observeGenreCards() {
+  if (_genreObs) _genreObs.disconnect();
+  _genreObs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const tid = el.dataset.tid;
+      if (!tid) return;
+      _genreObs.unobserve(el);
+      if (_genreCoverCache[tid]) { _applyGenreCover(el, _genreCoverCache[tid]); return; }
+      fetch(`/api/search?tagId=${encodeURIComponent(tid)}&limit=1&sort=followedCount`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const url = d?.results?.[0]?.coverUrl;
+          if (url) { _genreCoverCache[tid] = url; _applyGenreCover(el, url); }
+        }).catch(() => {});
+    });
+  }, { rootMargin: '120px' });
+  document.querySelectorAll('.genre-card[data-tid]').forEach(el => _genreObs.observe(el));
+}
+
+function _applyGenreCover(el, url) {
+  el.style.backgroundImage = `url('${url}')`;
 }
 
 function renderDesktopSidebarGenres() {
@@ -1455,7 +1484,7 @@ function chPageNav(page) {
 
 function heroBg(coverUrl) {
   const bg = coverUrl ? `<div class="panel-hdr-bg" style="background-image:url('${esc(proxyUrl(coverUrl))}')"></div>` : '<div class="panel-hdr-bg"></div>';
-  return bg + `<div class="panel-hdr-bg-overlay"></div><button class="panel-back-btn" onclick="closePanel()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+  return bg + `<div class="panel-hdr-bg-overlay"></div>`;
 }
 
 async function openPanel(id, source) {
