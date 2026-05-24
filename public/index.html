@@ -823,8 +823,8 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .sf-bar{padding:10px 24px 8px}
   /* Genres section visible on desktop search (sidebar gone); JS hidden class still works */
   #v-search .search-genres-section:not(.hidden){display:block}
-  .genre-grid{grid-template-columns:repeat(4,1fr);gap:12px}
-  .genre-card{height:130px}
+  .genre-grid{grid-template-columns:repeat(6,1fr);gap:12px}
+  .genre-card{height:155px}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -1224,7 +1224,7 @@ const VIEWALL_INITIAL = 40; // fills screen on first load
 let _searchSource = 'mdex'; // MangaDex primary
 let _panelSource = 'mdex';
 
-const _genreCoverCache = {};
+const _genreCoverCache = (() => { try { return JSON.parse(localStorage.getItem('genreCoverCache_v1') || '{}'); } catch { return {}; } })();
 let _genreObs = null;
 let _genrePreloadRunning = false;
 
@@ -1279,6 +1279,7 @@ async function _preloadGenreCovers(tagItems) {
         const url = pick?.coverUrl;
         if (url) {
           _genreCoverCache[g.id] = url;
+          try { localStorage.setItem('genreCoverCache_v1', JSON.stringify(_genreCoverCache)); } catch {}
           const el = document.querySelector(`.genre-card[data-tid="${g.id}"]`);
           if (el) _applyGenreCover(el, url);
         }
