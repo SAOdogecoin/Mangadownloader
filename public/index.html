@@ -399,7 +399,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 /* ─── TOC PANEL ─── */
 .toc-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;display:none}
 .toc-bg.open{display:block}
-.toc-panel{position:fixed;top:0;right:0;bottom:0;width:min(320px,85vw);background:var(--card);border-radius:18px 0 0 18px;z-index:11;display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.toc-panel{position:fixed;top:8px;right:8px;bottom:8px;width:min(320px,85vw);background:var(--card);border-radius:16px;z-index:11;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 16px));transition:transform .25s cubic-bezier(.4,0,.2,1)}
 .toc-panel.open{transform:translateX(0)}
 .toc-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .toc-title-label{font-size:13px;font-weight:800;color:var(--fg)}
@@ -571,7 +571,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 /* ─── DETAIL COLLAPSED HEADER ─── */
 .panel-collapsed .panel-hdr{padding:10px 14px 8px;align-items:flex-start;border-bottom:1px solid var(--border)}
 .panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{display:none !important}
-.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags{display:none !important}
+.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc,.panel-collapsed .panel-action-row{display:none !important}
 .panel-collapsed .panel-info{display:flex;flex-direction:row;align-items:center;gap:10px;padding-top:0;flex:1;min-width:0}
 .panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;-webkit-line-clamp:unset;line-height:1.25;flex:1;min-width:0}
 .panel-action-collapsed{display:none !important}
@@ -775,22 +775,33 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .disc-rating-num{font-size:12px}
   .home-section-label{font-size:24px;font-weight:800;letter-spacing:-.02em}
   /* Bigger panel header on desktop */
-  .panel-cover{width:120px;height:180px;border-radius:8px}
-  .panel-cover-ph{width:120px;height:180px;border-radius:8px}
-  .panel-cover-ph svg{width:36px;height:36px}
-  .panel-hdr{gap:20px;padding:16px 28px 16px;align-items:flex-start}
+  .panel-cover{width:168px;height:252px;border-radius:10px}
+  .panel-cover-ph{width:168px;height:252px;border-radius:10px}
+  .panel-cover-ph svg{width:44px;height:44px}
+  .panel-hdr{gap:28px;padding:24px 32px 20px;align-items:flex-start}
   .panel-info{padding-top:4px}
-  .panel-title{font-size:24px;margin-bottom:8px}
-  .panel-meta{font-size:14px;margin-bottom:12px}
-  .panel-tags{gap:6px;margin-bottom:12px}
-  .panel-desc{font-size:14px;-webkit-line-clamp:4}
+  .panel-title{font-size:28px;margin-bottom:10px}
+  .panel-meta{font-size:15px;margin-bottom:12px}
+  .panel-tags{gap:6px;margin-bottom:14px}
+  .panel-desc{font-size:14px;display:block !important;-webkit-line-clamp:unset !important;overflow:visible !important}
+  .btn-more-desc{display:none !important}
   .tag-pill{font-size:11px;padding:3px 10px}
-  .panel-save-btn{font-size:14px;padding:9px 20px}
-  .panel-save-btn svg{width:14px;height:14px}
-  .panel-start-btn,.panel-dl-btn{font-size:13px;padding:9px 18px}
-  .panel-start-btn svg,.panel-dl-btn svg{width:14px;height:14px}
-  .panel-action-row{gap:10px;margin-top:10px}
-  .btn-more-desc{font-size:13px}
+  .panel-save-btn{font-size:15px;padding:11px 24px}
+  .panel-save-btn svg{width:15px;height:15px}
+  .panel-start-btn,.panel-dl-btn{font-size:14px;padding:11px 22px}
+  .panel-start-btn svg,.panel-dl-btn svg{width:15px;height:15px}
+  .panel-action-row{gap:12px;margin-top:16px}
+  /* Hide separate desc section on desktop (desc shown inline in panel-hdr) */
+  .panel-desc-section{display:none !important}
+  /* Sidebar layout: chapters left, suggested right */
+  .panel-body{display:flex !important;flex-direction:row !important;overflow:hidden !important}
+  .panel-ch-wrap{flex:1;min-width:0;overflow-y:auto;height:100%}
+  .panel-suggested{width:272px;flex-shrink:0;border-top:none;border-left:1px solid var(--border);margin:0;padding-top:16px;overflow-y:auto}
+  .panel-suggested-strip{flex-direction:column;overflow-x:hidden;padding:0 12px 16px;gap:10px}
+  .panel-sug-card{width:100%;display:flex;flex-direction:row;gap:10px;align-items:flex-start}
+  .panel-sug-img,.panel-sug-ph{width:60px;height:90px;flex-shrink:0}
+  .panel-sug-ph svg{width:18px;height:18px}
+  .panel-sug-name{font-size:13px;-webkit-line-clamp:3}
   .hero-desktop{margin:0 -24px 24px;height:460px;width:calc(100% + 48px);}
   .topbar-lib-desktop{display:none !important}
 
@@ -2683,27 +2694,26 @@ async function renderPanel({ manga, chapters }) {
           <span>Read</span>
         </button>
       </div>
+      ${manga.description ? `<div class="panel-desc" id="panel-desc">${esc(manga.description.slice(0,300))}${manga.description.length>300?`<button class="btn-more-desc" onclick="expandDesc()" id="btn-more">See more</button>`:''}</div>` : ''}
+      <div class="panel-action-row">
+        <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
+          <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
+          <span>${isSaved ? 'Saved' : 'Add to Library'}</span>
+        </button>
+        <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
+          <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+          <span>Download</span>
+        </button>
+        <button class="panel-start-btn" id="panel-start-btn" onclick="readFromStart()">
+          <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          <span>Read from Start</span>
+        </button>
+      </div>
     </div>`;
 
-  // Desc + action buttons in separate section below header
-  const shortDesc = manga.description ? manga.description.slice(0, 300) : '';
-  const hasMore = manga.description && manga.description.length > 300;
-  document.getElementById('panel-desc-section').innerHTML =
-    (manga.description ? `<div class="panel-desc" id="panel-desc">${esc(shortDesc)}${hasMore ? `<button class="btn-more-desc" onclick="expandDesc()" id="btn-more">See more</button>` : ''}</div>` : '') +
-    `<div class="panel-action-row">
-      <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
-        <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
-        <span>${isSaved ? 'Saved' : 'Add to Library'}</span>
-      </button>
-      <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
-        <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
-        <span>Download</span>
-      </button>
-      <button class="panel-start-btn" id="panel-start-btn" onclick="readFromStart()">
-        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-        <span>Read from Start</span>
-      </button>
-    </div>`;
+  // panel-desc-section unused (desc now in panel-hdr); clear it
+  const pds = document.getElementById('panel-desc-section');
+  if (pds) pds.innerHTML = '';
 
   // Flatten chapters newest-first then paginate
   const allChFlat = [];
@@ -2817,14 +2827,11 @@ async function renderPanel({ manga, chapters }) {
     chHtml = '<div class="panel-loading"><div class="spin"></div> Searching alt source…</div>';
   }
 
-  document.getElementById('panel-body').innerHTML = chHtml;
-
-  // Suggested manga section
-  document.getElementById('panel-body').insertAdjacentHTML('beforeend',
+  document.getElementById('panel-body').innerHTML =
+    `<div class="panel-ch-wrap">${chHtml}</div>` +
     `<div class="panel-suggested" id="panel-suggested">` +
     `<div class="panel-suggested-title">More like this</div>` +
-    `<div class="panel-suggested-strip" id="panel-suggested-strip"></div></div>`
-  );
+    `<div class="panel-suggested-strip" id="panel-suggested-strip"></div></div>`;
   loadSuggestedManga(manga);
 
   // Auto-search alt source when MangaDex has no chapters
