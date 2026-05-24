@@ -316,6 +316,20 @@ button.status-pill:hover{opacity:.75}
 .btn-dl-ch.dl-loading svg{animation:rspin .7s linear infinite}
 .panel-loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--sub);font-size:14px;font-weight:600}
 
+/* ─── DETAIL PAGE (full-screen) ─── */
+.topbar-back-btn{display:none;align-items:center;gap:2px;background:none;border:none;font:700 15px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;padding:6px 8px 6px 0;-webkit-tap-highlight-color:transparent;letter-spacing:-.01em}
+.topbar-back-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+body[data-route="detail"] .topbar-back-btn{display:flex}
+body[data-route="detail"] .app-title{display:none}
+body[data-route="detail"] .topbar-search-desktop{visibility:hidden;pointer-events:none}
+body[data-route="detail"] .topbar-desktop-nav{visibility:hidden;pointer-events:none}
+body[data-route="detail"] .topbar{background:#fff !important;box-shadow:0 1px 0 var(--border) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+body[data-route="detail"] .bnav{display:none !important}
+body[data-route="detail"] .panel-bg{display:none !important}
+body[data-route="detail"] .panel-drag{display:none !important}
+body[data-route="detail"] .panel-close{display:none}
+body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;height:100% !important;transform:none !important;transition:none !important;border-radius:0 !important;z-index:9998 !important;padding-top:52px;display:flex !important}
+
 /* ─── READER ─── */
 .reader-overlay{position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column}
 .reader-overlay.hidden{display:none}
@@ -578,9 +592,9 @@ button.status-pill:hover{opacity:.75}
 .search-input-page{width:100%;background:rgba(255,255,255,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid rgba(0,0,0,.07);border-radius:99px;font-family:inherit;font-size:14px;color:var(--fg);padding:11px 38px 11px 38px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:-.005em;box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .search-input-page:focus{border-color:var(--org-text);box-shadow:0 0 0 3px var(--org-s)}
 .search-input-page::placeholder{color:var(--sub)}
-.btn-clear-input-page{position:absolute;right:10px;width:24px;height:24px;border:none;background:rgba(0,0,0,.06);cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.btn-clear-input-page{position:absolute;right:10px;width:30px;height:30px;border:none;background:rgba(0,0,0,.06);cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent}
 .btn-clear-input-page:hover{color:var(--fg);background:var(--border)}
-.btn-clear-input-page svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5}
+.btn-clear-input-page svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
 .btn-search-page{padding:11px 22px;background:var(--blk);color:var(--blk-text);border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:-.005em;transition:transform .15s,box-shadow .25s;white-space:nowrap;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 14px -4px rgba(60,50,30,.2)}
 .btn-search-page:hover{transform:translateY(-1px);box-shadow:0 8px 22px -6px rgba(60,50,30,.3)}
 .btn-search-page:active{transform:translateY(0)}
@@ -680,9 +694,9 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .topbar-search-desktop input{width:100%;padding:9px 36px 9px 38px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font:600 13px 'Inter',sans-serif;color:var(--fg);outline:none;letter-spacing:-.005em;transition:border-color .15s}
   .topbar-search-desktop input:focus{border-color:#0a0a0a}
   .topbar-search-desktop input::placeholder{color:var(--sub);font-weight:500}
-  #btn-clear-topbar{position:absolute;right:10px;width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0;z-index:2}
+  #btn-clear-topbar{position:absolute;right:10px;width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0;z-index:2}
   #btn-clear-topbar:hover{color:#0a0a0a}
-  #btn-clear-topbar svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  #btn-clear-topbar svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
   .topbar-lib-desktop{display:inline-flex;align-items:center;padding:9px 18px;border-radius:99px;background:#0a0a0a;color:#fff;font:700 13px 'Inter',sans-serif;letter-spacing:-.005em;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
   .topbar-lib-desktop:hover{background:#1c1c1c}
 
@@ -730,6 +744,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   /* Desktop: correct view padding to match topbar height */
   #v-library,#v-search{padding-top:66px}
   #v-home{padding-top:0}
+  body[data-route="detail"] #panel{padding-top:66px}
 
   /* Desktop nav links (right side of topbar) */
   .topbar-desktop-nav{display:flex;align-items:center;gap:2px}
@@ -750,8 +765,8 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .hd-content{align-items:center;gap:32px;padding:60px 40px 40px}
   .hd-thumb-wrap{width:240px;border-radius:10px}
   .hd-info{gap:10px;max-width:760px}
-  .hd-kicker{font-size:14px;text-transform:none;letter-spacing:-.005em;opacity:1}
-  .hd-title{font-size:36px}
+  .hd-kicker{font-size:18px;text-transform:none;letter-spacing:-.005em;opacity:1}
+  .hd-title{font-size:48px}
   .hd-meta-row{font-size:14px}
   .hd-rating .star{font-size:14px}
   .hd-author{max-width:300px}
@@ -859,9 +874,6 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 <!-- Manga Detail Panel -->
 <div class="panel-bg" id="panel-bg" onclick="closePanel()"></div>
 <div class="panel" id="panel">
-  <div style="padding:12px 16px 0;flex-shrink:0">
-    <div class="panel-drag"></div>
-  </div>
   <div class="panel-hdr" id="panel-hdr">
     <div class="panel-loading">
       <div class="spin"></div> Loading…
@@ -1416,8 +1428,12 @@ async function openPanel(id, source) {
   _panelSource = source;
   currentMangaData = null;
   selectMode = false; selectedChIds.clear();
-  document.getElementById('panel-bg').classList.add('open');
-  document.getElementById('panel').classList.add('open');
+  _prevRoute = _currentRoute;
+  navigate('detail', { pushState: false });
+  const panel = document.getElementById('panel');
+  if (panel) panel.scrollTop = 0;
+  const panelBody = document.getElementById('panel-body');
+  if (panelBody) panelBody.scrollTop = 0;
 
   const preview = _previewCache[id];
   if (preview) {
@@ -1730,6 +1746,7 @@ function mcCardHtml(m, badge) {
 }
 
 let _currentRoute = 'home';
+let _prevRoute = 'home';
 let _resetSearchOnReturn = false;
 
 function setSearchTitle(text) {
@@ -1763,8 +1780,17 @@ function navigate(route, { pushState = true } = {}) {
   if (route === 'genres') route = 'search';
   const prev = _currentRoute;
   // When leaving search, mark for reset on return
-  if (prev === 'search' && route !== 'search') _resetSearchOnReturn = true;
+  if (prev === 'search' && route !== 'search' && route !== 'detail') _resetSearchOnReturn = true;
   _currentRoute = route;
+
+  if (route === 'detail') {
+    // Full-page detail view — just set data-route, CSS handles the rest
+    if (route !== 'home') document.body.classList.remove('home-scrolled');
+    document.querySelector('.topbar').classList.remove('topbar-scrolled');
+    document.body.dataset.route = route;
+    return;
+  }
+
   const viewMap = { home: 'v-home', library: 'v-library', search: 'v-search' };
   const viewId = viewMap[route] || 'v-home';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
@@ -2488,41 +2514,13 @@ function expandDesc() {
 }
 
 function closePanel() {
-  const panel = document.getElementById('panel');
-  panel.style.transform = '';
-  panel.style.transition = '';
-  document.getElementById('panel-bg').classList.remove('open');
-  panel.classList.remove('open');
+  navigate(_prevRoute || 'home');
   selectMode = false; selectedChIds.clear(); _extChUrls.clear();
   const bar = document.getElementById('panel-select-bar');
   if (bar) bar.classList.remove('show');
 }
 
-// Swipe-down to close panel
-(function() {
-  const panel = document.getElementById('panel');
-  let startY = 0, dragging = false;
-  panel.addEventListener('touchstart', e => {
-    const body = document.getElementById('panel-body');
-    if (body && body.scrollTop > 0) return; // only when scrolled to top
-    startY = e.touches[0].clientY;
-    dragging = true;
-    panel.style.transition = 'none';
-  }, { passive: true });
-  panel.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const dy = e.touches[0].clientY - startY;
-    if (dy > 0) panel.style.transform = `translateY(${dy}px)`;
-  }, { passive: true });
-  panel.addEventListener('touchend', e => {
-    if (!dragging) return;
-    dragging = false;
-    const dy = e.changedTouches[0].clientY - startY;
-    panel.style.transition = '';
-    if (dy > 110) closePanel();
-    else { panel.style.transform = 'translateY(0)'; }
-  }, { passive: true });
-})();
+// Swipe-to-close removed — panel is now a full-page view
 
 // Start reading from chapter 1 (oldest)
 function readFromStart() {
@@ -3374,6 +3372,10 @@ document.getElementById('v-library').addEventListener('scroll', function() {
 <!-- Topbar last in DOM = always paints above all other stacking contexts -->
 <div class="topbar">
   <div class="topbar-r1">
+    <button class="topbar-back-btn" onclick="closePanel()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
     <div class="topbar-search-desktop">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
