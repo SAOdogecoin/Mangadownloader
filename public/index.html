@@ -396,9 +396,9 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 
 
 /* ─── TOC PANEL ─── */
-.toc-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10002;display:none}
+.toc-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;display:none}
 .toc-bg.open{display:block}
-.toc-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,85vw);background:var(--card);border-radius:0 18px 18px 0;z-index:10003;display:flex;flex-direction:column;overflow:hidden;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.toc-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,85vw);background:var(--card);border-radius:0 18px 18px 0;z-index:11;display:flex;flex-direction:column;overflow:hidden;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
 .toc-panel.open{transform:translateX(0)}
 .toc-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .toc-title-label{font-size:13px;font-weight:800;color:var(--fg)}
@@ -662,7 +662,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
-.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.62) 0%,rgba(255,255,255,.42) 55%,rgba(255,255,255,.18) 100%);pointer-events:none}
+.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 60%,rgba(255,255,255,.65) 82%,rgba(255,255,255,.95) 100%);pointer-events:none}
 .hd-content{position:relative;height:100%;display:flex;align-items:flex-start;gap:16px;padding:52px 16px 18px;z-index:2}
 .hd-thumb-wrap{flex-shrink:0;width:128px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 14px 32px -8px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.15)}
 .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
@@ -961,16 +961,16 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       <svg viewBox="0 0 24 24"><polyline id="right-arrow" points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
-</div>
 
-<!-- TOC -->
-<div class="toc-bg" id="toc-bg" onclick="closeToc()"></div>
-<div class="toc-panel" id="toc-panel">
-  <div class="toc-hdr">
-    <span class="toc-title-label" id="toc-label">Chapters</span>
-    <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <!-- TOC — inside reader so it's never visible outside the reader -->
+  <div class="toc-bg" id="toc-bg" onclick="closeToc()"></div>
+  <div class="toc-panel" id="toc-panel">
+    <div class="toc-hdr">
+      <span class="toc-title-label" id="toc-label">Chapters</span>
+      <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="toc-list" id="toc-list"></div>
   </div>
-  <div class="toc-list" id="toc-list"></div>
 </div>
 
 <!-- Toast -->
