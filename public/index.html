@@ -272,12 +272,12 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .panel-bg.open{display:block}
 .panel{position:fixed;bottom:0;left:0;right:0;height:85vh;background:var(--card);border-radius:20px 20px 0 0;z-index:41;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .panel.open{transform:translateY(0)}
-.panel-hdr{display:flex;align-items:flex-start;gap:14px;padding:16px 16px 12px;flex-shrink:0}
+.panel-hdr{display:flex;align-items:flex-start;gap:14px;padding:16px 16px 12px;flex-shrink:0;position:relative;overflow:hidden;isolation:isolate}
 .panel-drag{width:36px;height:4px;background:#e0dcd8;border-radius:99px;margin:0 auto 12px;flex-shrink:0}
-.panel-cover{width:100px;height:150px;border-radius:6px;object-fit:cover;background:var(--surf);flex-shrink:0}
-.panel-cover-ph{width:100px;height:150px;border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.panel-cover{width:100px;height:150px;border-radius:6px;object-fit:cover;background:var(--surf);flex-shrink:0;position:relative;z-index:1}
+.panel-cover-ph{width:100px;height:150px;border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
 .panel-cover-ph svg{width:30px;height:30px;stroke:#c8bdb8;fill:none}
-.panel-info{flex:1;min-width:0;padding-top:2px}
+.panel-info{flex:1;min-width:0;padding-top:2px;position:relative;z-index:1}
 .panel-title{font-size:17px;font-weight:800;color:var(--fg);line-height:1.3;margin-bottom:6px}
 .panel-meta{font-size:12px;color:var(--sub);margin-bottom:8px}
 .panel-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
@@ -314,21 +314,25 @@ button.status-pill:hover{opacity:.75}
 .btn-dl-ch:hover svg{stroke:#fff}
 .btn-dl-ch svg{width:13px;height:13px;stroke:currentColor;fill:none;flex-shrink:0}
 .btn-dl-ch.dl-loading svg{animation:rspin .7s linear infinite}
-.panel-loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--sub);font-size:14px;font-weight:600}
+.panel-loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--sub);font-size:14px;font-weight:600;position:relative;z-index:1}
 
 /* ─── DETAIL PAGE (full-screen) ─── */
-.topbar-back-btn{display:none;align-items:center;gap:2px;background:none;border:none;font:700 15px 'Inter',sans-serif;color:#0a0a0a;cursor:pointer;padding:6px 8px 6px 0;-webkit-tap-highlight-color:transparent;letter-spacing:-.01em}
-.topbar-back-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-body[data-route="detail"] .topbar-back-btn{display:flex}
-body[data-route="detail"] .app-title{display:none}
-body[data-route="detail"] .topbar-search-desktop{visibility:hidden;pointer-events:none}
-body[data-route="detail"] .topbar-desktop-nav{visibility:hidden;pointer-events:none}
-body[data-route="detail"] .topbar{background:#fff !important;box-shadow:0 1px 0 var(--border) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+.topbar-back-btn{display:none}
+body[data-route="detail"] .topbar{background:rgba(255,255,255,0) !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;transition:background .3s,box-shadow .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
+body[data-route="detail"] .topbar.topbar-scrolled{background:rgba(255,255,255,.93) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important;box-shadow:0 1px 0 var(--border) !important}
 body[data-route="detail"] .bnav{display:none !important}
 body[data-route="detail"] .panel-bg{display:none !important}
 body[data-route="detail"] .panel-drag{display:none !important}
 body[data-route="detail"] .panel-close{display:none}
-body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;height:100% !important;transform:none !important;transition:none !important;border-radius:0 !important;z-index:9998 !important;padding-top:52px;display:flex !important}
+body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;height:100% !important;transform:none !important;transition:none !important;border-radius:0 !important;z-index:9998 !important;padding-top:0 !important;display:flex !important}
+/* Hero bg inside panel-hdr */
+body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-inset-top,0px) + 62px))}
+.panel-hdr-bg{position:absolute;inset:-15%;background-size:cover;background-position:center top;filter:blur(30px) brightness(.72) saturate(.6);z-index:-1;pointer-events:none}
+.panel-hdr-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.82) 55%,rgba(255,255,255,1) 100%);z-index:0;pointer-events:none}
+.panel-back-btn{position:absolute;top:max(14px,env(safe-area-inset-top,14px));left:14px;z-index:2;background:rgba(255,255,255,.78);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .15s}
+.panel-back-btn:hover{background:rgba(255,255,255,.96)}
+.panel-back-btn svg{width:20px;height:20px;stroke:#0a0a0a;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.panel-collapsed .panel-back-btn{display:none}
 
 /* ─── READER ─── */
 .reader-overlay{position:fixed;inset:0;background:#000;z-index:10001;display:flex;flex-direction:column}
@@ -761,7 +765,9 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   /* Desktop: correct view padding to match topbar height */
   #v-library,#v-search{padding-top:66px}
   #v-home{padding-top:0}
-  body[data-route="detail"] #panel{padding-top:66px}
+  body[data-route="detail"] #panel{padding-top:0}
+  body[data-route="detail"] .panel-hdr{padding-top:76px}
+  .panel-back-btn{top:18px}
 
   /* Desktop nav links (right side of topbar) */
   .topbar-desktop-nav{display:flex;align-items:center;gap:2px}
@@ -1447,6 +1453,11 @@ function chPageNav(page) {
   if (pb) pb.scrollTop = 0;
 }
 
+function heroBg(coverUrl) {
+  const bg = coverUrl ? `<div class="panel-hdr-bg" style="background-image:url('${esc(proxyUrl(coverUrl))}')"></div>` : '<div class="panel-hdr-bg"></div>';
+  return bg + `<div class="panel-hdr-bg-overlay"></div><button class="panel-back-btn" onclick="closePanel()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+}
+
 async function openPanel(id, source) {
   source = source || 'mdex';
   _panelSource = source;
@@ -1467,7 +1478,7 @@ async function openPanel(id, source) {
       ? `<img class="panel-cover" src="${esc(proxyUrl(preview.coverUrl, preview.coverReferer))}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="panel-cover-ph" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`
       : `<div class="panel-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
     const tagsHtml = (preview.tags || []).slice(0,4).map(t => `<span class="tag-pill">${esc(t.name || t)}</span>`).join('');
-    document.getElementById('panel-hdr').innerHTML = `
+    document.getElementById('panel-hdr').innerHTML = heroBg(preview.coverUrl) + `
       ${covHtml}
       <div class="panel-info">
         <div class="panel-title">${esc(preview.title)}</div>
@@ -1478,7 +1489,7 @@ async function openPanel(id, source) {
       </div>`;
     document.getElementById('panel-body').innerHTML = '<div class="panel-loading"><div class="spin"></div> Loading chapters…</div>';
   } else {
-    document.getElementById('panel-hdr').innerHTML = '<div class="panel-loading"><div class="spin"></div> Loading…</div>';
+    document.getElementById('panel-hdr').innerHTML = heroBg(null) + '<div class="panel-loading"><div class="spin"></div> Loading…</div>';
     document.getElementById('panel-body').innerHTML = '';
   }
 
@@ -1500,7 +1511,7 @@ async function openPanel(id, source) {
     currentMangaData = data;
     renderPanel(data);
   } catch (e) {
-    document.getElementById('panel-hdr').innerHTML = `<div style="padding:20px;color:var(--err);font-weight:700">Error: ${esc(e.message)}</div>`;
+    document.getElementById('panel-hdr').innerHTML = heroBg(null) + `<div style="padding:20px;color:var(--err);font-weight:700;position:relative;z-index:1">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -2424,7 +2435,7 @@ async function renderPanel({ manga, chapters }) {
   ).join('');
   const pillCls = statusPillClass(manga.status);
 
-  document.getElementById('panel-hdr').innerHTML = `
+  document.getElementById('panel-hdr').innerHTML = heroBg(manga.coverUrl) + `
     ${covHtml}
     <div class="panel-info">
       <div class="panel-title">${esc(manga.title)}</div>
@@ -2588,10 +2599,13 @@ function expandDesc() {
 }
 
 function closePanel() {
+  const panel = document.getElementById('panel');
+  if (panel) panel.style.transition = 'none';
   navigate(_prevRoute || 'home');
   selectMode = false; selectedChIds.clear(); _extChUrls.clear();
   const bar = document.getElementById('panel-select-bar');
   if (bar) bar.classList.remove('show');
+  requestAnimationFrame(() => requestAnimationFrame(() => { if (panel) panel.style.transition = ''; }));
 }
 
 // Swipe-to-close removed — panel is now a full-page view
@@ -3405,6 +3419,9 @@ window.addEventListener('hashchange', () => {
 document.getElementById('panel-body').addEventListener('scroll', function() {
   const panel = document.getElementById('panel');
   if (panel) panel.classList.toggle('panel-collapsed', this.scrollTop > 80);
+  if (document.body.dataset.route === 'detail') {
+    document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 40);
+  }
 }, { passive: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
