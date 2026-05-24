@@ -127,7 +127,7 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .home-section:first-of-type{padding-top:8px}
 .home-section-head{margin-bottom:10px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .home-section-label{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--fg);letter-spacing:-.01em;line-height:1.2;flex:1}
-.view-all-btn{display:inline-flex;align-items:center;gap:2px;background:none;border:none;color:var(--sub);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.005em;cursor:pointer;padding:4px 4px 4px 10px;border-radius:99px;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s}
+.view-all-btn{display:inline-flex;align-items:center;gap:2px;background:none;border:none;color:var(--sub);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.005em;cursor:pointer;padding:4px 4px 4px 10px;border-radius:99px;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s;margin-left:auto}
 .view-all-btn:hover{color:#0a0a0a;background:var(--surf)}
 .view-all-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .home-section-label em{font-style:normal;color:var(--fg);font-weight:700}
@@ -581,12 +581,6 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-desc-section .panel-desc{font-size:13px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .panel-desc-section .panel-desc.expanded{display:block;-webkit-line-clamp:unset}
 .panel-desc-section .panel-action-row{margin-top:14px}
-/* ─── HOME REFRESH ─── */
-.home-rf-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:50%;color:var(--sub);transition:color .15s;-webkit-tap-highlight-color:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.home-rf-btn:hover{color:var(--fg)}
-.home-rf-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .5s}
-.home-rf-btn.spinning svg{animation:spin360 .65s linear infinite}
-@keyframes spin360{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 /* ─── CHAPTER PAGINATION ─── */
 .ch-pagination-inline{display:flex;align-items:center;gap:6px}
 .ch-pg-btn{padding:6px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;color:var(--fg)}
@@ -750,9 +744,9 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   #btn-clear-topbar{position:absolute;right:106px;width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0;z-index:2}
   #btn-clear-topbar:hover{color:#0a0a0a}
   #btn-clear-topbar svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-  .adv-search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);height:28px;padding:0 13px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--fg);white-space:nowrap;transition:background .15s,border-color .15s;z-index:2;-webkit-tap-highlight-color:transparent}
-  .adv-search-btn:hover{background:var(--surf);border-color:#999}
-  .adv-search-btn.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+  .adv-search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);height:28px;padding:0 13px;border-radius:99px;border:1.5px solid #0a0a0a;background:#0a0a0a;font:600 12px 'Inter',sans-serif;cursor:pointer;color:#fff;white-space:nowrap;transition:background .15s;z-index:2;-webkit-tap-highlight-color:transparent}
+  .adv-search-btn:hover{background:#333;border-color:#333}
+  .adv-search-btn.active{background:#444;border-color:#444}
   .adv-search-drop{position:absolute;top:calc(100% + 8px);right:0;width:296px;background:#fff;border-radius:14px;border:1.5px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.12);padding:14px 14px 10px;z-index:9999;display:none}
   .adv-search-drop.open{display:block}
   .adv-drop-section{margin-bottom:12px}
@@ -849,6 +843,9 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .topbar{background:#fff !important;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
   body:has(.hero-desktop) .topbar-search-desktop input{background:#fff;border-color:rgba(0,0,0,.12);box-shadow:0 4px 16px -8px rgba(0,0,0,.18)}
   /* (genre section now visible on desktop — sidebar removed) */
+  /* Download bar centered on desktop */
+  .panel-select-bar{justify-content:center;padding:10px 24px}
+  .btn-dl-selected{flex:none;min-width:260px}
   /* Desktop collapsed panel: bigger title + buttons */
   .panel-collapsed .panel-hdr{padding:14px 24px 12px}
   .panel-collapsed .panel-title{font-size:22px}
@@ -2273,7 +2270,6 @@ let _sectionIdx = 0;
 function renderDiscSection(label, items, container, sortKey, opts) {
   if (!items || !items.length) return;
   _sectionIdx++;
-  const isFirst = _sectionIdx === 1;
   const showChapter = opts?.showChapter || false;
   const cardsHtml = items.map(m => discCardHtml(m, showChapter)).join('');
   const sec = document.createElement('div');
@@ -2284,15 +2280,10 @@ function renderDiscSection(label, items, container, sortKey, opts) {
         <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
       </button>`
     : '';
-  const rfBtn = isFirst
-    ? `<button class="home-rf-btn" id="home-rf-btn" onclick="refreshHome()" title="Refresh">
-        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      </button>`
-    : '';
   sec.innerHTML = `
     <div class="home-section-head">
       <div class="home-section-label">${esc(label)}</div>
-      ${viewAll}${rfBtn}
+      ${viewAll}
     </div>
     <div class="disc-strip-wrap">
       <button class="disc-arrow da-left da-hidden" onclick="discScrollBtn(this,-1)" aria-label="Scroll left">
@@ -2624,14 +2615,6 @@ function renderHomeSkeleton(wrap) {
   // Reset scroll on home load so hero is always at top
   if (vHome) vHome.scrollTop = 0;
 })();
-
-function refreshHome() {
-  const btn = document.getElementById('home-rf-btn');
-  if (btn) btn.classList.add('spinning');
-  loadDiscoverySections({ forceRefresh: true }).finally(() => {
-    setTimeout(() => { const b = document.getElementById('home-rf-btn'); if (b) b.classList.remove('spinning'); }, 400);
-  });
-}
 
 async function loadDiscoverySections({ forceRefresh = false } = {}) {
   const wrap = document.getElementById('discover-wrap');
