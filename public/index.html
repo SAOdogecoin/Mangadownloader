@@ -1232,9 +1232,11 @@ function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
   if (grid && !grid.children.length) {
     const tagItems = GENRES.filter(g => g.type === 'tag');
-    grid.innerHTML = tagItems.map(g =>
-      `<button class="genre-card" data-tid="${esc(g.id)}" onclick="selectGenreAndSearch('${esc(g.id)}')"><span class="genre-card-name">${esc(g.name)}</span></button>`
-    ).join('');
+    grid.innerHTML = tagItems.map(g => {
+      const cached = _genreCoverCache[g.id];
+      const bg = cached ? ` style="background-image:url('${proxyUrl(cached)}')"` : '';
+      return `<button class="genre-card" data-tid="${esc(g.id)}"${bg} onclick="selectGenreAndSearch('${esc(g.id)}')"><span class="genre-card-name">${esc(g.name)}</span></button>`;
+    }).join('');
     _preloadGenreCovers(tagItems);
   }
   renderRecentSearches();
@@ -2643,8 +2645,8 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
       const w = document.getElementById('discover-wrap');
       if (w) renderHomeData(data, w);
     }).catch(() => {});
-    // Silently preload genre covers in bg (delayed so home fetch completes first)
-    setTimeout(() => _preloadGenreCovers(GENRES.filter(g => g.type === 'tag')), 1500);
+    // Silently preload genre covers in bg (short delay so home render completes first)
+    setTimeout(() => _preloadGenreCovers(GENRES.filter(g => g.type === 'tag')), 800);
     return;
   }
   renderHomeSkeleton(wrap);
@@ -2657,7 +2659,7 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
       if (m.coverUrl) { const img = new Image(); img.src = proxyUrl(m.coverUrl, m.coverReferer); }
     });
     // Silently preload genre covers in bg after home data lands
-    setTimeout(() => _preloadGenreCovers(GENRES.filter(g => g.type === 'tag')), 1500);
+    setTimeout(() => _preloadGenreCovers(GENRES.filter(g => g.type === 'tag')), 800);
   } catch (e) {
     wrap.innerHTML = '';
   }
