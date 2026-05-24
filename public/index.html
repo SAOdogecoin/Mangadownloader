@@ -559,7 +559,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .genre-card{position:relative;height:110px;border:none;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--surf);background-size:cover;background-position:center;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .15s;font-family:inherit;padding:0}
 .genre-card::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.62) 100%);z-index:1}
 .genre-card:active{transform:scale(.96);opacity:.9}
-.genre-card-name{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;font-size:13px;font-weight:800;color:#fff;text-align:left;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);line-height:1.2}
+.genre-card-name{position:absolute;bottom:0;left:0;right:0;padding:10px 12px;font-size:16px;font-weight:800;color:#fff;text-align:left;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);line-height:1.2}
 .genre-card-skel{position:absolute;inset:0;background:var(--surf)}
 
 /* ─── THEME TOGGLE ─── (removed) ─── */
@@ -1180,14 +1180,15 @@ function _observeGenreCards() {
       if (!tid) return;
       _genreObs.unobserve(el);
       if (_genreCoverCache[tid]) { _applyGenreCover(el, _genreCoverCache[tid]); return; }
-      fetch(`/api/search?tagId=${encodeURIComponent(tid)}&limit=10&sort=rating`)
+      fetch(`/api/search?tagId=${encodeURIComponent(tid)}&limit=20&sort=rating`)
         .then(r => r.ok ? r.json() : null)
         .then(d => {
           const results = d?.results || [];
           if (!results.length) return;
-          // Stable varied pick per genre: hash the tag id → different index each genre
-          let h = 0; for (const c of tid) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
-          const url = results[h % results.length]?.coverUrl;
+          // Pick first result whose cover isn't already used by another genre
+          const usedUrls = new Set(Object.values(_genreCoverCache));
+          const pick = results.find(r => r.coverUrl && !usedUrls.has(r.coverUrl)) || results[0];
+          const url = pick?.coverUrl;
           if (url) { _genreCoverCache[tid] = url; _applyGenreCover(el, url); }
         }).catch(() => {});
     });
