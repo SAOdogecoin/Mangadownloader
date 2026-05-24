@@ -77,6 +77,8 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .btn-search:active{background:var(--blk-h);transform:scale(.96)}
 .btn-search svg{width:13px;height:13px;stroke:var(--blk-text);fill:none}
 .dso{display:none}
+/* Flying pill animation for search navigation */
+#search-nav-pill{pointer-events:none;position:fixed;border-radius:99px;background:#fff;border:1.5px solid var(--border);box-shadow:0 4px 20px -8px rgba(0,0,0,.18);z-index:99999;will-change:top,left,width,height;transition:top .34s cubic-bezier(.4,0,.2,1),left .34s cubic-bezier(.4,0,.2,1),width .34s cubic-bezier(.4,0,.2,1),height .34s cubic-bezier(.4,0,.2,1),opacity .34s cubic-bezier(.4,0,.2,1)}
 
 /* ─── LAYOUT ─── */
 /* app-body absolutely fills viewport so fixed topbar doesn't push it down */
@@ -904,21 +906,21 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .dsp-inner{max-width:900px;margin:0 auto}
   .dsp-input-wrap{position:relative;margin-bottom:14px}
   .dsp-input-wrap>svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
-  .dsp-input{width:100%;padding:11px 44px 11px 44px;border:1.5px solid var(--border);border-radius:99px;font:500 15px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s}
+  .dsp-input{width:100%;padding:11px 110px 11px 44px;border:1.5px solid var(--border);border-radius:99px;font:500 15px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s}
   .dsp-input:focus{border-color:#0a0a0a}
   .dsp-input::placeholder{color:var(--sub)}
-  .dsp-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;transition:color .15s}
+  .dsp-clear{position:absolute;right:106px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;transition:color .15s}
   .dsp-clear:hover{color:#0a0a0a;background:var(--surf)}
   .dsp-clear svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;position:static !important;transform:none !important}
-  .dsp-filter-row{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}
+  .dsp-search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);height:32px;padding:0 18px;background:#0a0a0a;color:#fff;border:none;border-radius:99px;font:700 13px 'Inter',sans-serif;cursor:pointer;transition:background .15s;white-space:nowrap;letter-spacing:-.005em;-webkit-tap-highlight-color:transparent}
+  .dsp-search-btn:hover{background:#333}
+  .dsp-filter-row{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-top:14px}
   .dsp-section{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
   .dsp-label{font:700 11px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);white-space:nowrap;flex-shrink:0}
   .dsp-pills{display:flex;flex-wrap:wrap;gap:5px}
   .dsp-pill{padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em}
   .dsp-pill:hover{background:var(--surf)}
   .dsp-pill.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
-  .dsp-search-btn{padding:9px 28px;background:#0a0a0a;color:#fff;border:none;border-radius:99px;font:700 13px 'Inter',sans-serif;cursor:pointer;transition:background .15s;flex-shrink:0;align-self:center;letter-spacing:-.005em}
-  .dsp-search-btn:hover{background:#333}
 }
 </style>
 </head>
@@ -935,7 +937,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
       <span>Library</span>
     </button>
-    <button data-route="search" onclick="navigate('search')">
+    <button data-route="search" onclick="navigateToSearch()">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>Search</span>
     </button>
@@ -985,6 +987,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
           <button id="dsp-clear-btn" class="dsp-clear" onclick="clearDspInput()" aria-label="Clear">
             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <button class="dsp-search-btn" onclick="applyDspSearch()">Search</button>
         </div>
         <div class="dsp-filter-row">
           <div class="dsp-section">
@@ -1007,7 +1010,6 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
               <button class="dsp-pill" data-status="cancelled" onclick="setDspStatus('cancelled')">Cancelled</button>
             </div>
           </div>
-          <button class="dsp-search-btn" onclick="applyDspSearch()">Search</button>
         </div>
       </div>
     </div>
@@ -1521,6 +1523,44 @@ function initDsp() {
   inp.value = q;
   onDspInputChange();
   syncDsp();
+}
+
+// ─── SEARCH NAV ANIMATION (topbar pill → DSP pill) ───
+function navigateToSearch() {
+  // Only animate on desktop and when coming from a non-search page
+  const isDesktop = window.innerWidth >= 900;
+  const alreadySearch = document.body.dataset.route === 'search';
+  if (!isDesktop || alreadySearch) { navigate('search'); return; }
+
+  const topbarWrap = document.querySelector('.topbar-search-desktop');
+  if (!topbarWrap) { navigate('search'); return; }
+
+  // Capture start rect before navigate hides it
+  const s = topbarWrap.getBoundingClientRect();
+
+  // Create flying pill at topbar position
+  const pill = document.createElement('div');
+  pill.id = 'search-nav-pill';
+  pill.style.cssText = `top:${s.top}px;left:${s.left}px;width:${s.width}px;height:${s.height}px;opacity:1`;
+  document.body.appendChild(pill);
+
+  // Navigate — topbar search hides, DSP becomes visible
+  navigate('search');
+
+  // Double rAF so DSP is measured after layout
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const dspWrap = document.querySelector('.dsp-input-wrap');
+    if (!dspWrap) { pill.remove(); return; }
+    const e = dspWrap.getBoundingClientRect();
+    pill.style.top    = e.top + 'px';
+    pill.style.left   = e.left + 'px';
+    pill.style.width  = e.width + 'px';
+    pill.style.height = e.height + 'px';
+    pill.style.opacity = '0';
+    const cleanup = () => pill.remove();
+    pill.addEventListener('transitionend', cleanup, { once: true });
+    setTimeout(cleanup, 700); // fallback
+  }));
 }
 
 // ─── SEARCH FILTER BAR ───
@@ -3964,7 +4004,7 @@ document.getElementById('v-library').addEventListener('scroll', function() {
     <nav class="topbar-desktop-nav">
       <button data-route="home" onclick="navigate('home')">Home</button>
       <button data-route="library" onclick="navigate('library')">Library</button>
-      <button class="genres-btn" onclick="navigate('search')">Genres</button>
+      <button class="genres-btn" onclick="navigateToSearch()">Genres</button>
     </nav>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
