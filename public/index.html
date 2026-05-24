@@ -1240,6 +1240,8 @@ const IDB = {
 // Utils
 // ═══════════════════════════════════════════════════════════════════
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+// escAttr: for values inside single-quoted JS onclick args — also escapes '
+function escAttr(s) { return esc(s).replace(/'/g, '&#39;'); }
 function proxyUrl(url, referer) {
   let u = `/api/proxy?url=${encodeURIComponent(url)}`;
   if (referer) u += `&referer=${encodeURIComponent(referer)}`;
@@ -3046,8 +3048,8 @@ async function renderPanel({ manga, chapters }) {
       const chLabel = ch.chapter ? `Ch.${ch.chapter}` : 'Oneshot';
       const chIdEsc = esc(ch.id);
       const mangaIdEsc = esc(manga.id);
-      const chNumEsc = esc(ch.chapter || '');
-      const chTitleEsc = esc(ch.title || '');
+      const chNumEsc = escAttr(ch.chapter || '');
+      const chTitleEsc = escAttr(ch.title || '');
       const sources = ch.sources || [];
       const isCurAny = ch.id === lastChId || sources.some(s => s.id === lastChId);
       const extBadge = `<span class="ch-external-badge"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Official</span>`;
@@ -3170,9 +3172,10 @@ function readFromStart() {
   }
   // Multiple groups — show picker
   _pendingGroupManga = currentMangaData;
+  _pendingGroups = groups; // store for index-based selectGroupByIdx
   const list = document.getElementById('group-picker-list');
-  list.innerHTML = groups.map(([name, cnt]) =>
-    `<div class="group-picker-item" onclick="selectGroup(${JSON.stringify(name)})">
+  list.innerHTML = groups.map(([name, cnt], i) =>
+    `<div class="group-picker-item" onclick="selectGroupByIdx(${i})">
       <span class="group-picker-name">${esc(name)}</span>
       <span class="group-picker-cnt">${cnt} ch</span>
     </div>`
@@ -3181,10 +3184,19 @@ function readFromStart() {
 }
 
 let _pendingGroupManga = null;
+let _pendingGroups = []; // [[name, cnt], ...] — used by selectGroupByIdx to avoid inline string escaping
 
 function closeGroupPicker() {
   document.getElementById('group-picker-ov').classList.add('hidden');
   _pendingGroupManga = null;
+  _pendingGroups = [];
+}
+
+// Called from onclick with numeric index — avoids any group name escaping issues
+function selectGroupByIdx(i) {
+  const entry = _pendingGroups[i];
+  if (!entry) return;
+  selectGroup(entry[0]);
 }
 
 function selectGroup(groupName) {
