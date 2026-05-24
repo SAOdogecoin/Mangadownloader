@@ -571,12 +571,22 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 /* ─── DETAIL COLLAPSED HEADER ─── */
 .panel-collapsed .panel-hdr{padding:10px 14px 8px;align-items:flex-start;border-bottom:1px solid var(--border)}
 .panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{display:none !important}
-.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{display:none !important}
-.panel-collapsed .panel-info{display:flex;flex-direction:column;gap:7px;padding-top:0;flex:1;min-width:0}
-.panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;-webkit-line-clamp:unset;line-height:1.25}
-.panel-collapsed .panel-action-row{flex-wrap:nowrap;gap:6px;margin-top:0;flex-shrink:0;align-self:flex-start}
-.panel-collapsed .panel-dl-btn span,.panel-collapsed .panel-start-btn span{display:inline !important}
-.panel-collapsed .panel-save-btn,.panel-collapsed .panel-dl-btn,.panel-collapsed .panel-start-btn{padding:6px 12px;font-size:12px}
+.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags{display:none !important}
+.panel-collapsed .panel-info{display:flex;flex-direction:row;align-items:center;gap:10px;padding-top:0;flex:1;min-width:0}
+.panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;-webkit-line-clamp:unset;line-height:1.25;flex:1;min-width:0}
+.panel-action-collapsed{display:none !important}
+.panel-collapsed .panel-action-collapsed{display:flex !important;gap:6px;flex-shrink:0;align-self:center}
+/* ─── DETAIL DESC SECTION ─── */
+.panel-desc-section{padding:14px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-desc-section .panel-desc{font-size:13px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.panel-desc-section .panel-desc.expanded{display:block;-webkit-line-clamp:unset}
+.panel-desc-section .panel-action-row{margin-top:14px}
+/* ─── HOME REFRESH ─── */
+.home-rf-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:50%;color:var(--sub);transition:color .15s;-webkit-tap-highlight-color:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.home-rf-btn:hover{color:var(--fg)}
+.home-rf-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .5s}
+.home-rf-btn.spinning svg{animation:spin360 .65s linear infinite}
+@keyframes spin360{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 /* ─── CHAPTER PAGINATION ─── */
 .ch-pagination-inline{display:flex;align-items:center;gap:6px}
 .ch-pg-btn{padding:6px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;color:var(--fg)}
@@ -964,6 +974,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       <div class="spin"></div> Loading…
     </div>
   </div>
+  <div class="panel-desc-section" id="panel-desc-section"></div>
   <div class="panel-body" id="panel-body"></div>
   <div class="panel-select-bar" id="panel-select-bar">
     <div class="fmt-toggle">
@@ -2247,6 +2258,7 @@ let _sectionIdx = 0;
 function renderDiscSection(label, items, container, sortKey, opts) {
   if (!items || !items.length) return;
   _sectionIdx++;
+  const isFirst = _sectionIdx === 1;
   const showChapter = opts?.showChapter || false;
   const cardsHtml = items.map(m => discCardHtml(m, showChapter)).join('');
   const sec = document.createElement('div');
@@ -2257,10 +2269,15 @@ function renderDiscSection(label, items, container, sortKey, opts) {
         <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
       </button>`
     : '';
+  const rfBtn = isFirst
+    ? `<button class="home-rf-btn" id="home-rf-btn" onclick="refreshHome()" title="Refresh">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>`
+    : '';
   sec.innerHTML = `
     <div class="home-section-head">
       <div class="home-section-label">${esc(label)}</div>
-      ${viewAll}
+      ${viewAll}${rfBtn}
     </div>
     <div class="disc-strip-wrap">
       <button class="disc-arrow da-left da-hidden" onclick="discScrollBtn(this,-1)" aria-label="Scroll left">
@@ -2593,6 +2610,14 @@ function renderHomeSkeleton(wrap) {
   if (vHome) vHome.scrollTop = 0;
 })();
 
+function refreshHome() {
+  const btn = document.getElementById('home-rf-btn');
+  if (btn) btn.classList.add('spinning');
+  loadDiscoverySections({ forceRefresh: true }).finally(() => {
+    setTimeout(() => { const b = document.getElementById('home-rf-btn'); if (b) b.classList.remove('spinning'); }, 400);
+  });
+}
+
 async function loadDiscoverySections({ forceRefresh = false } = {}) {
   const wrap = document.getElementById('discover-wrap');
   if (!wrap) return;
@@ -2650,21 +2675,32 @@ async function renderPanel({ manga, chapters }) {
       </div>
       ${manga.rating ? `<div class="panel-rating">${starsHtml(manga.rating)}<span class="star-num">${manga.rating.toFixed(1)}/10</span></div>` : ''}
       <div class="panel-tags">${tagsHtml}</div>
-      ${manga.description ? `<div class="panel-desc" id="panel-desc">${esc(manga.description.slice(0, 220))}${manga.description.length > 220 ? `<button class="btn-more-desc" onclick="expandDesc()" id="btn-more">More</button>` : ''}</div>` : ''}
-      <div class="panel-action-row">
-        <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
-          <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
-          <span>${isSaved ? 'Saved' : 'Add to Library'}</span>
-        </button>
-        <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
-          <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
-          <span>Download</span>
-        </button>
-        <button class="panel-start-btn" id="panel-start-btn" onclick="readFromStart()" title="Read from chapter 1">
+      <div class="panel-action-collapsed">
+        <button class="panel-start-btn" onclick="readFromStart()">
           <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-          <span>Read from Start</span>
+          <span>Read</span>
         </button>
       </div>
+    </div>`;
+
+  // Desc + action buttons in separate section below header
+  const shortDesc = manga.description ? manga.description.slice(0, 300) : '';
+  const hasMore = manga.description && manga.description.length > 300;
+  document.getElementById('panel-desc-section').innerHTML =
+    (manga.description ? `<div class="panel-desc" id="panel-desc">${esc(shortDesc)}${hasMore ? `<button class="btn-more-desc" onclick="expandDesc()" id="btn-more">See more</button>` : ''}</div>` : '') +
+    `<div class="panel-action-row">
+      <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
+        <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
+        <span>${isSaved ? 'Saved' : 'Add to Library'}</span>
+      </button>
+      <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
+        <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+        <span>Download</span>
+      </button>
+      <button class="panel-start-btn" id="panel-start-btn" onclick="readFromStart()">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        <span>Read from Start</span>
+      </button>
     </div>`;
 
   // Flatten chapters newest-first then paginate
@@ -2784,7 +2820,7 @@ async function renderPanel({ manga, chapters }) {
   // Suggested manga section
   document.getElementById('panel-body').insertAdjacentHTML('beforeend',
     `<div class="panel-suggested" id="panel-suggested">` +
-    `<div class="panel-suggested-title">More like this</div>` +
+    `<div class="panel-suggested-title">Recommended</div>` +
     `<div class="panel-suggested-strip" id="panel-suggested-strip"></div></div>`
   );
   loadSuggestedManga(manga);
@@ -2807,6 +2843,7 @@ function expandDesc() {
   const btn = document.getElementById('btn-more');
   if (!d || !currentMangaData) return;
   d.textContent = currentMangaData.manga.description;
+  d.classList.add('expanded');
   if (btn) btn.style.display = 'none';
 }
 
