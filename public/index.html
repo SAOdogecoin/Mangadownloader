@@ -215,9 +215,9 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .disc-ph{width:100%;height:100%;background:linear-gradient(135deg,var(--surf),rgba(255,255,255,.02));display:flex;align-items:center;justify-content:center}
 .disc-ph svg{width:22px;height:22px;stroke:var(--sub);fill:none;opacity:.5}
 .disc-rating-row{display:flex;align-items:center;gap:2px;margin-top:4px}
-.disc-rating-row .star{font-size:9px}
-.disc-rating-num{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:500;color:var(--sub);margin-left:2px;letter-spacing:.02em}
-.disc-title{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--fg);line-height:1.32;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;letter-spacing:-.005em}
+.disc-rating-row .star{font-size:11px}
+.disc-rating-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--sub);margin-left:2px;letter-spacing:.02em}
+.disc-title{margin-top:8px;font-size:13px;font-weight:600;color:var(--fg);line-height:1.32;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;letter-spacing:-.005em}
 .disc-chapter-badge{position:absolute;bottom:6px;left:6px;background:rgba(10,10,10,.75);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.02em;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:3}
 /* (lead variant removed — all cards same size now) */
 /* Skeleton state for home cards */
@@ -639,16 +639,16 @@ button.status-pill:hover{opacity:.75}
 .hd-thumb-wrap{flex-shrink:0;width:128px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 14px 32px -8px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.15)}
 .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
 .hd-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;max-width:100%}
-.hd-kicker{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;color:#0a0a0a;letter-spacing:.04em;opacity:.7}
-.hd-title{font-family:'Inter',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.025em;line-height:1.15;color:#0a0a0a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.hd-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:'Inter',sans-serif;font-size:11px;color:#0a0a0a;font-weight:600}
+.hd-kicker{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:#0a0a0a;letter-spacing:.03em;opacity:.7}
+.hd-title{font-family:'Inter',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.025em;line-height:1.15;color:#0a0a0a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hd-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:'Inter',sans-serif;font-size:13px;color:#0a0a0a;font-weight:600}
 .hd-rating{display:inline-flex;align-items:center;gap:3px}
 .hd-rating .stars{display:inline-flex;gap:1px}
 .hd-rating .star{color:#f59e0b;font-size:11px;line-height:1}
 .hd-rating-num{font-weight:800;font-variant-numeric:tabular-nums}
 .hd-author{color:rgba(0,0,0,.6);font-style:italic;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
 .hd-tags{display:flex;gap:6px;flex-wrap:wrap}
-.hd-tag{font-family:'Inter',sans-serif;font-size:9px;font-weight:700;letter-spacing:.06em;color:#0a0a0a;background:rgba(0,0,0,.08);padding:3px 7px;border-radius:99px}
+.hd-tag{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.02em;color:#0a0a0a;background:rgba(0,0,0,.08);padding:4px 9px;border-radius:99px}
 .hd-desc{display:none}
 /* Dot pagination */
 .hd-dots{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:6px;z-index:4}
@@ -701,9 +701,9 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .disc-card{width:200px;max-width:200px}
   .disc-strip{padding-left:24px;padding-right:24px}
   .stats-card{grid-template-columns:repeat(4,1fr);margin:6px 24px 2px}
-  .disc-title{font-size:13px;font-weight:700;letter-spacing:-.01em}
-  .disc-rating-row .star{font-size:11px}
-  .disc-rating-num{font-size:11px}
+  .disc-title{font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .disc-rating-row .star{font-size:12px}
+  .disc-rating-num{font-size:12px}
   .home-section-label{font-size:20px;font-weight:800;letter-spacing:-.02em}
   /* Bigger panel header on desktop */
   .panel-cover{width:180px;height:270px;border-radius:8px}
@@ -755,12 +755,12 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .hd-content{align-items:center;gap:32px;padding:60px 40px 40px}
   .hd-thumb-wrap{width:240px;border-radius:10px}
   .hd-info{gap:10px;max-width:760px}
-  .hd-kicker{font-size:13px;text-transform:none;letter-spacing:-.005em;opacity:1}
-  .hd-title{font-size:30px}
-  .hd-meta-row{font-size:12px}
-  .hd-rating .star{font-size:12px}
+  .hd-kicker{font-size:14px;text-transform:none;letter-spacing:-.005em;opacity:1}
+  .hd-title{font-size:36px}
+  .hd-meta-row{font-size:14px}
+  .hd-rating .star{font-size:14px}
   .hd-author{max-width:300px}
-  .hd-tag{font-size:10px;padding:4px 9px}
+  .hd-tag{font-size:11px;padding:5px 11px}
   .hd-desc{display:-webkit-box;font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;color:rgba(0,0,0,.75);-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:580px}
   .hd-dots{bottom:22px}
   /* Home view: hero starts at very top (behind topbar) — no top padding */
@@ -2312,8 +2312,12 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
   const cached = getHomeCache();
   if (cached && !forceRefresh) {
     renderHomeData(cached, wrap);
-    // silent background refresh
-    fetch('/api/home').then(r => r.json()).then(data => { setHomeCache(data); }).catch(() => {});
+    // silent background refresh — updates cache AND re-renders UI with fresh data
+    fetch('/api/home').then(r => r.json()).then(data => {
+      setHomeCache(data);
+      const w = document.getElementById('discover-wrap');
+      if (w) renderHomeData(data, w);
+    }).catch(() => {});
     return;
   }
   renderHomeSkeleton(wrap);
@@ -3365,6 +3369,10 @@ document.getElementById('v-library').addEventListener('scroll', function() {
   const initialRoute = location.hash.replace('#', '') || 'home';
   navigate(initialRoute, { pushState: false });
   if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
+  // Refresh home data every 5 minutes (only when on home tab)
+  setInterval(() => {
+    if (_currentRoute === 'home') loadDiscoverySections({ forceRefresh: true });
+  }, 5 * 60 * 1000);
 })();
 
 </script>
