@@ -536,11 +536,11 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 .topbar-r3, .nav-tabs-row{display:none !important}
 
 /* ─── BOTTOM TAB NAV (floating pill, centered, selected = black circle) ─── */
-.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:stretch;gap:6px;background:rgba(255,255,255,.4);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:8px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50;min-width:280px}
+.bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0));display:inline-flex;align-items:stretch;gap:4px;background:rgba(255,255,255,.4);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(0,0,0,.06);border-radius:99px;padding:5px;box-shadow:0 8px 32px -8px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.06);z-index:50;min-width:240px}
 @supports not (backdrop-filter:blur(1px)){.bnav{background:rgba(255,255,255,.92)}}
-.bnav-tab{flex:1;min-width:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 14px;background:none;border:none;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:-.005em;transition:background .18s,color .18s,transform .15s}
-.bnav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.bnav-tab[data-route="home"] svg{width:24px;height:24px}
+.bnav-tab{flex:1;min-width:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 12px;background:none;border:none;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:-.005em;transition:background .18s,color .18s,transform .15s}
+.bnav-tab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bnav-tab[data-route="home"] svg{width:22px;height:22px}
 .bnav-tab span{display:block;line-height:1}
 .bnav-tab:active{transform:scale(.94)}
 .bnav-tab.active{background:#0a0a0a;color:#fff;font-weight:700}
@@ -561,7 +561,24 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 /* ─── THEME TOGGLE ─── (removed) ─── */
 
 /* ─── PANEL ACTION ROW ─── */
+.panel-author{font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px;line-height:1.3}
+.panel-hdr{transition:padding .2s}
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+/* ─── DETAIL COLLAPSED HEADER ─── */
+.panel-collapsed .panel-hdr{padding:8px 14px;align-items:center;border-bottom:1px solid var(--border)}
+.panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{display:none !important}
+.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{display:none !important}
+.panel-collapsed .panel-info{display:flex;flex-direction:row;align-items:center;gap:10px;padding-top:0;flex:1;min-width:0}
+.panel-collapsed .panel-title{font-size:13px;font-weight:700;margin-bottom:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;-webkit-line-clamp:unset}
+.panel-collapsed .panel-action-row{flex-wrap:nowrap;gap:6px;margin-top:0;flex-shrink:0}
+.panel-collapsed .panel-dl-btn span,.panel-collapsed .panel-start-btn span{display:none}
+.panel-collapsed .panel-save-btn,.panel-collapsed .panel-dl-btn,.panel-collapsed .panel-start-btn{padding:6px 10px;font-size:11px}
+/* ─── CHAPTER PAGINATION ─── */
+.ch-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:2}
+.ch-pg-btn{padding:6px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;color:var(--fg)}
+.ch-pg-btn:hover:not(:disabled){border-color:#0a0a0a;background:#0a0a0a;color:#fff}
+.ch-pg-btn:disabled{opacity:.35;cursor:default}
+.ch-pg-info{font-size:12px;font-weight:600;color:var(--sub)}
 .panel-start-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:transparent;color:var(--fg);border:1.5px solid var(--fg);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .panel-start-btn:hover{background:var(--fg);color:#fff}
 .panel-start-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -1423,15 +1440,23 @@ function prefetchManga(id, source) {
   }).catch(() => { delete _mangaCache[key]; });
 }
 
+function chPageNav(page) {
+  _chapterPage = page;
+  if (currentMangaData) renderPanel(currentMangaData);
+  const pb = document.getElementById('panel-body');
+  if (pb) pb.scrollTop = 0;
+}
+
 async function openPanel(id, source) {
   source = source || 'mdex';
   _panelSource = source;
   currentMangaData = null;
   selectMode = false; selectedChIds.clear();
+  _chapterPage = 0;
   _prevRoute = _currentRoute;
   navigate('detail', { pushState: false });
   const panel = document.getElementById('panel');
-  if (panel) panel.scrollTop = 0;
+  if (panel) { panel.scrollTop = 0; panel.classList.remove('panel-collapsed'); }
   const panelBody = document.getElementById('panel-body');
   if (panelBody) panelBody.scrollTop = 0;
 
@@ -1760,6 +1785,8 @@ function mcCardHtml(m, badge) {
 
 let _currentRoute = 'home';
 let _prevRoute = 'home';
+let _chapterPage = 0;
+const CHAPTERS_PER_PAGE = 100;
 let _resetSearchOnReturn = false;
 
 function setSearchTitle(text) {
@@ -2398,7 +2425,7 @@ async function renderPanel({ manga, chapters }) {
     ${covHtml}
     <div class="panel-info">
       <div class="panel-title">${esc(manga.title)}</div>
-      ${manga.author ? `<div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px;line-height:1.3">${esc(manga.author)}</div>` : ''}
+      ${manga.author ? `<div class="panel-author">${esc(manga.author)}</div>` : ''}
       <div class="panel-meta">
         <button class="status-pill ${pillCls}" style="position:static;display:inline-block;margin-bottom:4px" onclick="closePanel();selectStatusSearch('${esc(manga.status)}')">${esc(manga.status)}</button>
         ${manga.year ? ' · ' + manga.year : ''}${manga.originalLanguage ? ' · ' + manga.originalLanguage.toUpperCase() : ''}
@@ -2409,46 +2436,69 @@ async function renderPanel({ manga, chapters }) {
       <div class="panel-action-row">
         <button class="panel-save-btn ${isSaved ? 'saved' : ''}" id="panel-save-btn" onclick="toggleSave()">
           <svg viewBox="0 0 24 24">${isSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
-          ${isSaved ? 'Saved' : 'Add to Library'}
+          <span>${isSaved ? 'Saved' : 'Add to Library'}</span>
         </button>
         <button class="panel-dl-btn" id="panel-dl-btn" onclick="toggleSelectMode()">
           <svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
-          Download
+          <span>Download</span>
         </button>
         <button class="panel-start-btn" id="panel-start-btn" onclick="readFromStart()" title="Read from chapter 1">
           <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-          Read from Start
+          <span>Read from Start</span>
         </button>
       </div>
     </div>`;
 
-  // Group chapters by volume — display newest first within each volume
-  const volumes = {};
-  for (const ch of chapters) {
-    const vol = ch.volume || 'No Volume';
-    if (!volumes[vol]) volumes[vol] = [];
-    volumes[vol].push(ch);
+  // Flatten chapters newest-first then paginate
+  const allChFlat = [];
+  {
+    const vols = {};
+    for (const ch of chapters) {
+      const vol = ch.volume || 'No Volume';
+      if (!vols[vol]) vols[vol] = [];
+      vols[vol].push(ch);
+    }
+    Object.keys(vols).forEach(k => vols[k] = vols[k].slice().reverse());
+    for (const [vol, chs] of Object.entries(vols).reverse()) {
+      chs.forEach(ch => allChFlat.push({...ch, _vol: vol}));
+    }
   }
-  // Reverse each volume's chapters so newest shows first
-  Object.keys(volumes).forEach(k => volumes[k] = volumes[k].slice().reverse());
-  // Reverse volume key order too (newer volumes first)
-  const volEntries = Object.entries(volumes).reverse();
 
   const savedData = await IDB.get(manga.id);
   const lastChId = savedData?.lastReadChapterId;
-
-  // Reset select mode + external URL map when panel re-renders
   selectMode = false; selectedChIds.clear(); _extChUrls.clear();
 
-  let chHtml = chapters.length ? `<div class="ch-actions-bar">
-    <span class="ch-count-label">${chapters.length} chapter${chapters.length !== 1 ? 's' : ''}</span>
+  const totalChs = allChFlat.length;
+  const totalPages = Math.ceil(totalChs / CHAPTERS_PER_PAGE) || 1;
+  const pageStart = _chapterPage * CHAPTERS_PER_PAGE;
+  const pageEnd = Math.min(pageStart + CHAPTERS_PER_PAGE, totalChs);
+  const pageChaps = allChFlat.slice(pageStart, pageEnd);
+
+  // Re-group page slice by volume (preserve order)
+  const pageVols = {};
+  const pageVolOrder = [];
+  for (const ch of pageChaps) {
+    if (!pageVols[ch._vol]) { pageVols[ch._vol] = []; pageVolOrder.push(ch._vol); }
+    pageVols[ch._vol].push(ch);
+  }
+  const hasMultiVol = pageVolOrder.length > 1;
+
+  const pgNav = () => totalPages > 1 ? `<div class="ch-pagination">
+    <button class="ch-pg-btn" onclick="chPageNav(${_chapterPage-1})" ${_chapterPage===0?'disabled':''}>← Prev</button>
+    <span class="ch-pg-info">${_chapterPage+1} / ${totalPages}</span>
+    <button class="ch-pg-btn" onclick="chPageNav(${_chapterPage+1})" ${_chapterPage>=totalPages-1?'disabled':''}>Next →</button>
+  </div>` : '';
+
+  let chHtml = totalChs > 0 ? `<div class="ch-actions-bar">
+    <span class="ch-count-label">${totalChs} chapter${totalChs!==1?'s':''}${totalPages>1?` · ${pageStart+1}–${pageEnd}`:''}</span>
     <button class="btn-select-all-icon" id="btn-select-all" onclick="selectAllChapters()" title="Select all">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8.5 11 12 15 15.5 11"/></svg>
     </button>
-  </div>` : '';
+  </div>${pgNav()}` : '';
 
-  for (const [vol, chs] of volEntries) {
-    if (Object.keys(volumes).length > 1 || vol !== 'No Volume') {
+  for (const vol of pageVolOrder) {
+    const chs = pageVols[vol];
+    if (hasMultiVol || vol !== 'No Volume') {
       chHtml += `<div class="ch-section-hdr">${vol === 'No Volume' ? 'Chapters' : `Volume ${esc(vol)}`}</div>`;
     }
     chHtml += chs.map(ch => {
@@ -2459,11 +2509,9 @@ async function renderPanel({ manga, chapters }) {
       const chTitleEsc = esc(ch.title || '');
       const sources = ch.sources || [];
       const isCurAny = ch.id === lastChId || sources.some(s => s.id === lastChId);
-
       const extBadge = `<span class="ch-external-badge"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Official</span>`;
 
       if (sources.length > 1) {
-        // ── Multi-source: tree display ──
         const grpId = `chgrp-${chIdEsc}`;
         const titlePart = ch.title ? ` — ${esc(ch.title)}` : '';
         const sourcesHtml = sources.map(s => {
@@ -2471,17 +2519,17 @@ async function renderPanel({ manga, chapters }) {
           const isCurSrc = s.id === lastChId;
           const isExt = !!s.externalUrl;
           if (isExt) _extChUrls.set(s.id, s.externalUrl);
-          return `<div class="ch-source${isCurSrc ? ' current-ch' : ''}${isExt ? ' is-external' : ''}" data-chid="${sIdEsc}" onclick="handleChRowClick('${sIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
+          return `<div class="ch-source${isCurSrc?' current-ch':''}${isExt?' is-external':''}" data-chid="${sIdEsc}" onclick="handleChRowClick('${sIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
             <div class="ch-tree-col"></div>
-            <span class="ch-source-flag">${langFlag(s.translatedLanguage)}<span class="ch-src-num">Ch.${chNumEsc || '?'}</span></span>
+            <span class="ch-source-flag">${langFlag(s.translatedLanguage)}<span class="ch-src-num">Ch.${chNumEsc||'?'}</span></span>
             <div class="ch-source-right">
-              <span class="ch-source-group">${esc(s.group || 'Unknown group')}${isExt ? ' ' + extBadge : ''}</span>
-              <span class="ch-source-time">${[s.publishAt ? timeAgo(s.publishAt) : '', s.pages ? s.pages + 'p' : ''].filter(Boolean).join(' · ')}</span>
+              <span class="ch-source-group">${esc(s.group||'Unknown group')}${isExt?' '+extBadge:''}</span>
+              <span class="ch-source-time">${[s.publishAt?timeAgo(s.publishAt):'',s.pages?s.pages+'p':''].filter(Boolean).join(' · ')}</span>
             </div>
             <div class="ch-checkbox" id="chk-${sIdEsc}" onclick="event.stopPropagation();toggleChSelect('${sIdEsc}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           </div>`;
         }).join('');
-        return `<div class="ch-group${isCurAny ? ' has-current' : ''}" id="${grpId}">
+        return `<div class="ch-group${isCurAny?' has-current':''}" id="${grpId}">
           <div class="ch-group-hdr" onclick="toggleChGroup('${grpId}')">
             <span class="ch-group-label">${chLabel}${titlePart}</span>
             <span class="ch-group-cnt">${sources.length} sources</span>
@@ -2490,23 +2538,24 @@ async function renderPanel({ manga, chapters }) {
           <div class="ch-sources-list">${sourcesHtml}</div>
         </div>`;
       } else {
-        // ── Single source: augmented row ──
         const isCur = ch.id === lastChId;
         const isExt = !!ch.externalUrl;
         if (isExt) _extChUrls.set(ch.id, ch.externalUrl);
         const flag = langFlag(ch.translatedLanguage);
         const time = timeAgo(ch.publishAt);
-        const rightMeta = [ch.group ? `<span class="ch-source-group">${esc(ch.group)}${isExt ? ' ' + extBadge : ''}</span>` : '', time ? `<span class="ch-source-time">${time}</span>` : ''].filter(Boolean).join('');
-        return `<div class="ch-row${isCur ? ' current-ch' : ''}${isExt ? ' is-external' : ''}" data-chid="${chIdEsc}" onclick="handleChRowClick('${chIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
+        const rightMeta = [ch.group?`<span class="ch-source-group">${esc(ch.group)}${isExt?' '+extBadge:''}</span>`:'',time?`<span class="ch-source-time">${time}</span>`:''].filter(Boolean).join('');
+        return `<div class="ch-row${isCur?' current-ch':''}${isExt?' is-external':''}" data-chid="${chIdEsc}" onclick="handleChRowClick('${chIdEsc}','${mangaIdEsc}','${chNumEsc}','${chTitleEsc}')">
           <div class="ch-row-info">
-            <div class="ch-num">${flag} ${chLabel}${ch.title ? ` — ${esc(ch.title)}` : ''}</div>
+            <div class="ch-num">${flag} ${chLabel}${ch.title?` — ${esc(ch.title)}`:''}</div>
           </div>
-          ${rightMeta ? `<div class="ch-row-right">${rightMeta}</div>` : ''}
+          ${rightMeta?`<div class="ch-row-right">${rightMeta}</div>`:''}
           <div class="ch-checkbox" id="chk-${chIdEsc}" onclick="event.stopPropagation();toggleChSelect('${chIdEsc}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
         </div>`;
       }
     }).join('');
   }
+
+  chHtml += pgNav();
 
   if (!chapters.length) {
     chHtml = '<div class="panel-loading"><div class="spin"></div> Searching alt source…</div>';
@@ -2615,7 +2664,7 @@ async function toggleSave() {
   const btn = document.getElementById('panel-save-btn');
   if (btn) {
     btn.className = `panel-save-btn${newSaved ? ' saved' : ''}`;
-    btn.innerHTML = `<svg viewBox="0 0 24 24">${newSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>${newSaved ? 'Saved' : 'Add to Library'}`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24">${newSaved ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg><span>${newSaved ? 'Saved' : 'Add to Library'}</span>`;
   }
 }
 
@@ -3348,6 +3397,12 @@ window.addEventListener('hashchange', () => {
   const route = location.hash.replace('#', '') || 'home';
   if (['home','library','search','genres'].includes(route)) navigate(route, { pushState: false });
 });
+
+// Panel body scroll → collapse header
+document.getElementById('panel-body').addEventListener('scroll', function() {
+  const panel = document.getElementById('panel');
+  if (panel) panel.classList.toggle('panel-collapsed', this.scrollTop > 80);
+}, { passive: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
 document.getElementById('search-body').addEventListener('scroll', function() {
