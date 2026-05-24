@@ -398,6 +398,31 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .tap-left{left:0}
 .tap-right{right:0}
 .tap-center{left:30%;right:30%;cursor:default}
+/* Reader title — click to return to detail */
+.reader-title-txt{cursor:pointer;transition:opacity .15s}
+.reader-title-txt:hover{opacity:.75}
+/* Double-page button — desktop only */
+.reader-double-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.reader-double-btn.active{background:var(--org)}
+.reader-double-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:900px){.reader-double-btn{display:flex}}
+/* Double page spread */
+.reader-img-wrap.double{gap:2px}
+.reader-img-wrap.double .reader-img{max-width:50%;max-height:100%;flex:1;min-width:0;object-fit:contain}
+/* Group picker */
+.group-picker-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:flex-end;justify-content:center}
+.group-picker-ov.hidden{display:none}
+.group-picker{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:72vh;overflow-y:auto;padding:20px 16px 40px}
+.group-picker-drag{width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 14px}
+.group-picker-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.group-picker-hdr-title{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.group-picker-close{width:28px;height:28px;border:none;background:var(--surf);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);-webkit-tap-highlight-color:transparent}
+.group-picker-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.group-picker-sub{font-size:12px;color:var(--sub);margin-bottom:14px;font-weight:500;line-height:1.5}
+.group-picker-item{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:12px;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.group-picker-item:hover,.group-picker-item:active{background:var(--surf)}
+.group-picker-name{font-size:14px;font-weight:700;color:var(--fg)}
+.group-picker-cnt{font-size:12px;font-weight:600;color:var(--sub);flex-shrink:0;margin-left:8px}
 
 
 /* ─── TOC PANEL ─── */
@@ -573,13 +598,17 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-hdr{transition:padding .2s}
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 /* ─── DETAIL COLLAPSED HEADER ─── */
-.panel-collapsed .panel-hdr{padding:10px 14px 8px;align-items:center;border-bottom:1px solid var(--border)}
+.panel-collapsed .panel-hdr{padding:10px 14px 10px;flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border)}
 .panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{display:none !important}
-.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc,.panel-collapsed .panel-action-row{display:none !important}
-.panel-collapsed .panel-info{position:relative;flex:1;min-width:0;padding-top:0;overflow:hidden;display:block !important}
-.panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block !important;-webkit-line-clamp:unset !important;line-height:1.25;padding-right:86px}
+.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{display:none !important}
+.panel-collapsed .panel-info{display:block !important;flex:none;width:100%;padding-top:0;overflow:visible}
+.panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:8px;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
+.panel-collapsed .panel-action-row{flex-wrap:nowrap !important;margin-top:0;gap:6px;display:flex !important;flex-direction:row !important}
+.panel-collapsed .panel-action-row button span{display:none !important}
+.panel-collapsed .panel-action-row button{padding:8px 10px !important;gap:0 !important;flex-shrink:0;min-width:36px;justify-content:center}
 .panel-action-collapsed{display:none !important}
-.panel-collapsed .panel-action-collapsed{display:flex !important;gap:6px;position:absolute;right:0;top:50%;transform:translateY(-50%);background:var(--card);padding-left:8px}
+.panel-collapsed .panel-action-collapsed{display:none !important}
+body[data-route="detail"] .panel-collapsed .panel-hdr{padding-top:10px !important}
 /* ─── DETAIL DESC SECTION ─── */
 .panel-desc-section{padding:14px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-desc-section .panel-desc{font-size:13px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
@@ -594,10 +623,10 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-start-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:transparent;color:var(--fg);border:1.5px solid var(--fg);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .panel-start-btn:hover{background:var(--fg);color:#fff}
 .panel-start-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:#fff;color:var(--fg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
-.panel-dl-btn:hover{background:var(--surf);border-color:rgba(0,0,0,.25)}
-.panel-dl-btn.active{background:var(--surf);color:var(--fg);border-color:rgba(0,0,0,.25)}
-.panel-dl-btn svg{width:12px;height:12px;stroke:currentColor;fill:none}
+.panel-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:transparent;color:var(--fg);border:1.5px solid var(--fg);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.panel-dl-btn:hover{background:var(--fg);color:#fff}
+.panel-dl-btn.active{background:var(--fg);color:#fff}
+.panel-dl-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ─── FORMAT TOGGLE ─── */
 .fmt-toggle{display:flex;background:var(--surf);border-radius:8px;overflow:hidden;flex-shrink:0;padding:2px;gap:2px}
@@ -837,8 +866,13 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .sf-bar{padding:10px 24px 8px}
   /* Genres section visible on desktop search (sidebar gone); JS hidden class still works */
   #v-search .search-genres-section:not(.hidden){display:block}
-  .genre-grid{grid-template-columns:repeat(6,1fr);gap:12px}
-  .genre-card{height:155px}
+  .genre-grid{grid-template-columns:repeat(6,1fr);gap:14px}
+  .genre-card{height:190px}
+  .genre-card-name{font-size:18px;padding:12px 14px}
+  /* Bigger result cards on desktop */
+  .results-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px;padding:24px}
+  .result-title{font-size:13px}
+  .result-cover-wrap{border-radius:8px}
 
   /* Hide search page's own header on desktop (topbar has the search bar) */
   #v-search .search-page-hdr{display:none}
@@ -866,10 +900,14 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   /* Download bar centered on desktop */
   .panel-select-bar{justify-content:center;padding:10px 24px}
   .btn-dl-selected{flex:none;min-width:260px}
-  /* Desktop collapsed panel: bigger title + buttons */
-  .panel-collapsed .panel-hdr{padding:14px 24px 12px}
-  .panel-collapsed .panel-title{font-size:22px}
+  /* Desktop collapsed panel: restore row layout + bigger title + action btn */
+  .panel-collapsed .panel-hdr{padding:14px 24px 12px;flex-direction:row !important;align-items:center}
+  .panel-collapsed .panel-action-row{display:none !important}
+  .panel-collapsed .panel-info{display:flex !important;flex:1 !important;width:auto !important;flex-direction:row !important;align-items:center !important;gap:16px;min-width:0}
+  .panel-collapsed .panel-title{font-size:22px;margin-bottom:0 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;flex:1;min-width:0}
+  .panel-collapsed .panel-action-collapsed{display:flex !important;gap:8px;flex-shrink:0;position:static !important;transform:none !important;background:none !important;padding-left:0 !important}
   .panel-collapsed .panel-save-btn,.panel-collapsed .panel-dl-btn,.panel-collapsed .panel-start-btn{padding:9px 20px;font-size:14px}
+  body[data-route="detail"] .panel-collapsed .panel-hdr{padding-top:14px !important}
 
   /* ─── DESKTOP SEARCH OVERLAY ─── */
   .dso{position:absolute;top:100%;left:0;right:0;background:#fff;border-bottom:1.5px solid var(--border);box-shadow:0 16px 40px -8px rgba(0,0,0,.14);z-index:9998;padding:20px 32px 24px}
@@ -1099,11 +1137,14 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       Back
     </button>
     <div class="reader-meta">
-      <div class="reader-title-txt" id="reader-title"></div>
+      <div class="reader-title-txt" id="reader-title" onclick="closeReader()" title="Back to manga details"></div>
       <div class="reader-ch-txt" id="reader-ch"></div>
     </div>
     <button class="reader-mode-btn" id="reader-mode-btn" onclick="toggleReadMode()" title="Toggle reading mode" aria-label="Toggle reading mode">
       <svg id="reader-mode-icon" viewBox="0 0 24 24"></svg>
+    </button>
+    <button class="reader-double-btn" id="reader-double-btn" onclick="toggleDoubleMode()" title="Double page spread" aria-label="Double page spread">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="9" height="16" rx="1"/><rect x="13" y="4" width="9" height="16" rx="1"/></svg>
     </button>
     <button class="reader-toc-btn" onclick="openToc()" title="Chapters" aria-label="Chapters list">
       <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1151,6 +1192,19 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="toc-list" id="toc-list"></div>
+  </div>
+</div>
+
+<!-- Group picker -->
+<div class="group-picker-ov hidden" id="group-picker-ov">
+  <div class="group-picker">
+    <div class="group-picker-drag"></div>
+    <div class="group-picker-hdr">
+      <span class="group-picker-hdr-title">Choose reading group</span>
+      <button class="group-picker-close" onclick="closeGroupPicker()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <p class="group-picker-sub">Reader follows this group's chapters. Finishing returns you to the manga details.</p>
+    <div id="group-picker-list"></div>
   </div>
 </div>
 
@@ -3049,11 +3103,13 @@ async function renderPanel({ manga, chapters }) {
   }
 
   document.getElementById('panel-body').innerHTML =
-    `<div class="panel-ch-wrap">${chHtml}</div>` +
+    `<div class="panel-ch-wrap" id="panel-ch-wrap">${chHtml}</div>` +
     `<div class="panel-suggested" id="panel-suggested">` +
     `<div class="panel-suggested-title">More like this</div>` +
     `<div class="panel-suggested-strip" id="panel-suggested-strip"></div></div>`;
   loadSuggestedManga(manga);
+
+  // Desktop scroll handled by global capture listener below
 
   // Auto-search alt source when MangaDex has no chapters
   if (!chapters.length) searchAltForManga(manga.title || '');
@@ -3089,16 +3145,66 @@ function closePanel() {
 
 // Swipe-to-close removed — panel is now a full-page view
 
-// Start reading from chapter 1 (oldest)
+// Start reading from chapter 1 — shows group picker if multiple scanlation groups exist
 function readFromStart() {
   if (!currentMangaData?.manga || !currentMangaData?.chapters?.length) {
     showToast('Wait for chapters to load');
     return;
   }
-  // Internal chapter array is ascending (oldest first) → index 0 = first chapter
-  const first = currentMangaData.chapters[0];
-  readerState.chapterListIdx = 0;
-  startRead(currentMangaData.manga.id, first.id, first.chapter || '1', first.title || '');
+  // Collect unique scanlation groups across all chapters
+  const groupMap = {};
+  for (const ch of currentMangaData.chapters) {
+    if (ch.sources?.length) {
+      ch.sources.forEach(s => { if (s.group) groupMap[s.group] = (groupMap[s.group] || 0) + 1; });
+    } else if (ch.group) {
+      groupMap[ch.group] = (groupMap[ch.group] || 0) + 1;
+    }
+  }
+  const groups = Object.entries(groupMap).sort((a, b) => b[1] - a[1]);
+  if (groups.length <= 1) {
+    // 0 or 1 group — start directly without picker
+    readerState._groupChapters = null;
+    const first = currentMangaData.chapters[0];
+    startRead(currentMangaData.manga.id, first.id, first.chapter || '1', first.title || '');
+    return;
+  }
+  // Multiple groups — show picker
+  _pendingGroupManga = currentMangaData;
+  const list = document.getElementById('group-picker-list');
+  list.innerHTML = groups.map(([name, cnt]) =>
+    `<div class="group-picker-item" onclick="selectGroup(${JSON.stringify(name)})">
+      <span class="group-picker-name">${esc(name)}</span>
+      <span class="group-picker-cnt">${cnt} ch</span>
+    </div>`
+  ).join('');
+  document.getElementById('group-picker-ov').classList.remove('hidden');
+}
+
+let _pendingGroupManga = null;
+
+function closeGroupPicker() {
+  document.getElementById('group-picker-ov').classList.add('hidden');
+  _pendingGroupManga = null;
+}
+
+function selectGroup(groupName) {
+  const data = _pendingGroupManga;
+  closeGroupPicker();
+  if (!data) return;
+  // Build chapter list filtered to this group, keeping ascending order
+  const filtered = [];
+  for (const ch of data.chapters) {
+    if (ch.sources?.length) {
+      const src = ch.sources.find(s => s.group === groupName);
+      if (src) filtered.push({ id: src.id, chapter: ch.chapter, title: ch.title || '', group: src.group, volume: ch.volume, translatedLanguage: src.translatedLanguage });
+    } else if (ch.group === groupName) {
+      filtered.push(ch);
+    }
+  }
+  if (!filtered.length) { showToast('No chapters from this group'); return; }
+  readerState._groupChapters = filtered;
+  const first = filtered[0];
+  startRead(data.manga.id, first.id, first.chapter || '1', first.title || '');
 }
 
 // Search alt source by title, show results inline in panel body
@@ -3322,8 +3428,10 @@ let readerState = {
   pageIdx: 0,
   isRTL: false,
   isVertical: false,    // webtoon/manhua scroll mode
+  isDouble: false,      // double-page spread (desktop only)
   chapters: [],         // full chapter list for navigation
   chapterListIdx: 0,    // index in chapters array
+  _groupChapters: null, // filtered chapters when reading a specific group
   topBarVisible: true,
   topBarTimer: null
 };
@@ -3334,7 +3442,7 @@ function detectVerticalMode(manga) {
   // 1. User preference override (per-manga)
   const pref = getReadModePref(manga.id);
   if (pref === 'vertical') return true;
-  if (pref === 'horizontal') return false;
+  if (pref === 'horizontal' || pref === 'double') return false;
   // 2. Auto-detect from tags
   const tags = (manga.tags || []).map(t => (t.name || t || '').toLowerCase()).join(' ');
   if (/long.?strip|webtoon|manhua|manhwa/.test(tags)) return true;
@@ -3372,7 +3480,24 @@ function updateModeIcon() {
   }
 }
 
+function toggleDoubleMode() {
+  readerState.isDouble = !readerState.isDouble;
+  if (readerState.isDouble) {
+    readerState.isVertical = false;
+    document.getElementById('reader-area').classList.remove('vertical');
+    document.getElementById('reader-overlay').classList.remove('vmode');
+    updateModeIcon();
+    setReadModePref(readerState.mangaId, 'double');
+  } else {
+    setReadModePref(readerState.mangaId, 'horizontal');
+  }
+  document.getElementById('reader-double-btn').classList.toggle('active', readerState.isDouble);
+  showPage(readerState.pageIdx);
+}
+
 function toggleReadMode() {
+  readerState.isDouble = false;
+  document.getElementById('reader-double-btn')?.classList.remove('active');
   readerState.isVertical = !readerState.isVertical;
   setReadModePref(readerState.mangaId, readerState.isVertical ? 'vertical' : 'horizontal');
 
@@ -3398,8 +3523,14 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   readerState.pageIdx = saved?.lastReadChapterId === chapterId ? (saved.lastReadPage || 0) : 0;
   readerState.isRTL = (saved?.originalLanguage || currentMangaData?.manga?.originalLanguage || 'ja') === 'ja';
   readerState.isVertical = detectVerticalMode(currentMangaData?.manga);
-  readerState.chapters = currentMangaData?.chapters || [];
+  // Group-filtered chapters override full list
+  readerState.chapters = readerState._groupChapters || currentMangaData?.chapters || [];
   readerState.chapterListIdx = readerState.chapters.findIndex(c => c.id === chapterId);
+  // Double page mode (desktop only, from saved preference)
+  const _mpref = getReadModePref(mangaId);
+  readerState.isDouble = _mpref === 'double' && window.innerWidth >= 900;
+  if (readerState.isDouble) readerState.isVertical = false;
+  document.getElementById('reader-double-btn')?.classList.toggle('active', readerState.isDouble);
 
   // Toggle vertical class on reader-area AND overlay (tap-zones are overlay children)
   document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
@@ -3512,8 +3643,40 @@ function showPage(idx) {
 
   if (isVertical) return showVertical(idx);
 
-  const url = proxyUrl(pages[idx]); // proxy handles referer inference from hostname
   const wrap = document.getElementById('reader-img-wrap');
+
+  // ── Double page spread ──
+  if (readerState.isDouble) {
+    wrap.classList.add('double');
+    const idx2 = idx + 1;
+    const hasSecond = idx2 < pages.length;
+    wrap.innerHTML = '<div class="reader-page-loading"><div class="reader-spin"></div>Loading…</div>';
+    const di1 = new Image(); di1.className = 'reader-img'; di1.alt = '';
+    const di2 = hasSecond ? new Image() : null;
+    if (di2) { di2.className = 'reader-img'; di2.alt = ''; }
+    let _dloaded = 0; const _dneed = hasSecond ? 2 : 1;
+    const _dshow = () => {
+      if (++_dloaded < _dneed) return;
+      wrap.innerHTML = '';
+      // RTL: page[idx] on right, page[idx+1] on left
+      if (isRTL && di2) { wrap.appendChild(di2); wrap.appendChild(di1); }
+      else { wrap.appendChild(di1); if (di2) wrap.appendChild(di2); }
+    };
+    di1.onload = _dshow;
+    di1.onerror = () => { const fb = readerState.pagesFallback?.[idx]; if (fb && di1.src !== proxyUrl(fb)) di1.src = proxyUrl(fb); else _dshow(); };
+    di1.src = proxyUrl(pages[idx]);
+    if (di2) { di2.onload = _dshow; di2.onerror = _dshow; di2.src = proxyUrl(pages[idx2]); }
+    const tot = pages.length;
+    const dispEnd = Math.min(idx2, tot - 1) + 1;
+    document.getElementById('reader-pg-counter').textContent = hasSecond ? `${idx+1}–${dispEnd} / ${tot}` : `${idx+1} / ${tot}`;
+    document.getElementById('progress-fill').style.width = (tot > 1 ? (idx / (tot - 1)) * 100 : 100) + '%';
+    updateReaderUrl(); updateChNav(); updateNextChBtn();
+    saveProgress(readerState.mangaId, readerState.chapterId, readerState.chapterNum, idx);
+    return;
+  }
+
+  wrap.classList.remove('double');
+  const url = proxyUrl(pages[idx]); // proxy handles referer inference from hostname
 
   // Show spinner while loading
   wrap.innerHTML = `<div class="reader-page-loading"><div class="reader-spin"></div>Loading…</div>`;
@@ -3693,13 +3856,14 @@ function getReadHistory() {
 }
 
 function pageNav(dir) {
-  const { pages, pageIdx, isRTL, isVertical } = readerState;
+  const { pages, pageIdx, isRTL, isVertical, isDouble } = readerState;
   if (!pages.length) return;
   if (isVertical) return; // vertical mode uses scroll, not tap/swipe nav
   // RTL: left = next, right = prev
+  const step = isDouble ? 2 : 1;
   let next;
-  if (dir === 'next') next = isRTL ? pageIdx - 1 : pageIdx + 1;
-  else next = isRTL ? pageIdx + 1 : pageIdx - 1;
+  if (dir === 'next') next = isRTL ? pageIdx - step : pageIdx + step;
+  else next = isRTL ? pageIdx + step : pageIdx - step;
 
   if (next < 0 || next >= pages.length) return;
   showPage(next);
@@ -3707,9 +3871,12 @@ function pageNav(dir) {
 }
 
 async function goNextChapter() {
-  const { chapters, chapterListIdx, mangaId } = readerState;
+  const { chapters, chapterListIdx, mangaId, _groupChapters } = readerState;
   const nextCh = chapters[chapterListIdx + 1];
-  if (!nextCh) return;
+  if (!nextCh) {
+    if (_groupChapters) closeReader(); // end of group → back to detail page
+    return;
+  }
   const btn = document.getElementById('next-ch-btn');
   if (btn) btn.style.display = 'none';
   await startRead(mangaId, nextCh.id, nextCh.chapter || '', nextCh.title || '');
@@ -3723,15 +3890,19 @@ async function goPrevChapter() {
 }
 
 function updateNextChBtn() {
-  const { pages, pageIdx, isRTL, chapterListIdx, chapters } = readerState;
+  const { pages, pageIdx, isRTL, isDouble, chapterListIdx, chapters, _groupChapters } = readerState;
   if (!pages.length) return;
-  const atEnd = pageIdx === pages.length - 1;
+  const atEnd = isDouble ? pageIdx >= pages.length - 2 : pageIdx === pages.length - 1;
   const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
+  const isGroupEnd = !!_groupChapters && !hasNext;
   const btn = document.getElementById('next-ch-btn');
   if (btn) {
-    btn.style.display = atEnd && hasNext ? 'block' : 'none';
-    // Arrow points toward the direction of the next chapter tap zone
-    btn.textContent = isRTL ? '← Next Chapter' : 'Next Chapter →';
+    btn.style.display = atEnd && (hasNext || isGroupEnd) ? 'block' : 'none';
+    if (isGroupEnd) {
+      btn.textContent = '↩ Back to Manga';
+    } else {
+      btn.textContent = isRTL ? '← Next Chapter' : 'Next Chapter →';
+    }
   }
 }
 
@@ -3776,6 +3947,7 @@ function updateReaderUrl() {
 }
 
 function closeReader() {
+  readerState._groupChapters = null; // clear group reading filter
   document.getElementById('reader-overlay').classList.add('hidden');
   document.body.classList.remove('reader-open');
   document.getElementById('reader-overlay').classList.remove('vmode');
@@ -3897,7 +4069,7 @@ window.addEventListener('hashchange', () => {
   if (['home','library','search','genres'].includes(hash)) navigate(hash, { pushState: false });
 });
 
-// Panel body scroll → collapse header
+// Panel body scroll → collapse header (mobile: panel-body scrolls)
 document.getElementById('panel-body').addEventListener('scroll', function() {
   const panel = document.getElementById('panel');
   if (panel) panel.classList.toggle('panel-collapsed', this.scrollTop > 80);
@@ -3905,6 +4077,14 @@ document.getElementById('panel-body').addEventListener('scroll', function() {
     document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 40);
   }
 }, { passive: true });
+
+// Desktop: panel-ch-wrap scroll → collapse header (capture phase — survives innerHTML resets)
+document.addEventListener('scroll', function(e) {
+  if (!e.target || e.target.id !== 'panel-ch-wrap') return;
+  const panel = document.getElementById('panel');
+  if (panel) panel.classList.toggle('panel-collapsed', e.target.scrollTop > 80);
+  document.querySelector('.topbar')?.classList.toggle('topbar-scrolled', e.target.scrollTop > 40);
+}, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
 document.getElementById('search-body').addEventListener('scroll', function() {
