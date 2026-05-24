@@ -17,7 +17,8 @@ function mapMangaItem(m, statsMap = {}) {
   const latestChRel = (m.relationships || []).find(r => r.type === 'chapter');
   const lastChapter = latestChRel?.attributes?.chapter || attrs.lastChapter || null;
   const latestChapterAt = latestChRel?.attributes?.publishAt || null;
-  return { id: m.id, title, description, coverUrl, status: statusMap[attrs.status] || 'ongoing', year: attrs.year || null, tags, rating, lastChapter, latestChapterAt };
+  const group = m._chGroup || null;
+  return { id: m.id, title, description, coverUrl, status: statusMap[attrs.status] || 'ongoing', year: attrs.year || null, tags, rating, lastChapter, latestChapterAt, group };
 }
 
 async function fetchAuthorIds(q) {
@@ -84,18 +85,35 @@ module.exports = async (req, res) => {
       if (!seen.has(m.id)) { seen.add(m.id); merged.push(m); }
     }
 
-    // Fetch stats for all
+    // Fetch stats + (for latest-updates sort) scanlation groups in parallel
     const ids = merged.map(m => m.id);
     let statsMap = {};
-    if (ids.length) {
-      try {
-        const statsRes = await fetch(
-          `${BASE}/statistics/manga?${ids.map(id => `manga[]=${id}`).join('&')}`,
-          { headers: HEADERS }
-        );
-        if (statsRes.ok) statsMap = (await statsRes.json()).statistics || {};
-      } catch (_) {}
+
+    // For latestUploadedChapter sort, batch-fetch chapters to get scanlation group
+    const chIdToManga = {};
+    if (sort === 'latestUploadedChapter') {
+      merged.forEach(m => {
+        const chRel = (m.relationships || []).find(r => r.type === 'chapter');
+        if (chRel?.id) chIdToManga[chRel.id] = m;
+      });
     }
+    const chapterIds = Object.keys(chIdToManga);
+
+    const [statsRes, chapRes] = await Promise.all([
+      ids.length ? fetch(`${BASE}/statistics/manga?${ids.map(id => `manga[]=${id}`).join('&')}`, { headers: HEADERS }).catch(() => null) : Promise.resolve(null),
+      chapterIds.length ? fetch(`${BASE}/chapter?${chapterIds.map(id => `ids[]=${id}`).join('&')}&includes[]=scanlation_group&limit=100`, { headers: HEADERS }).catch(() => null) : Promise.resolve(null)
+    ]);
+
+    try { if (statsRes?.ok) statsMap = (await statsRes.json()).statistics || {}; } catch (_) {}
+    try {
+      if (chapRes?.ok) {
+        const chapData = await chapRes.json();
+        (chapData.data || []).forEach(ch => {
+          const grp = (ch.relationships || []).find(r => r.type === 'scanlation_group');
+          if (grp?.attributes?.name && chIdToManga[ch.id]) chIdToManga[ch.id]._chGroup = grp.attributes.name;
+        });
+      }
+    } catch (_) {}
 
     const results = merged.map(m => mapMangaItem(m, statsMap));
 

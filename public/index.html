@@ -398,8 +398,8 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 /* ─── TOC PANEL ─── */
 .toc-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:110;display:none}
 .toc-bg.open{display:block}
-.toc-panel{position:fixed;bottom:0;left:0;right:0;max-height:72vh;background:var(--card);border-radius:18px 18px 0 0;z-index:111;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
-.toc-panel.open{transform:translateY(0)}
+.toc-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,85vw);background:var(--card);border-radius:0 18px 18px 0;z-index:111;display:flex;flex-direction:column;overflow:hidden;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.toc-panel.open{transform:translateX(0)}
 .toc-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .toc-title-label{font-size:13px;font-weight:800;color:var(--fg)}
 .toc-close{background:none;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);-webkit-tap-highlight-color:transparent}
@@ -643,7 +643,7 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
-.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.55) 55%,rgba(255,255,255,.15) 100%);pointer-events:none}
+.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.99) 0%,rgba(255,255,255,.93) 60%,rgba(255,255,255,.65) 100%);pointer-events:none}
 .hd-content{position:relative;height:100%;display:flex;align-items:flex-start;gap:16px;padding:52px 16px 18px;z-index:2}
 .hd-thumb-wrap{flex-shrink:0;width:128px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 14px 32px -8px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.15)}
 .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
@@ -765,8 +765,8 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .hd-content{align-items:center;gap:32px;padding:60px 40px 40px}
   .hd-thumb-wrap{width:240px;border-radius:10px}
   .hd-info{gap:10px;max-width:760px}
-  .hd-kicker{font-size:18px;text-transform:none;letter-spacing:-.005em;opacity:1}
-  .hd-title{font-size:48px}
+  .hd-kicker{font-size:22px;text-transform:none;letter-spacing:-.005em;opacity:1}
+  .hd-title{font-size:56px}
   .hd-meta-row{font-size:14px}
   .hd-rating .star{font-size:14px}
   .hd-author{max-width:300px}
@@ -1687,20 +1687,33 @@ function resultCardHtml(r) {
     ? `<img class="result-cover" src="${esc(proxyUrl(r.coverUrl))}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=result-cover-ph><svg viewBox=\\'0 0 24 24\\'><path d=\\'M4 19.5A2.5 2.5 0 0 1 6.5 17H20\\'/><path d=\\'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\\'/></svg></div>'">`
     : `<div class="result-cover-ph"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>`;
   _previewCache[r.id] = r;
-  const tagBtns = (r.tags || []).slice(0, 2).map(t =>
-    `<button class="tag-pill" onclick="event.stopPropagation();selectGenreAndSearch('${esc(t.id)}')">${esc(t.name)}</button>`
-  ).join('');
-  return `<div class="result-card" onmouseenter="prefetchManga('${esc(r.id)}','${_searchSource}')" ontouchstart="prefetchManga('${esc(r.id)}','${_searchSource}')" onclick="openPanel('${esc(r.id)}','${_searchSource}')">
+  const cardOpen = `<div class="result-card" onmouseenter="prefetchManga('${esc(r.id)}','${_searchSource}')" ontouchstart="prefetchManga('${esc(r.id)}','${_searchSource}')" onclick="openPanel('${esc(r.id)}','${_searchSource}')">
     <div class="result-cover-wrap">
       ${imgHtml}
       <button class="status-pill ${pillCls}" onclick="event.stopPropagation();selectStatusSearch('${esc(r.status)}')">${esc(r.status)}</button>
     </div>
-    <div class="result-title">${esc(r.title)}</div>
-    ${r.year ? `<div class="result-meta">${r.year}</div>` : ''}
-    <div class="panel-tags" style="margin-top:4px;margin-bottom:0">${tagBtns}</div>
-    ${ratingRowHtml(r.rating)}
-    ${r.lastChapter ? `<div class="result-meta" style="color:var(--org-text);font-weight:700;margin-top:2px">Ch.${esc(r.lastChapter)}${r.latestChapterAt ? '<span style="color:var(--sub);font-weight:500;font-size:10px"> · ' + timeAgo(r.latestChapterAt) + '</span>' : ''}</div>` : ''}
-  </div>`;
+    <div class="result-title">${esc(r.title)}</div>`;
+
+  // Latest updates view: show chapter + date + group (no tags/year)
+  if (lastSort === 'latestUploadedChapter') {
+    const chNum = r.lastChapter ? `Ch.${esc(r.lastChapter)}` : '';
+    const dateStr = r.latestChapterAt ? timeAgo(r.latestChapterAt) : '';
+    return cardOpen +
+      (chNum || dateStr ? `<div class="result-meta" style="margin-top:4px;font-weight:700;color:var(--org-text)">${chNum}${chNum && dateStr ? `<span style="font-weight:500;color:var(--sub)"> · ${dateStr}</span>` : dateStr}</div>` : '') +
+      (r.group ? `<div class="result-meta" style="margin-top:3px;font-size:11px;font-weight:600;color:var(--fg)">${esc(r.group)}</div>` : '') +
+    `</div>`;
+  }
+
+  // Normal render (search + other view-all sections)
+  const tagBtns = (r.tags || []).slice(0, 2).map(t =>
+    `<button class="tag-pill" onclick="event.stopPropagation();selectGenreAndSearch('${esc(t.id)}')">${esc(t.name)}</button>`
+  ).join('');
+  return cardOpen +
+    (r.year ? `<div class="result-meta">${r.year}</div>` : '') +
+    `<div class="panel-tags" style="margin-top:4px;margin-bottom:0">${tagBtns}</div>` +
+    ratingRowHtml(r.rating) +
+    (r.lastChapter ? `<div class="result-meta" style="color:var(--org-text);font-weight:700;margin-top:2px">Ch.${esc(r.lastChapter)}${r.latestChapterAt ? '<span style="color:var(--sub);font-weight:500;font-size:10px"> · ' + timeAgo(r.latestChapterAt) + '</span>' : ''}</div>` : '') +
+  `</div>`;
 }
 
 function renderResults(results, append = false) {
@@ -1782,6 +1795,11 @@ function navigate(route, { pushState = true } = {}) {
   // When leaving search, mark for reset on return
   if (prev === 'search' && route !== 'search' && route !== 'detail') _resetSearchOnReturn = true;
   _currentRoute = route;
+
+  // Stop hero auto-scroll when leaving home
+  if (route !== 'home' && typeof _heroTimer !== 'undefined' && _heroTimer) {
+    clearInterval(_heroTimer); _heroTimer = null;
+  }
 
   if (route === 'detail') {
     // Full-page detail view — just set data-route, CSS handles the rest
@@ -2268,6 +2286,10 @@ function renderHeroDesktop(items, container) {
     const a = wrap.querySelector('.hd-slide.active');
     if (a) openPanel(a.dataset.id, a.dataset.source || 'mdex');
   });
+
+  // Auto-advance every 20 seconds
+  if (_heroTimer) clearInterval(_heroTimer);
+  _heroTimer = setInterval(() => show(_hdIdx + 1), 20000);
 
   // Prefetch all 5
   pick.forEach(p => {
