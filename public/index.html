@@ -4090,45 +4090,60 @@ window.addEventListener('hashchange', () => {
   if (['home','library','search','genres'].includes(hash)) navigate(hash, { pushState: false });
 });
 
-// Panel body scroll → collapse header (mobile: panel-body scrolls)
-// One-directional: collapse on any scroll > 0, only UNcollapse at scrollTop === 0
-// Dead zone 1–10px holds current state → breaks feedback loop with short chapter lists
+function _applyCollapse(collapsed, topbar, panel) {
+  if (!panel) return;
+  if (collapsed) {
+    panel.classList.add('panel-collapsed');
+    topbar?.classList.add('topbar-scrolled');
+  } else {
+    panel.classList.remove('panel-collapsed');
+    topbar?.classList.remove('topbar-scrolled');
+  }
+}
+
+// Mobile: scroll position
 document.getElementById('panel-body').addEventListener('scroll', function() {
+  if (document.body.dataset.route !== 'detail') return;
   const panel = document.getElementById('panel');
-  if (panel) {
-    if (this.scrollTop > 0) {
-      panel.classList.add('panel-collapsed');
-    } else if (this.scrollTop === 0) {
-      panel.classList.remove('panel-collapsed');
-    }
-  }
-  if (document.body.dataset.route === 'detail') {
-    const topbar = document.querySelector('.topbar');
-    if (topbar) {
-      if (this.scrollTop > 0) topbar.classList.add('topbar-scrolled');
-      else if (this.scrollTop === 0) topbar.classList.remove('topbar-scrolled');
-    }
-  }
+  const topbar = document.querySelector('.topbar');
+  if (this.scrollTop > 0) _applyCollapse(true, topbar, panel);
+  else if (this.scrollTop === 0) _applyCollapse(false, topbar, panel);
 }, { passive: true });
 
-// Desktop: panel-ch-wrap scroll → collapse header (capture phase — survives innerHTML resets)
-// Same one-directional logic to prevent feedback loop
+// Mobile: touch direction — collapses even when list too short to scroll
+let _ptY = 0;
+document.getElementById('panel-body').addEventListener('touchstart', function(e) {
+  if (document.body.dataset.route !== 'detail') return;
+  _ptY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('panel-body').addEventListener('touchmove', function(e) {
+  if (document.body.dataset.route !== 'detail') return;
+  const dy = _ptY - e.touches[0].clientY;
+  const panel = document.getElementById('panel');
+  const topbar = document.querySelector('.topbar');
+  if (dy > 8) _applyCollapse(true, topbar, panel);
+  else if (dy < -8 && this.scrollTop === 0) _applyCollapse(false, topbar, panel);
+}, { passive: true });
+
+// Desktop: scroll position (capture phase)
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
   const panel = document.getElementById('panel');
-  const st = e.target.scrollTop;
-  if (panel) {
-    if (st > 0) {
-      panel.classList.add('panel-collapsed');
-    } else if (st === 0) {
-      panel.classList.remove('panel-collapsed');
-    }
-  }
   const topbar = document.querySelector('.topbar');
-  if (topbar) {
-    if (st > 0) topbar.classList.add('topbar-scrolled');
-    else if (st === 0) topbar.classList.remove('topbar-scrolled');
-  }
+  const st = e.target.scrollTop;
+  if (st > 0) _applyCollapse(true, topbar, panel);
+  else if (st === 0) _applyCollapse(false, topbar, panel);
+}, { passive: true, capture: true });
+
+// Desktop: wheel direction — collapses even when chapter list too short to scroll
+document.addEventListener('wheel', function(e) {
+  if (document.body.dataset.route !== 'detail') return;
+  const chWrap = document.getElementById('panel-ch-wrap');
+  if (!chWrap || !chWrap.contains(e.target)) return;
+  const panel = document.getElementById('panel');
+  const topbar = document.querySelector('.topbar');
+  if (e.deltaY > 0) _applyCollapse(true, topbar, panel);
+  else if (e.deltaY < 0 && chWrap.scrollTop === 0) _applyCollapse(false, topbar, panel);
 }, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
