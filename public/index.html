@@ -551,6 +551,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .app-body{padding-bottom:0}
 /* Last home-section gets extra bottom space so last manga row isn't permanently hidden by pill */
 .home-section:last-of-type,.search-genres-section,#lib-page-wrap{padding-bottom:90px}
+#lib-page-wrap>.home-section:first-child{padding-top:6px}
 .nav-pill.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(10,10,10,.6)}
 
 /* ─── GENRE PAGE ─── */
@@ -1223,6 +1224,7 @@ function selectGenreAndSearch(id) {
   const inp = document.getElementById('search-input');
   if (inp) { inp.value = ''; document.getElementById('btn-clear-input').style.display = 'none'; }
   closeDropdown();
+  history.pushState(null, '', '#genre/' + id);
   doSearch();
 }
 
@@ -2152,7 +2154,10 @@ function _initSentinel() {
   _sentinelObs.observe(sentinel);
 }
 
+const VIEWALL_LABELS = { followedCount:'Trending', latestUploadedChapter:'Latest Updates', createdAt:'New Releases', rating:'Top Rated', selfPublished:'Self-Published', seasonal:'Seasonal', popularNew:'Popular New Titles' };
+
 async function viewAllSection(sortKey, label) {
+  history.pushState(null, '', '#viewall/' + sortKey);
   // Hide genres/recent BEFORE navigate so clearSearchAndReset doesn't re-show them
   document.getElementById('search-genres-section')?.classList.add('hidden');
   document.getElementById('recent-searches-wrap')?.classList.add('hidden');
@@ -3452,6 +3457,8 @@ function updateThemeIcon() {}
 window.addEventListener('hashchange', () => {
   const hash = location.hash.replace('#', '') || 'home';
   if (hash.startsWith('manga/')) { const id = hash.split('/')[1]; if (id) openPanel(id); return; }
+  if (hash.startsWith('viewall/')) { const k = hash.split('/')[1]; if (k) viewAllSection(k, VIEWALL_LABELS[k] || k); return; }
+  if (hash.startsWith('genre/')) { const id = hash.split('/')[1]; if (id) { navigate('search', { pushState: false }); activeTagId = id; doSearch(); } return; }
   if (['home','library','search','genres'].includes(hash)) navigate(hash, { pushState: false });
 });
 
@@ -3498,9 +3505,16 @@ document.getElementById('v-library').addEventListener('scroll', function() {
   const initialHash = location.hash.replace('#', '') || 'home';
   if (initialHash.startsWith('manga/')) {
     const id = initialHash.split('/')[1];
-    navigate('home', { pushState: false });
-    loadDiscoverySections();
+    navigate('home', { pushState: false }); loadDiscoverySections();
     if (id) openPanel(id);
+  } else if (initialHash.startsWith('viewall/')) {
+    const k = initialHash.split('/')[1];
+    navigate('search', { pushState: false });
+    if (k) viewAllSection(k, VIEWALL_LABELS[k] || k);
+  } else if (initialHash.startsWith('genre/')) {
+    const id = initialHash.split('/')[1];
+    navigate('search', { pushState: false });
+    if (id) { activeTagId = id; doSearch(); }
   } else {
     navigate(initialHash, { pushState: false });
     if (!['library','genres','search'].includes(initialHash)) loadDiscoverySections();
