@@ -117,14 +117,9 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .topbar-lib-btn:hover{border-color:var(--blk);color:var(--blk)}
 
 /* Library page */
-.lib-page-hdr{padding:10px 16px 0;flex-shrink:0}
+.lib-page-hdr{padding:14px 16px 0;flex-shrink:0}
 .lib-page-title{font-size:20px;font-weight:800;color:var(--fg);font-family:'Space Grotesk',sans-serif}
 .lib-empty{padding:60px 20px;text-align:center;color:var(--sub);font-size:14px;font-weight:600;line-height:1.6}
-/* Reading stats card */
-.stats-card{margin:8px 16px 2px;background:#ebebeb;border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
-.stats-stat{padding:14px 14px 12px;display:flex;flex-direction:column;gap:4px;background:#fff;border-radius:10px}
-.stats-num{font-size:34px;font-weight:800;color:#0a0a0a;line-height:1;letter-spacing:-.04em;font-family:'Inter',sans-serif}
-.stats-lbl{font-size:12px;font-weight:600;color:#888;letter-spacing:.005em}
 
 /* Unified section wrapper */
 .home-section{padding:18px 0 4px;flex-shrink:0;position:relative}
@@ -666,8 +661,8 @@ button.status-pill:hover{opacity:.75}
 .topbar{background:#fff;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
 .topbar > *{position:relative;z-index:10000}
 /* Library: transparent → white on scroll */
-body[data-route="library"] .topbar{background:rgba(255,255,255,0) !important;box-shadow:none;border-bottom:none;transition:background .25s,box-shadow .25s}
-body[data-route="library"] .topbar.topbar-scrolled{background:#fff !important;box-shadow:0 8px 24px -12px rgba(0,0,0,.08)}
+body[data-route="library"] .topbar{background:rgba(255,255,255,0) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);box-shadow:none;border-bottom:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s}
+body[data-route="library"] .topbar.topbar-scrolled{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 /* Search: transparent until scrolled, then frosted glass */
 body[data-route="search"] .topbar{background:rgba(255,255,255,0) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);box-shadow:none;border-bottom:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s}
 body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -700,7 +695,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   /* Bigger cards + typography on desktop */
   .disc-card{width:200px;max-width:200px}
   .disc-strip{padding-left:24px;padding-right:24px}
-  .stats-card{grid-template-columns:repeat(4,1fr);margin:6px 24px 2px}
+
   .disc-title{font-size:14px;font-weight:700;letter-spacing:-.01em}
   .disc-rating-row .star{font-size:12px}
   .disc-rating-num{font-size:12px}
@@ -1924,7 +1919,6 @@ function renderLibraryPage() {
     return;
   }
   wrap.innerHTML = '';
-  renderReadingStats(wrap);
   const sec = document.createElement('div');
   sec.className = 'home-section';
   sec.innerHTML = `
