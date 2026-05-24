@@ -49,10 +49,17 @@ module.exports = async (req, res) => {
   try {
     // Build title search URL
     let titleUrl = `${BASE}/manga?limit=${limit}&offset=${offset}&${COMMON}`;
-    if (q.trim()) titleUrl += `&title=${encodeURIComponent(q)}&order[relevance]=desc`;
-    else if (sort.trim()) {
-      const map = { followedCount:'order[followedCount]=desc', rating:'order[rating]=desc', latestUploadedChapter:'order[latestUploadedChapter]=desc', createdAt:'order[createdAt]=desc' };
-      titleUrl += '&' + (map[sort] || map.followedCount);
+    const sortMap = { followedCount:'order[followedCount]=desc', rating:'order[rating]=desc', latestUploadedChapter:'order[latestUploadedChapter]=desc', createdAt:'order[createdAt]=desc' };
+    if (q.trim()) {
+      titleUrl += `&title=${encodeURIComponent(q)}`;
+      if (sort.trim() && sortMap[sort]) {
+        titleUrl += '&' + sortMap[sort];
+        if (sort === 'latestUploadedChapter') titleUrl += '&includes[]=latest_uploaded_chapter';
+      } else {
+        titleUrl += '&order[relevance]=desc';
+      }
+    } else if (sort.trim()) {
+      titleUrl += '&' + (sortMap[sort] || sortMap.followedCount);
       if (sort === 'latestUploadedChapter') titleUrl += '&includes[]=latest_uploaded_chapter';
     } else titleUrl += `&order[followedCount]=desc`;
     if (tagId.trim()) titleUrl += `&includedTags[]=${encodeURIComponent(tagId)}`;
