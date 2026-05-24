@@ -1179,10 +1179,14 @@ function _observeGenreCards() {
       if (!tid) return;
       _genreObs.unobserve(el);
       if (_genreCoverCache[tid]) { _applyGenreCover(el, _genreCoverCache[tid]); return; }
-      fetch(`/api/search?tagId=${encodeURIComponent(tid)}&limit=1&sort=followedCount`)
+      fetch(`/api/search?tagId=${encodeURIComponent(tid)}&limit=10&sort=rating`)
         .then(r => r.ok ? r.json() : null)
         .then(d => {
-          const url = d?.results?.[0]?.coverUrl;
+          const results = d?.results || [];
+          if (!results.length) return;
+          // Stable varied pick per genre: hash the tag id → different index each genre
+          let h = 0; for (const c of tid) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+          const url = results[h % results.length]?.coverUrl;
           if (url) { _genreCoverCache[tid] = url; _applyGenreCover(el, url); }
         }).catch(() => {});
     });
@@ -1500,6 +1504,7 @@ async function openPanel(id, source) {
   _chapterPage = 0;
   _prevRoute = _currentRoute;
   navigate('detail', { pushState: false });
+  history.pushState({ mangaId: id }, '', '#manga/' + id);
   const panel = document.getElementById('panel');
   if (panel) { panel.scrollTop = 0; panel.classList.remove('panel-collapsed'); }
   const panelBody = document.getElementById('panel-body');
@@ -3445,8 +3450,9 @@ function updateThemeIcon() {}
 
 // Hash routing
 window.addEventListener('hashchange', () => {
-  const route = location.hash.replace('#', '') || 'home';
-  if (['home','library','search','genres'].includes(route)) navigate(route, { pushState: false });
+  const hash = location.hash.replace('#', '') || 'home';
+  if (hash.startsWith('manga/')) { const id = hash.split('/')[1]; if (id) openPanel(id); return; }
+  if (['home','library','search','genres'].includes(hash)) navigate(hash, { pushState: false });
 });
 
 // Panel body scroll → collapse header
@@ -3489,9 +3495,16 @@ document.getElementById('v-library').addEventListener('scroll', function() {
   await loadLibrary();
   updateThemeIcon();
   renderDesktopSidebarGenres();
-  const initialRoute = location.hash.replace('#', '') || 'home';
-  navigate(initialRoute, { pushState: false });
-  if (!['library','genres','search'].includes(initialRoute)) loadDiscoverySections();
+  const initialHash = location.hash.replace('#', '') || 'home';
+  if (initialHash.startsWith('manga/')) {
+    const id = initialHash.split('/')[1];
+    navigate('home', { pushState: false });
+    loadDiscoverySections();
+    if (id) openPanel(id);
+  } else {
+    navigate(initialHash, { pushState: false });
+    if (!['library','genres','search'].includes(initialHash)) loadDiscoverySections();
+  }
   // Refresh home data every 5 minutes (only when on home tab)
   setInterval(() => {
     if (_currentRoute === 'home') loadDiscoverySections({ forceRefresh: true });
