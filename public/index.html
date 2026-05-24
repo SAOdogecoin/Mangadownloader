@@ -577,7 +577,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-collapsed .panel-dl-btn span,.panel-collapsed .panel-start-btn span{display:inline !important}
 .panel-collapsed .panel-save-btn,.panel-collapsed .panel-dl-btn,.panel-collapsed .panel-start-btn{padding:6px 12px;font-size:12px}
 /* ─── CHAPTER PAGINATION ─── */
-.ch-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:2}
+.ch-pagination-inline{display:flex;align-items:center;gap:6px}
 .ch-pg-btn{padding:6px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;color:var(--fg)}
 .ch-pg-btn:hover:not(:disabled){border-color:#0a0a0a;background:#0a0a0a;color:#fff}
 .ch-pg-btn:disabled{opacity:.35;cursor:default}
@@ -2527,7 +2527,7 @@ async function renderPanel({ manga, chapters }) {
   }
   const hasMultiVol = pageVolOrder.length > 1;
 
-  const pgNav = () => totalPages > 1 ? `<div class="ch-pagination">
+  const pgNav = () => totalPages > 1 ? `<div class="ch-pagination-inline">
     <button class="ch-pg-btn" onclick="chPageNav(${_chapterPage-1})" ${_chapterPage===0?'disabled':''}>← Prev</button>
     <span class="ch-pg-info">${_chapterPage+1} / ${totalPages}</span>
     <button class="ch-pg-btn" onclick="chPageNav(${_chapterPage+1})" ${_chapterPage>=totalPages-1?'disabled':''}>Next →</button>
@@ -2535,10 +2535,10 @@ async function renderPanel({ manga, chapters }) {
 
   let chHtml = totalChs > 0 ? `<div class="ch-actions-bar">
     <span class="ch-count-label">${totalChs} chapter${totalChs!==1?'s':''}${totalPages>1?` · ${pageStart+1}–${pageEnd}`:''}</span>
-    <button class="btn-select-all-icon" id="btn-select-all" onclick="selectAllChapters()" title="Select all">
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">${pgNav()}<button class="btn-select-all-icon" id="btn-select-all" onclick="selectAllChapters()" title="Select all">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8.5 11 12 15 15.5 11"/></svg>
-    </button>
-  </div>${pgNav()}` : '';
+    </button></div>
+  </div>` : '';
 
   for (const vol of pageVolOrder) {
     const chs = pageVols[vol];
