@@ -125,7 +125,7 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .home-section{padding:18px 0 4px;flex-shrink:0;position:relative}
 .home-section:first-of-type{padding-top:8px}
 .home-section-head{margin-bottom:10px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.home-section-label{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--fg);letter-spacing:-.01em;line-height:1.2;flex:1}
+.home-section-label{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--fg);letter-spacing:-.01em;line-height:1.2;flex:1}
 .view-all-btn{display:inline-flex;align-items:center;gap:2px;background:none;border:none;color:var(--sub);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.005em;cursor:pointer;padding:4px 4px 4px 10px;border-radius:99px;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s}
 .view-all-btn:hover{color:#0a0a0a;background:var(--surf)}
 .view-all-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -660,7 +660,7 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
-.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.99) 0%,rgba(255,255,255,.93) 60%,rgba(255,255,255,.65) 100%);pointer-events:none}
+.hd-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.62) 0%,rgba(255,255,255,.42) 55%,rgba(255,255,255,.18) 100%);pointer-events:none}
 .hd-content{position:relative;height:100%;display:flex;align-items:flex-start;gap:16px;padding:52px 16px 18px;z-index:2}
 .hd-thumb-wrap{flex-shrink:0;width:128px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 14px 32px -8px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.15)}
 .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
@@ -730,7 +730,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .disc-title{font-size:14px;font-weight:700;letter-spacing:-.01em}
   .disc-rating-row .star{font-size:12px}
   .disc-rating-num{font-size:12px}
-  .home-section-label{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .home-section-label{font-size:24px;font-weight:800;letter-spacing:-.02em}
   /* Bigger panel header on desktop */
   .panel-cover{width:180px;height:270px;border-radius:8px}
   .panel-cover-ph{width:180px;height:270px;border-radius:8px}
@@ -2139,6 +2139,9 @@ async function viewAllSection(sortKey, label) {
     if (!cached) _viewAllCache.set(url, data);
     if (data.error) throw new Error(data.error);
     const results = data.results || [];
+    if (lastSort === 'latestUploadedChapter' && results.length > 0) {
+      console.log('[LatestUpdates] sample result:', {id:results[0].id, title:results[0].title, lastChapter:results[0].lastChapter, latestChapterAt:results[0].latestChapterAt, group:results[0].group});
+    }
     lastOffset = results.length;
     _hasMore = results.length >= VIEWALL_INITIAL;
     renderResults(results, false);
@@ -2314,9 +2317,9 @@ function renderHeroDesktop(items, container) {
     if (a) openPanel(a.dataset.id, a.dataset.source || 'mdex');
   });
 
-  // Auto-advance every 20 seconds
+  // Auto-advance every 5 seconds
   if (_heroTimer) clearInterval(_heroTimer);
-  _heroTimer = setInterval(() => show(_hdIdx + 1), 20000);
+  _heroTimer = setInterval(() => show(_hdIdx + 1), 5000);
 
   // Prefetch all 5
   pick.forEach(p => {
