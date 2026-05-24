@@ -4070,21 +4070,44 @@ window.addEventListener('hashchange', () => {
 });
 
 // Panel body scroll → collapse header (mobile: panel-body scrolls)
-// Low threshold (10px) so collapse triggers even with short chapter lists
+// One-directional: collapse on any scroll > 0, only UNcollapse at scrollTop === 0
+// Dead zone 1–10px holds current state → breaks feedback loop with short chapter lists
 document.getElementById('panel-body').addEventListener('scroll', function() {
   const panel = document.getElementById('panel');
-  if (panel) panel.classList.toggle('panel-collapsed', this.scrollTop > 10);
+  if (panel) {
+    if (this.scrollTop > 0) {
+      panel.classList.add('panel-collapsed');
+    } else if (this.scrollTop === 0) {
+      panel.classList.remove('panel-collapsed');
+    }
+  }
   if (document.body.dataset.route === 'detail') {
-    document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 10);
+    const topbar = document.querySelector('.topbar');
+    if (topbar) {
+      if (this.scrollTop > 0) topbar.classList.add('topbar-scrolled');
+      else if (this.scrollTop === 0) topbar.classList.remove('topbar-scrolled');
+    }
   }
 }, { passive: true });
 
 // Desktop: panel-ch-wrap scroll → collapse header (capture phase — survives innerHTML resets)
+// Same one-directional logic to prevent feedback loop
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
   const panel = document.getElementById('panel');
-  if (panel) panel.classList.toggle('panel-collapsed', e.target.scrollTop > 10);
-  document.querySelector('.topbar')?.classList.toggle('topbar-scrolled', e.target.scrollTop > 10);
+  const st = e.target.scrollTop;
+  if (panel) {
+    if (st > 0) {
+      panel.classList.add('panel-collapsed');
+    } else if (st === 0) {
+      panel.classList.remove('panel-collapsed');
+    }
+  }
+  const topbar = document.querySelector('.topbar');
+  if (topbar) {
+    if (st > 0) topbar.classList.add('topbar-scrolled');
+    else if (st === 0) topbar.classList.remove('topbar-scrolled');
+  }
 }, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
