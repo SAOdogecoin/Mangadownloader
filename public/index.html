@@ -76,6 +76,7 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .btn-search:hover{background:var(--blk-h)}
 .btn-search:active{background:var(--blk-h);transform:scale(.96)}
 .btn-search svg{width:13px;height:13px;stroke:var(--blk-text);fill:none}
+.dso{display:none}
 
 /* ─── LAYOUT ─── */
 /* app-body absolutely fills viewport so fixed topbar doesn't push it down */
@@ -557,7 +558,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 /* ─── GENRE PAGE ─── */
 .genre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px}
 .genre-card{position:relative;height:110px;border:none;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--surf);background-size:cover;background-position:center;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .15s;font-family:inherit;padding:0}
-.genre-card::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.62) 100%);z-index:1}
+.genre-card::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(0,0,0,.78) 100%);z-index:1}
 .genre-card:active{transform:scale(.96);opacity:.9}
 .genre-card-name{position:absolute;bottom:0;left:0;right:0;padding:10px 12px;font-size:16px;font-weight:800;color:#fff;text-align:left;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);line-height:1.2}
 .genre-card-skel{position:absolute;inset:0;background:var(--surf)}
@@ -866,6 +867,30 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .panel-collapsed .panel-hdr{padding:14px 24px 12px}
   .panel-collapsed .panel-title{font-size:22px}
   .panel-collapsed .panel-save-btn,.panel-collapsed .panel-dl-btn,.panel-collapsed .panel-start-btn{padding:9px 20px;font-size:14px}
+
+  /* ─── DESKTOP SEARCH OVERLAY ─── */
+  .dso{position:absolute;top:100%;left:0;right:0;background:#fff;border-bottom:1.5px solid var(--border);box-shadow:0 16px 40px -8px rgba(0,0,0,.14);z-index:9998;padding:20px 32px 24px}
+  .dso.open{display:block}
+  .dso-inner{max-width:720px;margin:0 auto}
+  .dso-input-wrap{position:relative;margin-bottom:20px}
+  .dso-input-wrap svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
+  .dso-input{width:100%;padding:14px 52px 14px 52px;border:2px solid #0a0a0a;border-radius:14px;font:600 16px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s}
+  .dso-input::placeholder{color:var(--sub);font-weight:500}
+  #dso-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;transition:color .15s}
+  #dso-clear:hover{color:#0a0a0a;background:var(--surf)}
+  #dso-clear svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;position:static;transform:none}
+  .dso-row{display:flex;gap:28px;margin-bottom:20px}
+  .dso-section{flex:1}
+  .dso-label{display:block;font:700 11px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:8px}
+  .dso-pills{display:flex;flex-wrap:wrap;gap:6px}
+  .dso-pill{padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 13px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em}
+  .dso-pill:hover{background:var(--surf)}
+  .dso-pill.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+  .dso-footer{display:flex;align-items:center;justify-content:flex-end}
+  .dso-search-btn{padding:11px 36px;background:#0a0a0a;color:#fff;border:none;border-radius:99px;font:700 14px 'Inter',sans-serif;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em}
+  .dso-search-btn:hover{background:#333}
+  /* Hide old advanced button on desktop */
+  .adv-search-btn,.adv-search-drop{display:none !important}
 }
 </style>
 </head>
@@ -1354,6 +1379,51 @@ function applyAdvSearch() {
   doSearch();
 }
 
+// ─── DESKTOP SEARCH OVERLAY ───
+function openDso() {
+  const dso = document.getElementById('dso');
+  if (!dso) return;
+  const dsInp = document.getElementById('dso-input');
+  if (dsInp) {
+    dsInp.value = document.getElementById('topbar-search-input')?.value || '';
+    onDsoInputChange();
+    setTimeout(() => { dsInp.focus(); dsInp.select(); }, 40);
+  }
+  dso.classList.add('open');
+  syncDso();
+}
+function closeDso() {
+  document.getElementById('dso')?.classList.remove('open');
+}
+function syncDso() {
+  document.querySelectorAll('#dso-sort-pills .dso-pill').forEach(b => b.classList.toggle('active', b.dataset.sort === activeSort));
+  document.querySelectorAll('#dso-status-pills .dso-pill').forEach(b => b.classList.toggle('active', b.dataset.status === activeStatus));
+}
+function setDsoSort(s) { activeSort = s; syncDso(); }
+function setDsoStatus(s) { activeStatus = s; syncDso(); }
+function onDsoInputChange() {
+  const inp = document.getElementById('dso-input');
+  const clr = document.getElementById('dso-clear');
+  if (clr) clr.style.display = inp?.value ? 'flex' : 'none';
+}
+function clearDsoInput() {
+  const inp = document.getElementById('dso-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const clr = document.getElementById('dso-clear');
+  if (clr) clr.style.display = 'none';
+}
+function applyDsoSearch() {
+  const q = document.getElementById('dso-input')?.value.trim() || '';
+  const topbarInp = document.getElementById('topbar-search-input');
+  if (topbarInp) topbarInp.value = q;
+  const clrTop = document.getElementById('btn-clear-topbar');
+  if (clrTop) clrTop.style.display = q ? 'flex' : 'none';
+  const mobileInp = document.getElementById('search-input');
+  if (mobileInp) mobileInp.value = q;
+  closeDso();
+  doSearch();
+}
+
 // ─── SEARCH FILTER BAR ───
 function syncSFBar() {
   ['','followedCount','rating','latestUploadedChapter','createdAt'].forEach(s => {
@@ -1556,6 +1626,7 @@ document.addEventListener('mousedown', e => {
     document.getElementById('adv-search-drop')?.classList.remove('open');
     document.getElementById('adv-search-btn')?.classList.remove('active');
   }
+  if (!e.target.closest('#dso') && !e.target.closest('.topbar-search-desktop')) closeDso();
 });
 
 // ─── Recent searches ─────────────────────────────────────────────────────────
@@ -3756,7 +3827,7 @@ document.getElementById('v-library').addEventListener('scroll', function() {
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
     <div class="topbar-search-desktop">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="onDesktopInputChange()" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
+      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="onDesktopInputChange()" onfocus="openDso()" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
       <button id="btn-clear-topbar" onclick="clearDesktopSearch()" aria-label="Clear">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -3793,6 +3864,44 @@ document.getElementById('v-library').addEventListener('scroll', function() {
     </nav>
   </div>
   <div class="topbar-r3" id="nav-pills-old"></div>
+  <div class="dso" id="dso">
+    <div class="dso-inner">
+      <div class="dso-input-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="dso-input" class="dso-input" type="text" placeholder="Search manga…"
+          oninput="onDsoInputChange()"
+          onkeydown="if(event.key==='Escape')closeDso();else if(event.key==='Enter')applyDsoSearch()"/>
+        <button id="dso-clear" onclick="clearDsoInput()" aria-label="Clear">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="dso-row">
+        <div class="dso-section">
+          <span class="dso-label">Sort</span>
+          <div class="dso-pills" id="dso-sort-pills">
+            <button class="dso-pill" data-sort="" onclick="setDsoSort('')">Best Match</button>
+            <button class="dso-pill" data-sort="followedCount" onclick="setDsoSort('followedCount')">Trending</button>
+            <button class="dso-pill" data-sort="rating" onclick="setDsoSort('rating')">Top Rated</button>
+            <button class="dso-pill" data-sort="latestUploadedChapter" onclick="setDsoSort('latestUploadedChapter')">Latest</button>
+            <button class="dso-pill" data-sort="createdAt" onclick="setDsoSort('createdAt')">New</button>
+          </div>
+        </div>
+        <div class="dso-section">
+          <span class="dso-label">Status</span>
+          <div class="dso-pills" id="dso-status-pills">
+            <button class="dso-pill" data-status="" onclick="setDsoStatus('')">Any</button>
+            <button class="dso-pill" data-status="ongoing" onclick="setDsoStatus('ongoing')">Ongoing</button>
+            <button class="dso-pill" data-status="completed" onclick="setDsoStatus('completed')">Completed</button>
+            <button class="dso-pill" data-status="hiatus" onclick="setDsoStatus('hiatus')">Hiatus</button>
+            <button class="dso-pill" data-status="cancelled" onclick="setDsoStatus('cancelled')">Cancelled</button>
+          </div>
+        </div>
+      </div>
+      <div class="dso-footer">
+        <button class="dso-search-btn" onclick="applyDsoSearch()">Search</button>
+      </div>
+    </div>
+  </div>
 </div>
 </body>
 </html>
