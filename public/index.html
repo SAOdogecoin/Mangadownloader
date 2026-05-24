@@ -1226,6 +1226,7 @@ let _panelSource = 'mdex';
 
 const _genreCoverCache = {};
 let _genreObs = null;
+let _genrePreloadRunning = false;
 
 function renderGenrePage() {
   const grid = document.getElementById('genre-grid');
@@ -1245,6 +1246,17 @@ function renderGenrePage() {
 const _GENRE_SORTS = ['rating','followedCount','latestUploadedChapter','createdAt'];
 async function _preloadGenreCovers(tagItems) {
   if (_genreObs) { _genreObs.disconnect(); _genreObs = null; }
+  // If already running (bg preload in flight), just apply what's cached so far and return
+  if (_genrePreloadRunning) {
+    tagItems.forEach(g => {
+      if (_genreCoverCache[g.id]) {
+        const el = document.querySelector(`.genre-card[data-tid="${g.id}"]`);
+        if (el) _applyGenreCover(el, _genreCoverCache[g.id]);
+      }
+    });
+    return;
+  }
+  _genrePreloadRunning = true;
   const BATCH = 4;
   for (let i = 0; i < tagItems.length; i += BATCH) {
     const slice = tagItems.slice(i, i + BATCH);
@@ -2630,6 +2642,8 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
       const w = document.getElementById('discover-wrap');
       if (w) renderHomeData(data, w);
     }).catch(() => {});
+    // Silently preload genre covers in bg (delayed so home fetch completes first)
+    setTimeout(() => _preloadGenreCovers(GENRES.filter(g => g.type === 'tag')), 1500);
     return;
   }
   renderHomeSkeleton(wrap);
@@ -2641,6 +2655,8 @@ async function loadDiscoverySections({ forceRefresh = false } = {}) {
     [...(data.trending||[]), ...(data.updated||[])].slice(0,6).forEach(m => {
       if (m.coverUrl) { const img = new Image(); img.src = proxyUrl(m.coverUrl, m.coverReferer); }
     });
+    // Silently preload genre covers in bg after home data lands
+    setTimeout(() => _preloadGenreCovers(GENRES.filter(g => g.type === 'tag')), 1500);
   } catch (e) {
     wrap.innerHTML = '';
   }
@@ -2820,7 +2836,7 @@ async function renderPanel({ manga, chapters }) {
   // Suggested manga section
   document.getElementById('panel-body').insertAdjacentHTML('beforeend',
     `<div class="panel-suggested" id="panel-suggested">` +
-    `<div class="panel-suggested-title">Recommended</div>` +
+    `<div class="panel-suggested-title">More like this</div>` +
     `<div class="panel-suggested-strip" id="panel-suggested-strip"></div></div>`
   );
   loadSuggestedManga(manga);
