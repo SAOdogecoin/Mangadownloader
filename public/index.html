@@ -117,22 +117,14 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .topbar-lib-btn:hover{border-color:var(--blk);color:var(--blk)}
 
 /* Library page */
-.lib-page-hdr{padding:20px 16px 0;flex-shrink:0}
+.lib-page-hdr{padding:10px 16px 0;flex-shrink:0}
 .lib-page-title{font-size:20px;font-weight:800;color:var(--fg);font-family:'Space Grotesk',sans-serif}
 .lib-empty{padding:60px 20px;text-align:center;color:var(--sub);font-size:14px;font-weight:600;line-height:1.6}
 /* Reading stats card */
-.stats-card{margin:16px 16px 4px;background:#111;border-radius:16px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:1px;overflow:hidden;position:relative}
-.stats-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,0) 60%);pointer-events:none;border-radius:16px}
-.stats-stat{padding:14px 14px 12px;position:relative;display:flex;flex-direction:column;gap:6px;background:#111}
-.stats-stat:nth-child(1){border-radius:12px 0 0 0}
-.stats-stat:nth-child(2){border-radius:0 12px 0 0}
-.stats-stat:nth-child(3){border-radius:0 0 0 12px}
-.stats-stat:nth-child(4){border-radius:0 0 12px 0}
-.stats-stat:nth-child(odd){background:rgba(255,255,255,.025)}
-.stats-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);flex-shrink:0}
-.stats-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.stats-num{font-size:26px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.03em;font-family:'Inter',sans-serif}
-.stats-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.04em;text-transform:uppercase}
+.stats-card{margin:8px 16px 2px;background:#ebebeb;border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
+.stats-stat{padding:14px 14px 12px;display:flex;flex-direction:column;gap:4px;background:#fff;border-radius:10px}
+.stats-num{font-size:34px;font-weight:800;color:#0a0a0a;line-height:1;letter-spacing:-.04em;font-family:'Inter',sans-serif}
+.stats-lbl{font-size:12px;font-weight:600;color:#888;letter-spacing:.005em}
 
 /* Unified section wrapper */
 .home-section{padding:18px 0 4px;flex-shrink:0;position:relative}
@@ -216,6 +208,7 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .cr-resume-badge{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:50%;background:var(--org);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:2}
 .cr-resume-badge svg{width:11px;height:11px;margin-left:1px}
 .cr-chapter{margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--org-text);letter-spacing:.02em}
+.disc-update-line{margin-top:3px;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;color:var(--org-text);letter-spacing:.01em}
 .disc-card:hover .disc-cover-wrap::after{opacity:1}
 .disc-cover{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
 .disc-card:hover .disc-cover{transform:scale(1.04)}
@@ -672,8 +665,9 @@ button.status-pill:hover{opacity:.75}
 /* Keep the topbar opaque above the hero — no !important so home-scrolled blur can override */
 .topbar{background:#fff;box-shadow:0 16px 40px -28px rgba(0,0,0,.08);}
 .topbar > *{position:relative;z-index:10000}
-/* Library: solid white */
-body[data-route="library"] .topbar{background:#fff !important;box-shadow:none;border-bottom:none}
+/* Library: transparent → white on scroll */
+body[data-route="library"] .topbar{background:rgba(255,255,255,0) !important;box-shadow:none;border-bottom:none;transition:background .25s,box-shadow .25s}
+body[data-route="library"] .topbar.topbar-scrolled{background:#fff !important;box-shadow:0 8px 24px -12px rgba(0,0,0,.08)}
 /* Search: transparent until scrolled, then frosted glass */
 body[data-route="search"] .topbar{background:rgba(255,255,255,0) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);box-shadow:none;border-bottom:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s}
 body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -706,6 +700,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   /* Bigger cards + typography on desktop */
   .disc-card{width:200px;max-width:200px}
   .disc-strip{padding-left:24px;padding-right:24px}
+  .stats-card{grid-template-columns:repeat(4,1fr);margin:6px 24px 2px}
   .disc-title{font-size:13px;font-weight:700;letter-spacing:-.01em}
   .disc-rating-row .star{font-size:11px}
   .disc-rating-num{font-size:11px}
@@ -1780,7 +1775,7 @@ function navigate(route, { pushState = true } = {}) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId));
   document.querySelectorAll('.bnav-tab,.desktop-nav-list button,.topbar-desktop-nav button[data-route]').forEach(p => p.classList.toggle('active', p.dataset.route === route));
   if (route !== 'home') document.body.classList.remove('home-scrolled');
-  if (route !== 'search') document.querySelector('.topbar').classList.remove('topbar-scrolled');
+  document.querySelector('.topbar').classList.remove('topbar-scrolled');
   document.body.dataset.route = route;
   if (pushState) history.pushState(null, '', '#' + route);
   if (route === 'library') renderLibraryPage();
@@ -1889,26 +1884,34 @@ function renderReadingStats(container) {
   card.className = 'stats-card';
   card.innerHTML = `
     <div class="stats-stat">
-      <div class="stats-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
       <div class="stats-num">${totalManga}</div>
       <div class="stats-lbl">In Library</div>
     </div>
     <div class="stats-stat">
-      <div class="stats-icon"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       <div class="stats-num">${totalChapters}</div>
       <div class="stats-lbl">Chapters Read</div>
     </div>
     <div class="stats-stat">
-      <div class="stats-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       <div class="stats-num">${estHours}</div>
       <div class="stats-lbl">Est. Reading</div>
     </div>
     <div class="stats-stat">
-      <div class="stats-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="stats-num">${days}</div>
       <div class="stats-lbl">Days Active</div>
     </div>`;
   container.appendChild(card);
+}
+
+function savedCardHtml(m) {
+  const img = m.coverUrl
+    ? `<img class="disc-cover" src="${esc(proxyUrl(m.coverUrl, m.coverReferer))}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="disc-ph">${SVG_BOOK}</div>`;
+  const chap = m.lastReadChapter ? `<div class="cr-chapter">Ch.${esc(m.lastReadChapter)}</div>` : '';
+  return `<div class="disc-card" data-id="${esc(m.id)}">
+    <div class="disc-cover-wrap">${img}</div>
+    <div class="disc-title">${esc(m.title)}</div>
+    ${chap}
+  </div>`;
 }
 
 function renderLibraryPage() {
@@ -1922,13 +1925,27 @@ function renderLibraryPage() {
   }
   wrap.innerHTML = '';
   renderReadingStats(wrap);
-  const grid = document.createElement('div');
-  grid.className = 'home-section';
-  grid.innerHTML = `<div class="home-section-label">Saved</div>
-    <div class="mc-grid">${saved.map(m => mcCardHtml(m)).join('')}</div>`;
-  wrap.appendChild(grid);
-  wrap.querySelectorAll('.mc-card').forEach(el =>
+  const sec = document.createElement('div');
+  sec.className = 'home-section';
+  sec.innerHTML = `
+    <div class="home-section-head"><div class="home-section-label">Saved (${saved.length})</div></div>
+    <div class="disc-strip-wrap">
+      <button class="disc-arrow da-left da-hidden" onclick="discScrollBtn(this,-1)" aria-label="Scroll left">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="disc-strip">${saved.map(savedCardHtml).join('')}</div>
+      <button class="disc-arrow da-right" onclick="discScrollBtn(this,1)" aria-label="Scroll right">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>`;
+  wrap.appendChild(sec);
+  sec.querySelectorAll('.disc-card').forEach(el =>
     el.addEventListener('click', () => openPanel(el.dataset.id)));
+  const strip = sec.querySelector('.disc-strip');
+  if (strip) {
+    strip.addEventListener('scroll', () => _updateDiscArrows(strip), { passive: true });
+    setTimeout(() => _updateDiscArrows(strip), 50);
+  }
 }
 
 // ─── Discovery sections ─────────────────────────────────────────────
@@ -1940,10 +1957,12 @@ function discCardHtml(m, showChapter) {
   const chTime = (showChapter && m.latestChapterAt) ? timeAgo(m.latestChapterAt) : '';
   const chapterBadge = showChapter && (m.lastChapter || chTime)
     ? `<div class="disc-chapter-badge">${m.lastChapter ? 'Ch.' + esc(m.lastChapter) : ''}${m.lastChapter && chTime ? ' · ' : ''}${chTime}</div>` : '';
+  const updateLine = showChapter && (m.lastChapter || chTime)
+    ? `<div class="disc-update-line">${m.lastChapter ? 'Ch.' + esc(m.lastChapter) : ''}${m.lastChapter && chTime ? ' · ' : ''}${chTime}</div>` : '';
   return `<div class="disc-card" data-id="${esc(m.id)}" data-source="${esc(m.source || 'mdex')}">
     <div class="disc-cover-wrap">${img}${chapterBadge}</div>
     <div class="disc-title">${esc(m.title)}</div>
-    ${m.rating ? `<div class="disc-rating-row">${stars}<span class="disc-rating-num">${m.rating.toFixed(1)}</span></div>` : ''}
+    ${updateLine || (m.rating ? `<div class="disc-rating-row">${stars}<span class="disc-rating-num">${m.rating.toFixed(1)}</span></div>` : '')}
   </div>`;
 }
 
@@ -2333,6 +2352,7 @@ async function renderPanel({ manga, chapters }) {
     ${covHtml}
     <div class="panel-info">
       <div class="panel-title">${esc(manga.title)}</div>
+      ${manga.author ? `<div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px;line-height:1.3">${esc(manga.author)}</div>` : ''}
       <div class="panel-meta">
         <button class="status-pill ${pillCls}" style="position:static;display:inline-block;margin-bottom:4px" onclick="closePanel();selectStatusSearch('${esc(manga.status)}')">${esc(manga.status)}</button>
         ${manga.year ? ' · ' + manga.year : ''}${manga.originalLanguage ? ' · ' + manga.originalLanguage.toUpperCase() : ''}
@@ -3311,8 +3331,11 @@ window.addEventListener('hashchange', () => {
   if (['home','library','search','genres'].includes(route)) navigate(route, { pushState: false });
 });
 
-// Search topbar: transparent → frosted glass on scroll
+// Search + Library topbar: transparent → white/frosted on scroll
 document.getElementById('search-body').addEventListener('scroll', function() {
+  document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 8);
+}, { passive: true });
+document.getElementById('v-library').addEventListener('scroll', function() {
   document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 8);
 }, { passive: true });
 

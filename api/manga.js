@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
 
   try {
     const [detailRes, statsRes, allChapterData] = await Promise.all([
-      fetch(`${BASE}/manga/${id}?includes[]=cover_art`, { headers: HEADERS }),
+      fetch(`${BASE}/manga/${id}?includes[]=cover_art&includes[]=author&includes[]=artist`, { headers: HEADERS }),
       fetch(`${BASE}/statistics/manga/${id}`, { headers: HEADERS }),
       fetchAllChapters(id, lang)
     ]);
@@ -71,6 +71,10 @@ module.exports = async (req, res) => {
 
     const tags = (attrs.tags || []).map(t => ({ name: t.attributes?.name?.en || '', id: t.id })).filter(t => t.name);
 
+    const authorRels = (m.relationships || []).filter(r => r.type === 'author' || r.type === 'artist');
+    const authorNames = [...new Set(authorRels.map(r => r.attributes?.name).filter(Boolean))];
+    const author = authorNames.slice(0, 2).join(', ');
+
     const manga = {
       id: m.id,
       title,
@@ -79,6 +83,7 @@ module.exports = async (req, res) => {
       status: attrs.status || 'unknown',
       year: attrs.year || null,
       tags,
+      author: author || null,
       originalLanguage: attrs.originalLanguage || 'ja',
       rating: statsData?.statistics?.[m.id]?.rating?.bayesian
         ? Math.round(statsData.statistics[m.id].rating.bayesian * 10) / 10
