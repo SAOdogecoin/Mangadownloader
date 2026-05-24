@@ -3172,14 +3172,23 @@ function readFromStart() {
   }
   // Multiple groups — show picker
   _pendingGroupManga = currentMangaData;
-  _pendingGroups = groups; // store for index-based selectGroupByIdx
+  _pendingGroups = groups;
   const list = document.getElementById('group-picker-list');
   list.innerHTML = groups.map(([name, cnt], i) =>
-    `<div class="group-picker-item" onclick="selectGroupByIdx(${i})">
+    `<div class="group-picker-item" data-gi="${i}">
       <span class="group-picker-name">${esc(name)}</span>
       <span class="group-picker-cnt">${cnt} ch</span>
     </div>`
   ).join('');
+  // Event delegation — reliable even with dynamically generated HTML
+  list.onclick = function(e) {
+    const item = e.target.closest('.group-picker-item');
+    if (!item) return;
+    const idx = parseInt(item.dataset.gi, 10);
+    const entry = _pendingGroups[idx];
+    if (!entry) return;
+    selectGroup(entry[0]);
+  };
   document.getElementById('group-picker-ov').classList.remove('hidden');
 }
 
