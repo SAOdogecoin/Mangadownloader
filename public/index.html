@@ -4070,11 +4070,12 @@ window.addEventListener('hashchange', () => {
 });
 
 // Panel body scroll → collapse header (mobile: panel-body scrolls)
+// Low threshold (10px) so collapse triggers even with short chapter lists
 document.getElementById('panel-body').addEventListener('scroll', function() {
   const panel = document.getElementById('panel');
-  if (panel) panel.classList.toggle('panel-collapsed', this.scrollTop > 80);
+  if (panel) panel.classList.toggle('panel-collapsed', this.scrollTop > 10);
   if (document.body.dataset.route === 'detail') {
-    document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 40);
+    document.querySelector('.topbar').classList.toggle('topbar-scrolled', this.scrollTop > 10);
   }
 }, { passive: true });
 
@@ -4082,8 +4083,8 @@ document.getElementById('panel-body').addEventListener('scroll', function() {
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
   const panel = document.getElementById('panel');
-  if (panel) panel.classList.toggle('panel-collapsed', e.target.scrollTop > 80);
-  document.querySelector('.topbar')?.classList.toggle('topbar-scrolled', e.target.scrollTop > 40);
+  if (panel) panel.classList.toggle('panel-collapsed', e.target.scrollTop > 10);
+  document.querySelector('.topbar')?.classList.toggle('topbar-scrolled', e.target.scrollTop > 10);
 }, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
