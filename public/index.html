@@ -1186,7 +1186,7 @@ function _observeGenreCards() {
 }
 
 function _applyGenreCover(el, url) {
-  el.style.backgroundImage = `url('${url}')`;
+  el.style.backgroundImage = `url('${proxyUrl(url)}')`;
 }
 
 function renderDesktopSidebarGenres() {
