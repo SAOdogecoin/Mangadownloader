@@ -889,8 +889,36 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .dso-footer{display:flex;align-items:center;justify-content:flex-end}
   .dso-search-btn{padding:11px 36px;background:#0a0a0a;color:#fff;border:none;border-radius:99px;font:700 14px 'Inter',sans-serif;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em}
   .dso-search-btn:hover{background:#333}
-  /* Hide old advanced button on desktop */
-  .adv-search-btn,.adv-search-drop{display:none !important}
+
+  /* On search page: hide topbar search, adjust topbar layout */
+  body[data-route="search"] .topbar-search-desktop{display:none !important}
+  body[data-route="search"] .topbar-r1{display:flex !important;justify-content:space-between !important;align-items:center !important;grid-template-columns:unset !important}
+  /* Hide sf-bar on desktop — DSP has the filters */
+  body[data-route="search"] .sf-bar{display:none !important}
+  /* Hide old adv button/drop only on search page (home+library keep it) */
+  body[data-route="search"] .adv-search-btn,body[data-route="search"] .adv-search-drop{display:none !important}
+
+  /* ─── DSP: Desktop Search Panel (inline, always visible on search page) ─── */
+  #dsp{display:none;flex-shrink:0;background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px 18px}
+  body[data-route="search"] #dsp{display:block}
+  .dsp-inner{max-width:900px;margin:0 auto}
+  .dsp-input-wrap{position:relative;margin-bottom:14px}
+  .dsp-input-wrap>svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
+  .dsp-input{width:100%;padding:11px 44px 11px 44px;border:1.5px solid var(--border);border-radius:99px;font:500 15px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s}
+  .dsp-input:focus{border-color:#0a0a0a}
+  .dsp-input::placeholder{color:var(--sub)}
+  .dsp-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;transition:color .15s}
+  .dsp-clear:hover{color:#0a0a0a;background:var(--surf)}
+  .dsp-clear svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;position:static !important;transform:none !important}
+  .dsp-filter-row{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}
+  .dsp-section{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+  .dsp-label{font:700 11px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);white-space:nowrap;flex-shrink:0}
+  .dsp-pills{display:flex;flex-wrap:wrap;gap:5px}
+  .dsp-pill{padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em}
+  .dsp-pill:hover{background:var(--surf)}
+  .dsp-pill.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+  .dsp-search-btn{padding:9px 28px;background:#0a0a0a;color:#fff;border:none;border-radius:99px;font:700 13px 'Inter',sans-serif;cursor:pointer;transition:background .15s;flex-shrink:0;align-self:center;letter-spacing:-.005em}
+  .dsp-search-btn:hover{background:#333}
 }
 </style>
 </head>
@@ -944,6 +972,43 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
           <div class="ac-popup" id="ac-popup-main"></div>
         </div>
         <button class="btn-search-page" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+    <!-- Desktop Search Panel: always visible on desktop search page -->
+    <div id="dsp">
+      <div class="dsp-inner">
+        <div class="dsp-input-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="dsp-input" class="dsp-input" type="text" placeholder="Search manga…"
+            oninput="onDspInputChange()"
+            onkeydown="if(event.key==='Enter')applyDspSearch()"/>
+          <button id="dsp-clear-btn" class="dsp-clear" onclick="clearDspInput()" aria-label="Clear">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="dsp-filter-row">
+          <div class="dsp-section">
+            <span class="dsp-label">Sort</span>
+            <div class="dsp-pills" id="dsp-sort-pills">
+              <button class="dsp-pill" data-sort="" onclick="setDspSort('')">Best Match</button>
+              <button class="dsp-pill" data-sort="followedCount" onclick="setDspSort('followedCount')">Trending</button>
+              <button class="dsp-pill" data-sort="rating" onclick="setDspSort('rating')">Top Rated</button>
+              <button class="dsp-pill" data-sort="latestUploadedChapter" onclick="setDspSort('latestUploadedChapter')">Latest</button>
+              <button class="dsp-pill" data-sort="createdAt" onclick="setDspSort('createdAt')">New</button>
+            </div>
+          </div>
+          <div class="dsp-section">
+            <span class="dsp-label">Status</span>
+            <div class="dsp-pills" id="dsp-status-pills">
+              <button class="dsp-pill" data-status="" onclick="setDspStatus('')">Any</button>
+              <button class="dsp-pill" data-status="ongoing" onclick="setDspStatus('ongoing')">Ongoing</button>
+              <button class="dsp-pill" data-status="completed" onclick="setDspStatus('completed')">Completed</button>
+              <button class="dsp-pill" data-status="hiatus" onclick="setDspStatus('hiatus')">Hiatus</button>
+              <button class="dsp-pill" data-status="cancelled" onclick="setDspStatus('cancelled')">Cancelled</button>
+            </div>
+          </div>
+          <button class="dsp-search-btn" onclick="applyDspSearch()">Search</button>
+        </div>
       </div>
     </div>
     <!-- Search filter bar: shown when results are active -->
@@ -1422,6 +1487,40 @@ function applyDsoSearch() {
   if (mobileInp) mobileInp.value = q;
   closeDso();
   doSearch();
+}
+
+// ─── DSP (Desktop Search Panel — inline in v-search) ───
+function syncDsp() {
+  document.querySelectorAll('#dsp-sort-pills .dsp-pill').forEach(b => b.classList.toggle('active', b.dataset.sort === activeSort));
+  document.querySelectorAll('#dsp-status-pills .dsp-pill').forEach(b => b.classList.toggle('active', b.dataset.status === activeStatus));
+}
+function setDspSort(s) { activeSort = s; syncDsp(); }
+function setDspStatus(s) { activeStatus = s; syncDsp(); }
+function onDspInputChange() {
+  const inp = document.getElementById('dsp-input');
+  const clr = document.getElementById('dsp-clear-btn');
+  if (clr) clr.style.display = inp?.value ? 'flex' : 'none';
+}
+function clearDspInput() {
+  const inp = document.getElementById('dsp-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const clr = document.getElementById('dsp-clear-btn');
+  if (clr) clr.style.display = 'none';
+}
+function applyDspSearch() {
+  const q = document.getElementById('dsp-input')?.value.trim() || '';
+  const mobileInp = document.getElementById('search-input');
+  if (mobileInp) mobileInp.value = q;
+  doSearch();
+}
+function initDsp() {
+  const inp = document.getElementById('dsp-input');
+  if (!inp) return;
+  // Populate with current query if any
+  const q = document.getElementById('search-input')?.value || '';
+  inp.value = q;
+  onDspInputChange();
+  syncDsp();
 }
 
 // ─── SEARCH FILTER BAR ───
@@ -1957,6 +2056,10 @@ async function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q && !activeTagId && !activeStatus && !activeSort) return;
   if (q) saveRecentSearch(q);
+  // Sync DSP input with current query
+  const dspInp = document.getElementById('dsp-input');
+  if (dspInp && dspInp.value !== q) { dspInp.value = q; onDspInputChange(); }
+  syncDsp();
   // Set title before navigate so reset doesn't wipe it
   const genreName = activeTagId ? (GENRES.find(g => g.id === activeTagId)?.name || '') : '';
   const titleText = q || genreName || (activeStatus ? activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1) : 'Search');
@@ -2168,6 +2271,7 @@ function navigate(route, { pushState = true } = {}) {
     renderGenrePage();
     // Auto-reset when returning to search from another page
     if (_resetSearchOnReturn) { _resetSearchOnReturn = false; clearSearchAndReset(); }
+    initDsp();
   }
   if (route === 'home') loadDiscoverySections();
 }
@@ -3827,7 +3931,7 @@ document.getElementById('v-library').addEventListener('scroll', function() {
     <span class="app-title" onclick="navigate('home')" style="cursor:pointer">Mangaink</span>
     <div class="topbar-search-desktop">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="onDesktopInputChange()" onfocus="openDso()" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
+      <input id="topbar-search-input" type="text" placeholder="Search manga…" oninput="onDesktopInputChange()" onkeydown="acKeyNav(event,'desktop');if(event.key==='Enter'&&!event.defaultPrevented)doDesktopSearch()" onblur="setTimeout(()=>closeAc('desktop'),180)"/>
       <button id="btn-clear-topbar" onclick="clearDesktopSearch()" aria-label="Clear">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
