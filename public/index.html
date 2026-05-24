@@ -329,7 +329,7 @@ body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;he
 /* Hero bg inside panel-hdr */
 body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-inset-top,0px) + 62px))}
 .panel-hdr-bg{position:absolute;inset:-15%;background-size:cover;background-position:center top;filter:blur(30px) brightness(.72) saturate(.6);z-index:-1;pointer-events:none}
-.panel-hdr-bg-overlay{position:absolute;inset:0;background:rgba(255,255,255,.25);z-index:0;pointer-events:none}
+.panel-hdr-bg-overlay{position:absolute;inset:0;background:rgba(255,255,255,.5);z-index:0;pointer-events:none}
 
 /* ─── READER ─── */
 .reader-overlay{position:fixed;inset:0;background:#000;z-index:10001;display:flex;flex-direction:column}
@@ -663,7 +663,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
-.hd-bg-overlay{position:absolute;inset:0;background:rgba(255,255,255,.25);pointer-events:none}
+.hd-bg-overlay{position:absolute;inset:0;background:rgba(255,255,255,.5);pointer-events:none}
 .hd-content{position:relative;height:100%;display:flex;align-items:flex-start;gap:16px;padding:52px 16px 18px;z-index:2}
 .hd-thumb-wrap{flex-shrink:0;width:128px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 14px 32px -8px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.15)}
 .hd-thumb{width:100%;height:100%;object-fit:cover;display:block}
@@ -783,7 +783,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 
   /* Desktop hero overrides — bigger, side-by-side layout. Top margin 0 since topbar is now fixed/floating */
   .hero-desktop{margin:0 -24px 24px;height:460px;width:calc(100% + 48px);}
-  .hd-bg-overlay{background:linear-gradient(90deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.85) 40%,rgba(255,255,255,.55) 75%,rgba(255,255,255,.35) 100%)}
+  .hd-bg-overlay{background:rgba(255,255,255,.5)}
   .hd-content{align-items:center;gap:32px;padding:60px 40px 40px}
   .hd-thumb-wrap{width:240px;border-radius:10px}
   .hd-info{gap:10px;max-width:760px}
