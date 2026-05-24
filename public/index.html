@@ -1164,36 +1164,46 @@ function renderGenrePage() {
     grid.innerHTML = tagItems.map(g =>
       `<button class="genre-card" data-tid="${esc(g.id)}" onclick="selectGenreAndSearch('${esc(g.id)}')"><span class="genre-card-name">${esc(g.name)}</span></button>`
     ).join('');
-    _observeGenreCards();
+    _preloadGenreCovers(tagItems);
   }
   renderRecentSearches();
   renderDesktopSidebarGenres();
 }
 
-function _observeGenreCards() {
-  if (_genreObs) _genreObs.disconnect();
-  _genreObs = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const el = entry.target;
-      const tid = el.dataset.tid;
-      if (!tid) return;
-      _genreObs.unobserve(el);
-      if (_genreCoverCache[tid]) { _applyGenreCover(el, _genreCoverCache[tid]); return; }
-      fetch(`/api/search?tagId=${encodeURIComponent(tid)}&limit=20&sort=rating`)
-        .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          const results = d?.results || [];
-          if (!results.length) return;
-          // Pick first result whose cover isn't already used by another genre
-          const usedUrls = new Set(Object.values(_genreCoverCache));
-          const pick = results.find(r => r.coverUrl && !usedUrls.has(r.coverUrl)) || results[0];
-          const url = pick?.coverUrl;
-          if (url) { _genreCoverCache[tid] = url; _applyGenreCover(el, url); }
-        }).catch(() => {});
-    });
-  }, { rootMargin: '120px' });
-  document.querySelectorAll('.genre-card[data-tid]').forEach(el => _genreObs.observe(el));
+// Preload all genre covers in parallel — rotate sort+offset so each genre
+// pulls from a different part of the MangaDex catalog → minimal duplicates
+const _GENRE_SORTS = ['rating','followedCount','latestUploadedChapter','createdAt'];
+async function _preloadGenreCovers(tagItems) {
+  if (_genreObs) { _genreObs.disconnect(); _genreObs = null; }
+  const BATCH = 4;
+  for (let i = 0; i < tagItems.length; i += BATCH) {
+    const slice = tagItems.slice(i, i + BATCH);
+    await Promise.all(slice.map(async (g, j) => {
+      if (_genreCoverCache[g.id]) {
+        const el = document.querySelector(`.genre-card[data-tid="${g.id}"]`);
+        if (el) _applyGenreCover(el, _genreCoverCache[g.id]);
+        return;
+      }
+      const idx = i + j;
+      const sort = _GENRE_SORTS[idx % _GENRE_SORTS.length];
+      const offset = Math.floor(idx / _GENRE_SORTS.length) * 3;
+      try {
+        const d = await fetch(`/api/search?tagId=${encodeURIComponent(g.id)}&limit=10&offset=${offset}&sort=${sort}`)
+          .then(r => r.ok ? r.json() : null);
+        const results = d?.results || [];
+        if (!results.length) return;
+        const usedUrls = new Set(Object.values(_genreCoverCache));
+        const pick = results.find(r => r.coverUrl && !usedUrls.has(r.coverUrl)) || results[0];
+        const url = pick?.coverUrl;
+        if (url) {
+          _genreCoverCache[g.id] = url;
+          const el = document.querySelector(`.genre-card[data-tid="${g.id}"]`);
+          if (el) _applyGenreCover(el, url);
+        }
+      } catch {}
+    }));
+    if (i + BATCH < tagItems.length) await new Promise(r => setTimeout(r, 150));
+  }
 }
 
 function _applyGenreCover(el, url) {
