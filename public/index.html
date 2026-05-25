@@ -388,9 +388,10 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 /* Progress bar */
 .reader-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1);z-index:2}
 .reader-progress-fill{height:100%;background:var(--org);transition:width .2s}
-/* Next chapter callout — shown at end of chapter */
-.next-ch-btn{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);padding:10px 24px;background:var(--org);color:#fff;border:none;border-radius:99px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:5;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(10,10,10,.55);transition:opacity .2s}
-.next-ch-btn:active{opacity:.8}
+/* Next chapter callout — slide-up bar from bottom */
+.next-ch-btn{position:absolute;bottom:0;left:0;right:0;transform:translateY(100%);padding:16px 24px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--org);color:#fff;border:none;border-radius:18px 18px 0 0;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:6;display:block;text-align:center;box-shadow:0 -4px 24px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.4,0,.2,1);letter-spacing:-.01em}
+.next-ch-btn.visible{transform:translateY(0)}
+.next-ch-btn:active{opacity:.85}
 .reader-overlay.vmode .next-ch-btn{display:none !important}
 
 /* Touch zones (invisible) */
@@ -1584,7 +1585,6 @@ function initDsp() {
 
 // ─── SEARCH NAV ANIMATION (topbar pill → DSP pill) ───
 function navigateToSearch() {
-  // Only animate on desktop and when coming from a non-search page
   const isDesktop = window.innerWidth >= 900;
   const alreadySearch = document.body.dataset.route === 'search';
   if (!isDesktop || alreadySearch) { navigate('search'); return; }
@@ -1592,31 +1592,54 @@ function navigateToSearch() {
   const topbarWrap = document.querySelector('.topbar-search-desktop');
   if (!topbarWrap) { navigate('search'); return; }
 
-  // Capture start rect before navigate hides it
-  const s = topbarWrap.getBoundingClientRect();
+  // FIRST — capture topbar search rect before navigate hides it
+  const first = topbarWrap.getBoundingClientRect();
 
-  // Create flying pill at topbar position
-  const pill = document.createElement('div');
-  pill.id = 'search-nav-pill';
-  pill.style.cssText = `top:${s.top}px;left:${s.left}px;width:${s.width}px;height:${s.height}px;opacity:1`;
-  document.body.appendChild(pill);
-
-  // Navigate — topbar search hides, DSP becomes visible
+  // Navigate — topbar search hides via CSS, #dsp becomes visible
   navigate('search');
 
-  // Double rAF so DSP is measured after layout
+  // FLIP: animate the real dsp-input-wrap from topbar position to its natural position
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const dspWrap = document.querySelector('.dsp-input-wrap');
-    if (!dspWrap) { pill.remove(); return; }
-    const e = dspWrap.getBoundingClientRect();
-    pill.style.top    = e.top + 'px';
-    pill.style.left   = e.left + 'px';
-    pill.style.width  = e.width + 'px';
-    pill.style.height = e.height + 'px';
-    pill.style.opacity = '0';
-    const cleanup = () => pill.remove();
-    pill.addEventListener('transitionend', cleanup, { once: true });
-    setTimeout(cleanup, 700); // fallback
+    if (!dspWrap) return;
+
+    // LAST — capture final (natural) position on the search page
+    const last = dspWrap.getBoundingClientRect();
+
+    // Compute invert transform (transform-origin: top left)
+    const scaleX = first.width / last.width;
+    const scaleY = first.height / last.height;
+    const dx = first.left - last.left;
+    const dy = first.top - last.top;
+
+    // Hide filter row — fade it in after animation
+    const filterRow = document.querySelector('.dsp-filter-row');
+    if (filterRow) { filterRow.style.cssText = 'opacity:0;transition:none'; }
+
+    // INVERT — teleport element to topbar position instantly (no transition)
+    dspWrap.style.transition = 'none';
+    dspWrap.style.transformOrigin = 'top left';
+    dspWrap.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+    dspWrap.style.overflow = 'hidden';
+
+    // Force browser to commit the inverted state before starting transition
+    dspWrap.getBoundingClientRect();
+
+    // PLAY — animate back to natural position
+    dspWrap.style.transition = 'transform .42s cubic-bezier(.4,0,.2,1)';
+    dspWrap.style.transform = 'none';
+
+    function cleanup() {
+      dspWrap.style.cssText = '';
+      if (filterRow) {
+        filterRow.style.cssText = 'opacity:0;transition:opacity .22s ease';
+        requestAnimationFrame(() => { filterRow.style.opacity = '1'; });
+        setTimeout(() => { filterRow.style.cssText = ''; }, 280);
+      }
+      document.getElementById('dsp-input')?.focus();
+    }
+    dspWrap.addEventListener('transitionend', cleanup, { once: true });
+    setTimeout(cleanup, 600);
   }));
 }
 
@@ -3916,15 +3939,15 @@ function updateNextChBtn() {
   const atEnd = isDouble ? pageIdx >= pages.length - 2 : pageIdx === pages.length - 1;
   const hasNext = chapterListIdx >= 0 && chapterListIdx < chapters.length - 1;
   const isGroupEnd = !!_groupChapters && !hasNext;
+  const show = atEnd && (hasNext || isGroupEnd);
   const btn = document.getElementById('next-ch-btn');
+  const bottomBar = document.getElementById('reader-bottom-bar');
   if (btn) {
-    btn.style.display = atEnd && (hasNext || isGroupEnd) ? 'block' : 'none';
-    if (isGroupEnd) {
-      btn.textContent = '↩ Back to Manga';
-    } else {
-      btn.textContent = isRTL ? '← Next Chapter' : 'Next Chapter →';
-    }
+    btn.classList.toggle('visible', show);
+    btn.textContent = isGroupEnd ? '↩ Back to Manga' : (isRTL ? '← Next Chapter' : 'Next Chapter →');
   }
+  // Hide bottom bar while next-ch banner is up
+  if (bottomBar) bottomBar.classList.toggle('hide', show);
 }
 
 function updateChNav() {
@@ -4040,9 +4063,10 @@ document.addEventListener('keydown', e => {
 // TOC (Chapter list in reader)
 // ═══════════════════════════════════════════════════════════════════
 function openToc() {
-  const { chapters, chapterId, mangaTitle } = readerState;
+  const { chapters, chapterId, mangaTitle, _groupChapters } = readerState;
   if (!chapters.length) return;
-  document.getElementById('toc-label').textContent = mangaTitle || 'Chapters';
+  const groupName = _groupChapters?.length && chapters[0]?.group ? chapters[0].group : null;
+  document.getElementById('toc-label').textContent = groupName || mangaTitle || 'Chapters';
   const list = document.getElementById('toc-list');
   list.innerHTML = chapters.map((ch, i) => {
     const label = ch.chapter ? `Ch.${ch.chapter}` : `Ch.${i + 1}`;
