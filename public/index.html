@@ -107,6 +107,8 @@
   .ch-src-num{color:var(--fg) !important}
   /* panel rating num hardcoded #2a2a2a */
   .panel-rating .star-num{color:var(--sub) !important}
+  /* cr-resume-badge: org becomes white in dark, force black */
+  .cr-resume-badge{background:#0a0a0a !important}
   /* filter pills */
   .sf-pill{border-color:#484848 !important;background:rgba(255,255,255,.05) !important}
   .sf-pill:hover,.sf-pill:active{background:rgba(255,255,255,.1) !important}
@@ -553,6 +555,22 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .toc-name{font-size:13px;color:var(--fg);flex:1}
 .toc-pages{font-size:10px;color:var(--sub);flex-shrink:0}
 .toc-item.cur .toc-num,.toc-item.cur .toc-name{color:var(--org-text);font-weight:700}
+/* TOC settings panel extras */
+.toc-ch-info{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.toc-info-num{font:800 12px 'Inter',sans-serif;color:var(--org-text);letter-spacing:.04em;text-transform:uppercase}
+.toc-info-title{font-size:13px;color:var(--fg);margin-top:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc-drops{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.toc-drop-row{display:flex;align-items:center;gap:10px}
+.toc-drop-lbl{font:700 10px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);width:62px;flex-shrink:0}
+.toc-select{flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf);color:var(--fg);font:600 12px 'Inter',sans-serif;cursor:pointer;outline:none}
+.toc-setts{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.toc-sett-row{display:flex;align-items:center;gap:10px}
+.toc-sett-lbl{font:700 10px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);width:62px;flex-shrink:0}
+.toc-sett-opts{display:flex;gap:5px;flex-wrap:wrap}
+.toc-sett-btn{padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 11px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:all .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-.005em}
+.toc-sett-btn.active{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.toc-sett-btn:hover{background:var(--surf)}
+.toc-list-hdr{padding:10px 16px 4px;font:700 10px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);flex-shrink:0}
 
 /* ─── FAB ─── */
 .fab{display:none;position:fixed;bottom:22px;right:18px;width:54px;height:54px;border-radius:50%;background:var(--blk);border:none;color:var(--org);cursor:pointer;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.35);z-index:30;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s,box-shadow .15s}
@@ -1311,10 +1329,45 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   <div class="toc-bg" id="toc-bg" onclick="closeToc()"></div>
   <div class="toc-panel" id="toc-panel">
     <div class="toc-hdr">
-      <span class="toc-title-label" id="toc-label">Chapters</span>
-      <select class="toc-group-select" id="toc-group-select" style="display:none" onchange="switchTocGroup(this.value)"></select>
+      <span class="toc-title-label">Settings</span>
       <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
+    <div class="toc-ch-info">
+      <div class="toc-info-num" id="toc-info-num"></div>
+      <div class="toc-info-title" id="toc-info-title"></div>
+    </div>
+    <div class="toc-drops">
+      <div class="toc-drop-row">
+        <span class="toc-drop-lbl">Group</span>
+        <select class="toc-select" id="toc-group-select" onchange="switchTocGroup(this.value)"></select>
+      </div>
+      <div class="toc-drop-row">
+        <span class="toc-drop-lbl">Chapter</span>
+        <select class="toc-select" id="toc-ch-select" onchange="tocJumpChapter(this.value)"></select>
+      </div>
+      <div class="toc-drop-row">
+        <span class="toc-drop-lbl">Page</span>
+        <select class="toc-select" id="toc-page-select" onchange="tocJumpPage(parseInt(this.value))"></select>
+      </div>
+    </div>
+    <div class="toc-setts">
+      <div class="toc-sett-row">
+        <span class="toc-sett-lbl">Mode</span>
+        <div class="toc-sett-opts">
+          <button class="toc-sett-btn" id="toc-mode-h" onclick="tocSetMode('horizontal')">Single</button>
+          <button class="toc-sett-btn" id="toc-mode-v" onclick="tocSetMode('vertical')">Strip</button>
+          <button class="toc-sett-btn" id="toc-mode-d" onclick="tocSetMode('double')">Double</button>
+        </div>
+      </div>
+      <div class="toc-sett-row">
+        <span class="toc-sett-lbl">Direction</span>
+        <div class="toc-sett-opts">
+          <button class="toc-sett-btn" id="toc-dir-ltr" onclick="tocSetDir('ltr')">LTR →</button>
+          <button class="toc-sett-btn" id="toc-dir-rtl" onclick="tocSetDir('rtl')">← RTL</button>
+        </div>
+      </div>
+    </div>
+    <div class="toc-list-hdr">Chapters</div>
     <div class="toc-list" id="toc-list"></div>
   </div>
 </div>
@@ -4188,11 +4241,14 @@ document.addEventListener('keydown', e => {
 // TOC (Chapter list in reader)
 // ═══════════════════════════════════════════════════════════════════
 function openToc() {
-  const { chapters, chapterId, mangaTitle, _groupChapters } = readerState;
+  const { chapters, chapterId, chapterNum, chapterTitle, mangaTitle, _groupChapters, pageIdx, pages, isRTL, isVertical, isDouble } = readerState;
   if (!chapters.length) return;
-  const curGroup = _groupChapters?.length && chapters[0]?.group ? chapters[0].group : '';
-  document.getElementById('toc-label').textContent = mangaTitle || 'Chapters';
-  // Build group list for dropdown
+  // Chapter info
+  const infoNum = document.getElementById('toc-info-num');
+  const infoTitle = document.getElementById('toc-info-title');
+  if (infoNum) infoNum.textContent = chapterNum ? `Chapter ${chapterNum}` : 'Chapter';
+  if (infoTitle) infoTitle.textContent = chapterTitle || mangaTitle || '';
+  // Group dropdown
   const allChapters = currentMangaData?.chapters || [];
   const groupMap = {};
   for (const ch of allChapters) {
@@ -4200,21 +4256,34 @@ function openToc() {
     else if (ch.group) groupMap[ch.group] = (groupMap[ch.group]||0)+1;
   }
   const groups = Object.entries(groupMap).sort((a,b) => b[1]-a[1]);
-  const sel = document.getElementById('toc-group-select');
-  if (sel) {
-    if (groups.length > 1) {
-      sel.style.display = '';
-      sel.innerHTML = '<option value="">All groups</option>' +
-        groups.map(([n]) => `<option value="${esc(n)}"${n===curGroup?' selected':''}>${esc(n)}</option>`).join('');
-    } else {
-      sel.style.display = 'none';
-    }
-  }
+  const curGroup = _groupChapters?.length && chapters[0]?.group ? chapters[0].group : '';
+  const groupSel = document.getElementById('toc-group-select');
+  if (groupSel) groupSel.innerHTML = '<option value="">All groups</option>' +
+    groups.map(([n]) => `<option value="${esc(n)}"${n===curGroup?' selected':''}>${esc(n)}</option>`).join('');
+  // Chapter dropdown
+  const chSel = document.getElementById('toc-ch-select');
+  if (chSel) chSel.innerHTML = chapters.map((ch, i) => {
+    const label = ch.chapter ? `Ch.${ch.chapter}${ch.title?' — '+ch.title:''}` : `Ch.${i+1}`;
+    return `<option value="${esc(ch.id)}"${ch.id===chapterId?' selected':''}>${esc(label)}</option>`;
+  }).join('');
+  // Page dropdown
+  const pgSel = document.getElementById('toc-page-select');
+  if (pgSel) pgSel.innerHTML = (pages||[]).map((_, i) =>
+    `<option value="${i}"${i===pageIdx?' selected':''}>Page ${i+1}</option>`
+  ).join('');
+  // Mode buttons
+  document.getElementById('toc-mode-h')?.classList.toggle('active', !isVertical && !isDouble);
+  document.getElementById('toc-mode-v')?.classList.toggle('active', !!isVertical);
+  document.getElementById('toc-mode-d')?.classList.toggle('active', !!isDouble);
+  // Direction buttons
+  document.getElementById('toc-dir-ltr')?.classList.toggle('active', !isRTL);
+  document.getElementById('toc-dir-rtl')?.classList.toggle('active', !!isRTL);
+  // Chapter list
   const list = document.getElementById('toc-list');
   list.innerHTML = chapters.map((ch, i) => {
     const label = ch.chapter ? `Ch.${ch.chapter}` : `Ch.${i + 1}`;
     const isCur = ch.id === chapterId;
-    return `<div class="toc-item${isCur ? ' cur' : ''}" onclick="jumpChapter('${esc(ch.id)}','${esc(ch.chapter||'')}','${esc(ch.title||'')}',${i})">
+    return `<div class="toc-item${isCur?' cur':''}" onclick="jumpChapter('${esc(ch.id)}','${esc(ch.chapter||'')}','${esc(ch.title||'')}',${i})">
       <span class="toc-num">${label}</span>
       <span class="toc-name">${esc(ch.title || label)}</span>
       ${ch.pages ? `<span class="toc-pages">${ch.pages}p</span>` : ''}
@@ -4234,6 +4303,37 @@ async function jumpChapter(chId, chNum, chTitle, idx) {
   await startRead(readerState.mangaId, chId, chNum, chTitle);
 }
 
+function tocJumpChapter(chId) {
+  const idx = readerState.chapters.findIndex(c => c.id === chId);
+  if (idx < 0) return;
+  const ch = readerState.chapters[idx];
+  closeToc();
+  readerState.chapterListIdx = idx;
+  startRead(readerState.mangaId, ch.id, ch.chapter||'', ch.title||'');
+}
+function tocJumpPage(idx) {
+  showPage(idx);
+  closeToc();
+}
+function tocSetMode(mode) {
+  readerState.isDouble = mode === 'double';
+  readerState.isVertical = mode === 'vertical';
+  document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
+  document.getElementById('reader-overlay').classList.toggle('vmode', readerState.isVertical);
+  document.getElementById('reader-double-btn')?.classList.toggle('active', readerState.isDouble);
+  updateModeIcon();
+  setReadModePref(readerState.mangaId, mode);
+  showPage(readerState.pageIdx);
+  document.getElementById('toc-mode-h')?.classList.toggle('active', mode==='horizontal');
+  document.getElementById('toc-mode-v')?.classList.toggle('active', mode==='vertical');
+  document.getElementById('toc-mode-d')?.classList.toggle('active', mode==='double');
+}
+function tocSetDir(dir) {
+  readerState.isRTL = dir === 'rtl';
+  showPage(readerState.pageIdx);
+  document.getElementById('toc-dir-ltr')?.classList.toggle('active', dir==='ltr');
+  document.getElementById('toc-dir-rtl')?.classList.toggle('active', dir==='rtl');
+}
 function closeToc() {
   document.getElementById('toc-bg').classList.remove('open');
   document.getElementById('toc-panel').classList.remove('open');
