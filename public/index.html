@@ -45,7 +45,8 @@
   /* search inputs hardcoded white */
   .dsp-input{background:#2c2c2c !important;border-color:#404040 !important}
   .search-input-page{background:#2c2c2c !important;border-color:#404040 !important}
-  .topbar-search-desktop input{background:#2c2c2c !important;border-color:#404040 !important;box-shadow:none !important}
+  .topbar-search-desktop input{background:#2c2c2c !important;border-color:transparent !important;box-shadow:none !important}
+  .topbar-search-desktop input::placeholder{color:rgba(232,232,232,.45) !important}
   /* filter pill active (hardcoded #0a0a0a) */
   .sf-pill.active{background:var(--fg) !important;color:var(--bg) !important;border-color:var(--fg) !important}
   /* buttons: org/blk become light in dark → text must be dark */
@@ -71,8 +72,9 @@
   /* search buttons → white bg black text */
   .dsp-search-btn{background:#fff !important;color:#000 !important}
   .dsp-search-btn:hover{background:rgba(255,255,255,.88) !important}
-  .adv-search-btn{background:#2a2a2a !important;border-color:#484848 !important;color:var(--fg) !important}
-  .adv-search-btn:hover,.adv-search-btn.active{background:#383838 !important;border-color:#606060 !important}
+  /* advanced btn → white pill black text */
+  .adv-search-btn{background:#fff !important;border-color:#fff !important;color:#000 !important}
+  .adv-search-btn:hover,.adv-search-btn.active{background:rgba(255,255,255,.88) !important;border-color:#fff !important;color:#000 !important}
   /* dsp pills: no border, white text */
   .dsp-pill{border-color:transparent !important;color:var(--fg) !important}
   .dsp-pill:hover{background:rgba(255,255,255,.08) !important}
@@ -100,6 +102,11 @@
   /* chapter group header hardcoded white */
   .ch-group-hdr{background:var(--surf) !important}
   .ch-row:active{background:var(--surf) !important}
+  .ch-source:active{background:var(--surf) !important}
+  /* ch source num text hardcoded #0a0a0a */
+  .ch-src-num{color:var(--fg) !important}
+  /* panel rating num hardcoded #2a2a2a */
+  .panel-rating .star-num{color:var(--sub) !important}
   /* filter pills */
   .sf-pill{border-color:#484848 !important;background:rgba(255,255,255,.05) !important}
   .sf-pill:hover,.sf-pill:active{background:rgba(255,255,255,.1) !important}
@@ -843,6 +850,13 @@ body[data-route="library"] .topbar.topbar-scrolled{background:rgba(255,255,255,.
 body[data-route="search"] .topbar{background:rgba(255,255,255,0) !important;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);box-shadow:none;border-bottom:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s}
 body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .home-scrolled .topbar{background:rgba(255,255,255,.88) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 24px -12px rgba(0,0,0,.1)}
+/* ─── DARK MODE: topbar scrolled overrides (must be AFTER light-mode rules to win cascade) ─── */
+@media (prefers-color-scheme:dark){
+  body[data-route="detail"] .topbar.topbar-scrolled{background:#000 !important;box-shadow:0 1px 0 #1a1a1a !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+  body[data-route="library"] .topbar.topbar-scrolled{background:rgba(0,0,0,.97) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important}
+  body[data-route="search"] .topbar.topbar-scrolled{background:rgba(0,0,0,.97) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important}
+  .home-scrolled .topbar{background:rgba(0,0,0,.93) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important;box-shadow:none !important}
+}
 /* Topbar desktop nav */
 .topbar-desktop-nav{display:none}
 
