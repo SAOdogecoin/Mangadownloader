@@ -545,6 +545,9 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .toc-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .toc-title-label{font-size:13px;font-weight:800;color:var(--fg)}
 .toc-close{background:none;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);-webkit-tap-highlight-color:transparent}
+.toc-hdr-info{flex:1;min-width:0;overflow:hidden}
+.toc-hdr-manga{font:800 13px 'Inter',sans-serif;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc-hdr-ch{font:600 11px 'Inter',sans-serif;color:var(--org-text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toc-group-select{flex:1;margin:0 8px;padding:5px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf);color:var(--fg);font:600 12px 'Inter',sans-serif;cursor:pointer;outline:none;min-width:0}
 .toc-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
 .toc-list{flex:1;overflow-y:auto;padding:6px 0}
@@ -736,6 +739,15 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
 .panel-action-collapsed{display:none !important}
 .panel-collapsed .panel-action-collapsed{display:none !important}
+/* Stage 1: only cover + desc hidden */
+.panel-semi-collapsed .panel-cover,.panel-semi-collapsed .panel-cover-ph{display:none !important}
+.panel-semi-collapsed .panel-desc,.panel-semi-collapsed .btn-more-desc{display:none !important}
+.panel-semi-collapsed .panel-hdr{flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border)}
+.panel-semi-collapsed .panel-info{display:block !important;flex:none;width:100%;padding-top:0;overflow:visible}
+.panel-semi-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:6px;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
+.panel-semi-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:0;gap:8px;display:flex !important;flex-direction:row !important}
+.panel-semi-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
+body[data-route="detail"] .panel-semi-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 10px !important}
 /* Push collapsed content below the fixed topbar (~52px) + safe area */
 body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 12px !important}
 /* ─── DETAIL DESC SECTION ─── */
@@ -1332,7 +1344,10 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   <div class="toc-bg" id="toc-bg" onclick="closeToc()"></div>
   <div class="toc-panel" id="toc-panel">
     <div class="toc-hdr">
-      <span class="toc-title-label">Settings</span>
+      <div class="toc-hdr-info">
+        <div class="toc-hdr-manga" id="toc-hdr-manga"></div>
+        <div class="toc-hdr-ch" id="toc-hdr-ch"></div>
+      </div>
       <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="toc-ch-info">
@@ -4246,6 +4261,11 @@ document.addEventListener('keydown', e => {
 function openToc() {
   const { chapters, chapterId, chapterNum, chapterTitle, mangaTitle, _groupChapters, pageIdx, pages, isRTL, isVertical, isDouble } = readerState;
   if (!chapters.length) return;
+  // Header: manga title + chapter
+  const hdrManga = document.getElementById('toc-hdr-manga');
+  const hdrCh = document.getElementById('toc-hdr-ch');
+  if (hdrManga) hdrManga.textContent = mangaTitle || '';
+  if (hdrCh) hdrCh.textContent = chapterNum ? `Ch.${chapterNum}${chapterTitle ? ' — ' + chapterTitle : ''}` : '';
   // Chapter info
   const infoNum = document.getElementById('toc-info-num');
   const infoTitle = document.getElementById('toc-info-title');
@@ -4380,41 +4400,52 @@ function switchTocGroup(groupName) {
 function toggleTheme() {}
 function updateThemeIcon() {}
 
-// Hash routing
+// Hash routing — handles browser back button for all routes
 window.addEventListener('hashchange', () => {
   const hash = location.hash.replace('#', '') || 'home';
-  // Browser back while reader is open → close reader
+  // Reader open → back → close reader
   if (!hash.startsWith('read/') && !document.getElementById('reader-overlay').classList.contains('hidden')) {
-    closeReader();
+    closeReader(); return;
+  }
+  // Detail page (panel open) → back → close panel, navigate to target
+  if (document.body.dataset.route === 'detail' && !hash.startsWith('manga/')) {
+    const panel = document.getElementById('panel');
+    if (panel) { panel.classList.remove('open', 'panel-collapsed', 'panel-semi-collapsed'); }
+    document.getElementById('panel-bg')?.classList.remove('open');
+    selectMode = false; selectedChIds.clear();
+    document.getElementById('panel-select-bar')?.classList.remove('show');
+    const dest = ['home','library','search','genres'].includes(hash) ? hash : 'home';
+    navigate(dest, { pushState: false });
     return;
   }
   if (hash.startsWith('manga/')) { const id = hash.split('/')[1]; if (id) openPanel(id); return; }
-  if (hash.startsWith('viewall/')) { const k = hash.split('/')[1]; if (k) viewAllSection(k, VIEWALL_LABELS[k] || k); return; }
-  if (hash.startsWith('genre/')) { const id = hash.split('/')[1]; if (id) { navigate('search', { pushState: false }); activeTagId = id; doSearch(); } return; }
+  if (hash.startsWith('viewall/')) { const k = hash.split('/')[1]; if (k) viewAllSection(k, VIEWALL_LABELS[k]||k); return; }
+  if (hash.startsWith('genre/')) { const id = hash.split('/')[1]; if (id) { navigate('search', { pushState:false }); activeTagId = id; doSearch(); } return; }
   if (['home','library','search','genres'].includes(hash)) navigate(hash, { pushState: false });
 });
 
-function _applyCollapse(collapsed, topbar, panel) {
+function _collapseLevel(panel) {
+  return panel.classList.contains('panel-collapsed') ? 2 : panel.classList.contains('panel-semi-collapsed') ? 1 : 0;
+}
+function _applyCollapse(level, topbar, panel) {
   if (!panel) return;
-  if (collapsed) {
-    panel.classList.add('panel-collapsed');
-    topbar?.classList.add('topbar-scrolled');
-  } else {
-    panel.classList.remove('panel-collapsed');
-    topbar?.classList.remove('topbar-scrolled');
-  }
+  panel.classList.remove('panel-collapsed', 'panel-semi-collapsed');
+  if (level >= 2) { panel.classList.add('panel-collapsed'); topbar?.classList.add('topbar-scrolled'); }
+  else if (level === 1) { panel.classList.add('panel-semi-collapsed'); topbar?.classList.add('topbar-scrolled'); }
+  else { topbar?.classList.remove('topbar-scrolled'); }
 }
 
-// Mobile: scroll position
+// Mobile: scroll position → 2 thresholds
 document.getElementById('panel-body').addEventListener('scroll', function() {
   if (document.body.dataset.route !== 'detail') return;
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
-  if (this.scrollTop > 0) _applyCollapse(true, topbar, panel);
-  else if (this.scrollTop === 0) _applyCollapse(false, topbar, panel);
+  if (this.scrollTop > 60) _applyCollapse(2, topbar, panel);
+  else if (this.scrollTop > 0) _applyCollapse(1, topbar, panel);
+  else _applyCollapse(0, topbar, panel);
 }, { passive: true });
 
-// Mobile: touch direction — collapses even when list too short to scroll
+// Mobile: touch direction — progressive collapse
 let _ptY = 0;
 document.getElementById('panel-body').addEventListener('touchstart', function(e) {
   if (document.body.dataset.route !== 'detail') return;
@@ -4425,29 +4456,32 @@ document.getElementById('panel-body').addEventListener('touchmove', function(e) 
   const dy = _ptY - e.touches[0].clientY;
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
-  if (dy > 8) _applyCollapse(true, topbar, panel);
-  else if (dy < -8 && this.scrollTop === 0) _applyCollapse(false, topbar, panel);
+  const cur = _collapseLevel(panel);
+  if (dy > 8 && cur < 2) _applyCollapse(cur + 1, topbar, panel);
+  else if (dy < -8 && this.scrollTop === 0 && cur > 0) _applyCollapse(cur - 1, topbar, panel);
 }, { passive: true });
 
-// Desktop: scroll position (capture phase)
+// Desktop: scroll position (capture phase) → 2 thresholds
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
   const st = e.target.scrollTop;
-  if (st > 0) _applyCollapse(true, topbar, panel);
-  else if (st === 0) _applyCollapse(false, topbar, panel);
+  if (st > 60) _applyCollapse(2, topbar, panel);
+  else if (st > 0) _applyCollapse(1, topbar, panel);
+  else _applyCollapse(0, topbar, panel);
 }, { passive: true, capture: true });
 
-// Desktop: wheel direction — collapses even when chapter list too short to scroll
+// Desktop: wheel direction — progressive collapse
 document.addEventListener('wheel', function(e) {
   if (document.body.dataset.route !== 'detail') return;
   const chWrap = document.getElementById('panel-ch-wrap');
   if (!chWrap || !chWrap.contains(e.target)) return;
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
-  if (e.deltaY > 0) _applyCollapse(true, topbar, panel);
-  else if (e.deltaY < 0 && chWrap.scrollTop === 0) _applyCollapse(false, topbar, panel);
+  const cur = _collapseLevel(panel);
+  if (e.deltaY > 0 && cur < 2) _applyCollapse(cur + 1, topbar, panel);
+  else if (e.deltaY < 0 && chWrap.scrollTop === 0 && cur > 0) _applyCollapse(cur - 1, topbar, panel);
 }, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
