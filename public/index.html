@@ -388,8 +388,8 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .panel.open{transform:translateY(0)}
 .panel-hdr{display:flex;align-items:flex-start;gap:14px;padding:16px 16px 12px;flex-shrink:0;position:relative;overflow:hidden;isolation:isolate}
 .panel-drag{width:36px;height:4px;background:#e0dcd8;border-radius:99px;margin:0 auto 12px;flex-shrink:0}
-.panel-cover{width:100px;height:150px;border-radius:6px;object-fit:cover;background:var(--surf);flex-shrink:0;position:relative;z-index:1;transition:width .3s ease,min-width .3s ease,opacity .25s ease,margin .2s ease;overflow:hidden}
-.panel-cover-ph{width:100px;height:150px;border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;transition:width .3s ease,min-width .3s ease,opacity .25s ease,margin .2s ease;overflow:hidden}
+.panel-cover{width:100px;height:150px;border-radius:6px;object-fit:cover;background:var(--surf);flex-shrink:0;position:relative;z-index:1;transition:width .3s ease,min-width .3s ease,height .3s ease,min-height .3s ease,opacity .25s ease,margin .2s ease;overflow:hidden}
+.panel-cover-ph{width:100px;height:150px;border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;transition:width .3s ease,min-width .3s ease,height .3s ease,min-height .3s ease,opacity .25s ease,margin .2s ease;overflow:hidden}
 .panel-cover-ph svg{width:30px;height:30px;stroke:#c8bdb8;fill:none}
 .panel-info{flex:1;min-width:0;padding-top:2px;position:relative;z-index:1}
 .panel-title{font-size:17px;font-weight:800;color:var(--fg);line-height:1.3;margin-bottom:6px}
@@ -729,17 +729,17 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-hdr{transition:padding .2s}
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 /* ─── DETAIL PANEL GRADUAL COLLAPSE ─── */
-/* Stage 1 (semi-collapsed): cover collapses left→0, desc fades out */
-.panel-semi-collapsed .panel-hdr,.panel-collapsed .panel-hdr{border-bottom:1px solid var(--border)}
-/* Cover: animate width 100px→0 (collapses sideways in row layout) */
+/* Both stages: border + gap collapses once cover shrinks */
+.panel-semi-collapsed .panel-hdr,.panel-collapsed .panel-hdr{border-bottom:1px solid var(--border);gap:0 !important}
+/* Cover: animate both width AND height to 0 — eliminates the flex-row height contribution */
 .panel-semi-collapsed .panel-cover,.panel-semi-collapsed .panel-cover-ph,
 .panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{
-  width:0 !important;min-width:0 !important;opacity:0 !important;margin-right:0 !important}
+  width:0 !important;min-width:0 !important;height:0 !important;min-height:0 !important;opacity:0 !important;margin:0 !important}
 /* Desc + "more" button: max-height 0 */
 .panel-semi-collapsed .panel-desc,.panel-semi-collapsed .btn-more-desc,
 .panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{
   max-height:0 !important;opacity:0 !important;margin-bottom:0 !important;margin-top:0 !important}
-/* Stage 1: title wraps, action row normalises */
+/* Title: unwrap, action row normalise */
 .panel-semi-collapsed .panel-title,.panel-collapsed .panel-title{font-size:16px;font-weight:800;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
 .panel-semi-collapsed .panel-action-row,.panel-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:6px;gap:8px;display:flex !important;flex-direction:row !important}
 .panel-semi-collapsed .panel-action-row button,.panel-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
@@ -747,7 +747,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags{
   max-height:0 !important;opacity:0 !important;margin-bottom:0 !important;margin-top:0 !important}
 .panel-action-collapsed{display:none !important}
-/* Padding reduction on detail page for both collapse stages */
+/* Padding reduction: detail page both collapse stages */
 body[data-route="detail"] .panel-semi-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 10px !important}
 body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 8px !important}
 /* ─── DETAIL DESC SECTION ─── */
