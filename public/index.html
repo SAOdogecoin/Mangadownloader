@@ -733,27 +733,18 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .panel-author{font-size:12px;font-weight:600;color:#2a2a2a;margin-bottom:6px;line-height:1.3;transition:max-height .25s ease,opacity .2s ease,margin .2s;overflow:hidden}
 .panel-hdr{transition:padding .2s}
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
-/* ─── DETAIL PANEL GRADUAL COLLAPSE ─── */
-/* Both stages: border + gap collapses once cover shrinks */
-.panel-semi-collapsed .panel-hdr,.panel-collapsed .panel-hdr{border-bottom:1px solid var(--border);gap:0 !important}
-/* Cover: animate both width AND height to 0 — eliminates the flex-row height contribution */
-.panel-semi-collapsed .panel-cover,.panel-semi-collapsed .panel-cover-ph,
+/* ─── DETAIL PANEL COLLAPSE ─── */
+.panel-collapsed .panel-hdr{border-bottom:1px solid var(--border);gap:0 !important}
 .panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{
   width:0 !important;min-width:0 !important;height:0 !important;min-height:0 !important;opacity:0 !important;margin:0 !important}
-/* Desc + "more" button: max-height 0 */
-.panel-semi-collapsed .panel-desc,.panel-semi-collapsed .btn-more-desc,
 .panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{
   max-height:0 !important;opacity:0 !important;margin-bottom:0 !important;margin-top:0 !important}
-/* Title: unwrap, action row normalise */
-.panel-semi-collapsed .panel-title,.panel-collapsed .panel-title{font-size:16px;font-weight:800;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
-.panel-semi-collapsed .panel-action-row,.panel-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:6px;gap:8px;display:flex !important;flex-direction:row !important}
-.panel-semi-collapsed .panel-action-row button,.panel-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
-/* Stage 2 (collapsed): also hide author, meta, tags, rating */
+.panel-collapsed .panel-title{font-size:16px;font-weight:800;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
+.panel-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:6px;gap:8px;display:flex !important;flex-direction:row !important}
+.panel-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
 .panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags{
   max-height:0 !important;opacity:0 !important;margin-bottom:0 !important;margin-top:0 !important}
 .panel-action-collapsed{display:none !important}
-/* Padding reduction: detail page both collapse stages */
-body[data-route="detail"] .panel-semi-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 10px !important}
 body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 8px !important}
 /* ─── DETAIL DESC SECTION ─── */
 .panel-desc-section{padding:14px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -4458,7 +4449,7 @@ window.addEventListener('hashchange', () => {
   // Detail page (panel open) → back → close panel, navigate to target
   if (document.body.dataset.route === 'detail' && !hash.startsWith('manga/')) {
     const panel = document.getElementById('panel');
-    if (panel) { panel.classList.remove('open', 'panel-collapsed', 'panel-semi-collapsed'); }
+    if (panel) { panel.classList.remove('open', 'panel-collapsed'); }
     document.getElementById('panel-bg')?.classList.remove('open');
     selectMode = false; selectedChIds.clear();
     document.getElementById('panel-select-bar')?.classList.remove('show');
@@ -4473,27 +4464,24 @@ window.addEventListener('hashchange', () => {
 });
 
 function _collapseLevel(panel) {
-  return panel.classList.contains('panel-collapsed') ? 2 : panel.classList.contains('panel-semi-collapsed') ? 1 : 0;
+  return panel.classList.contains('panel-collapsed') ? 1 : 0;
 }
 function _applyCollapse(level, topbar, panel) {
   if (!panel) return;
-  panel.classList.remove('panel-collapsed', 'panel-semi-collapsed');
-  if (level >= 2) { panel.classList.add('panel-collapsed'); topbar?.classList.add('topbar-scrolled'); }
-  else if (level === 1) { panel.classList.add('panel-semi-collapsed'); topbar?.classList.add('topbar-scrolled'); }
+  panel.classList.remove('panel-collapsed');
+  if (level >= 1) { panel.classList.add('panel-collapsed'); topbar?.classList.add('topbar-scrolled'); }
   else { topbar?.classList.remove('topbar-scrolled'); }
 }
 
-// Mobile: scroll position → 2 thresholds
+// Mobile: scroll position → single threshold
 document.getElementById('panel-body').addEventListener('scroll', function() {
   if (document.body.dataset.route !== 'detail') return;
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
-  if (this.scrollTop > 120) _applyCollapse(2, topbar, panel);
-  else if (this.scrollTop > 30) _applyCollapse(1, topbar, panel);
-  else _applyCollapse(0, topbar, panel);
+  _applyCollapse(this.scrollTop > 60 ? 1 : 0, topbar, panel);
 }, { passive: true });
 
-// Mobile: touch direction — progressive collapse
+// Mobile: touch direction — toggle collapse
 let _ptY = 0;
 document.getElementById('panel-body').addEventListener('touchstart', function(e) {
   if (document.body.dataset.route !== 'detail') return;
@@ -4505,22 +4493,19 @@ document.getElementById('panel-body').addEventListener('touchmove', function(e) 
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
   const cur = _collapseLevel(panel);
-  if (dy > 8 && cur < 2) _applyCollapse(cur + 1, topbar, panel);
-  else if (dy < -8 && this.scrollTop === 0 && cur > 0) _applyCollapse(cur - 1, topbar, panel);
+  if (dy > 8 && cur < 1) _applyCollapse(1, topbar, panel);
+  else if (dy < -8 && this.scrollTop === 0 && cur > 0) _applyCollapse(0, topbar, panel);
 }, { passive: true });
 
-// Desktop: scroll position (capture phase) → 2 thresholds
+// Desktop: scroll position (capture phase) → single threshold
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
-  const st = e.target.scrollTop;
-  if (st > 60) _applyCollapse(2, topbar, panel);
-  else if (st > 0) _applyCollapse(1, topbar, panel);
-  else _applyCollapse(0, topbar, panel);
+  _applyCollapse(e.target.scrollTop > 40 ? 1 : 0, topbar, panel);
 }, { passive: true, capture: true });
 
-// Desktop: wheel direction — progressive collapse
+// Desktop: wheel direction — toggle collapse
 document.addEventListener('wheel', function(e) {
   if (document.body.dataset.route !== 'detail') return;
   const chWrap = document.getElementById('panel-ch-wrap');
@@ -4528,8 +4513,8 @@ document.addEventListener('wheel', function(e) {
   const panel = document.getElementById('panel');
   const topbar = document.querySelector('.topbar');
   const cur = _collapseLevel(panel);
-  if (e.deltaY > 0 && cur < 2) _applyCollapse(cur + 1, topbar, panel);
-  else if (e.deltaY < 0 && chWrap.scrollTop === 0 && cur > 0) _applyCollapse(cur - 1, topbar, panel);
+  if (e.deltaY > 0 && cur < 1) _applyCollapse(1, topbar, panel);
+  else if (e.deltaY < 0 && chWrap.scrollTop === 0 && cur > 0) _applyCollapse(0, topbar, panel);
 }, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
