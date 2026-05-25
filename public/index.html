@@ -36,7 +36,7 @@
 @media (prefers-color-scheme:dark){
   :root{
     --org:#e8e8e8;--org-text:#e8e8e8;--org-h:#f5f5f5;--org-s:rgba(232,232,232,.1);
-    --bg:#0d0d0d;--card:#161616;--fg:#e8e8e8;--sub:#888;
+    --bg:#111111;--card:#1a1a1a;--fg:#e8e8e8;--sub:#888;
     --border:#2b2b2b;--surf:#1e1e1e;
     --blk:#e8e8e8;--blk-h:#f5f5f5;--blk-text:#0d0d0d;
   }
@@ -57,8 +57,15 @@
   .disc-arrow svg{stroke:var(--fg) !important}
   /* bottom nav frosted */
   .bnav{background:rgba(13,13,13,.95) !important;border-top-color:var(--border) !important}
-  /* hero desktop bottom gradient — hero images already dark, keep */
-  /* hero tags stay white-bg dark-text (fine on dark images) */
+  /* hero gradient stronger in dark mode */
+  .hero-grad{background:linear-gradient(180deg,rgba(0,0,0,.25) 0%,rgba(0,0,0,.65) 50%,rgba(0,0,0,.95) 100%) !important}
+  /* desktop nav buttons */
+  .topbar-desktop-nav button{color:var(--fg) !important}
+  .topbar-desktop-nav button:hover{color:var(--fg) !important}
+  .topbar-desktop-nav button.active{color:var(--fg) !important}
+  .topbar-desktop-nav .genres-btn{color:var(--fg) !important}
+  /* genre search input */
+  .dso-input{background:var(--card) !important;border-color:var(--border) !important;box-shadow:0 4px 24px -8px rgba(0,0,0,.4) !important}
 }
 html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;font-feature-settings:'ss01','cv11';-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;letter-spacing:-.005em}
@@ -845,7 +852,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .panel-cover{width:190px;height:285px;border-radius:10px}
   .panel-cover-ph{width:190px;height:285px;border-radius:10px}
   .panel-cover-ph svg{width:44px;height:44px}
-  .panel-hdr{gap:28px;padding:24px 32px 20px;align-items:flex-start}
+  .panel-hdr{gap:28px;padding:24px 32px 20px;align-items:flex-end}
   .panel-info{padding-top:4px}
   .panel-title{font-size:28px;margin-bottom:10px}
   .panel-meta{font-size:15px;margin-bottom:12px}
@@ -853,10 +860,12 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .panel-desc{font-size:14px;display:block !important;-webkit-line-clamp:unset !important;overflow:visible !important}
   .btn-more-desc{display:none !important}
   .tag-pill{font-size:11px;padding:3px 10px}
-  .panel-save-btn{font-size:15px;padding:11px 24px}
-  .panel-save-btn svg{width:15px;height:15px}
-  .panel-start-btn,.panel-dl-btn{font-size:14px;padding:11px 22px}
-  .panel-start-btn svg,.panel-dl-btn svg{width:15px;height:15px}
+  .panel-save-btn{font-size:15px;padding:10px 12px}
+  .panel-save-btn svg{width:16px;height:16px}
+  .panel-dl-btn{font-size:14px;padding:10px 12px}
+  .panel-dl-btn svg{width:16px;height:16px}
+  .panel-start-btn{font-size:14px;padding:11px 22px}
+  .panel-start-btn svg{width:15px;height:15px}
   .panel-action-row{gap:12px;margin-top:16px}
   /* Hide separate desc section on desktop (desc shown inline in panel-hdr) */
   .panel-desc-section{display:none !important}
@@ -947,7 +956,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .dso-inner{max-width:720px;margin:0 auto}
   .dso-input-wrap{position:relative;margin-bottom:20px}
   .dso-input-wrap svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
-  .dso-input{width:100%;padding:14px 52px 14px 52px;border:2px solid #0a0a0a;border-radius:14px;font:600 16px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s}
+  .dso-input{width:100%;padding:14px 52px 14px 52px;border:2px solid #0a0a0a;border-radius:14px;font:600 16px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s;box-shadow:0 4px 24px -8px rgba(0,0,0,.18)}
   .dso-input::placeholder{color:var(--sub);font-weight:500}
   #dso-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;transition:color .15s}
   #dso-clear:hover{color:#0a0a0a;background:var(--surf)}
