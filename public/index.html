@@ -109,6 +109,14 @@
   .hd-dot.active{background:var(--fg) !important;width:22px}
   .hd-side-arrow{background:rgba(30,30,30,.9) !important;border-color:var(--border) !important}
   .hd-side-arrow svg{stroke:var(--fg) !important}
+  /* logo */
+  .app-title{color:var(--fg) !important}
+  /* topbar scrolled → black */
+  .topbar{background:var(--bg) !important}
+  body[data-route="detail"] .topbar.topbar-scrolled{background:#000 !important}
+  body[data-route="library"] .topbar.topbar-scrolled{background:rgba(0,0,0,.95) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important}
+  body[data-route="search"] .topbar.topbar-scrolled{background:rgba(0,0,0,.95) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important}
+  .home-scrolled .topbar{background:rgba(0,0,0,.9) !important;backdrop-filter:blur(16px) !important;-webkit-backdrop-filter:blur(16px) !important}
 }
 html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;font-feature-settings:'ss01','cv11';-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;letter-spacing:-.005em}
@@ -903,10 +911,13 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .panel-desc{font-size:14px;display:block !important;-webkit-line-clamp:unset !important;overflow:visible !important}
   .btn-more-desc{display:none !important}
   .tag-pill{font-size:11px;padding:3px 10px}
-  .panel-save-btn{font-size:15px;padding:10px 12px}
-  .panel-save-btn svg{width:16px;height:16px}
-  .panel-dl-btn{font-size:14px;padding:10px 12px}
-  .panel-dl-btn svg{width:16px;height:16px}
+  .panel-save-btn{font-size:15px;padding:10px 18px}
+  .panel-save-btn svg{width:15px;height:15px}
+  .panel-save-btn::after{content:'Save';font:700 13px 'Inter',sans-serif;font-family:inherit;margin-left:2px}
+  .panel-save-btn.saved::after{content:'Saved'}
+  .panel-dl-btn{font-size:14px;padding:10px 18px}
+  .panel-dl-btn svg{width:15px;height:15px}
+  .panel-dl-btn::after{content:'Download';font:700 13px 'Inter',sans-serif;font-family:inherit;margin-left:2px}
   .panel-start-btn{font-size:14px;padding:11px 22px}
   .panel-start-btn svg{width:15px;height:15px}
   .panel-action-row{gap:12px;margin-top:16px}
