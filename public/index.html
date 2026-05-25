@@ -388,19 +388,19 @@ body.reader-open .topbar{display:none !important;visibility:hidden !important;}
 .panel.open{transform:translateY(0)}
 .panel-hdr{display:flex;align-items:flex-start;gap:14px;padding:16px 16px 12px;flex-shrink:0;position:relative;overflow:hidden;isolation:isolate}
 .panel-drag{width:36px;height:4px;background:#e0dcd8;border-radius:99px;margin:0 auto 12px;flex-shrink:0}
-.panel-cover{width:100px;height:150px;border-radius:6px;object-fit:cover;background:var(--surf);flex-shrink:0;position:relative;z-index:1}
-.panel-cover-ph{width:100px;height:150px;border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
+.panel-cover{width:100px;height:150px;border-radius:6px;object-fit:cover;background:var(--surf);flex-shrink:0;position:relative;z-index:1;transition:width .3s ease,min-width .3s ease,opacity .25s ease,margin .2s ease;overflow:hidden}
+.panel-cover-ph{width:100px;height:150px;border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;transition:width .3s ease,min-width .3s ease,opacity .25s ease,margin .2s ease;overflow:hidden}
 .panel-cover-ph svg{width:30px;height:30px;stroke:#c8bdb8;fill:none}
 .panel-info{flex:1;min-width:0;padding-top:2px;position:relative;z-index:1}
 .panel-title{font-size:17px;font-weight:800;color:var(--fg);line-height:1.3;margin-bottom:6px}
-.panel-meta{font-size:12px;color:#2a2a2a;margin-bottom:8px}
-.panel-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.panel-meta{font-size:12px;color:#2a2a2a;margin-bottom:8px;transition:max-height .25s ease,opacity .2s ease,margin .2s;overflow:hidden}
+.panel-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;transition:max-height .25s ease,opacity .2s ease,margin .2s;overflow:hidden}
 .tag-pill{padding:2px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--sub);font-weight:600}
 button.tag-pill{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:all .15s}
 button.tag-pill:hover{border-color:var(--org-text);color:var(--org-text);background:var(--org-s)}
 button.status-pill{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
 button.status-pill:hover{opacity:.75}
-.panel-desc{font-size:12px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.panel-desc{font-size:12px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;transition:max-height .25s ease,opacity .2s ease,margin .2s}
 .panel-desc.expanded{display:block;-webkit-line-clamp:unset}
 .btn-more-desc{display:inline;background:none;border:none;font-family:inherit;font-size:11px;color:var(--org-text);font-weight:700;cursor:pointer;padding:0 0 0 3px;-webkit-tap-highlight-color:transparent}
 .panel-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);-webkit-tap-highlight-color:transparent;z-index:1}
@@ -631,7 +631,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .star.half::before{content:'★';position:absolute;left:0;width:50%;overflow:hidden;color:#f59e0b}
 .star-num{font-size:10px;font-weight:700;color:var(--sub);margin-left:2px}
 /* panel rating — slightly bigger */
-.panel-rating{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.panel-rating{display:flex;align-items:center;gap:4px;margin-bottom:6px;transition:max-height .25s ease,opacity .2s ease,margin .2s;overflow:hidden;max-height:40px}
 .panel-rating .stars .star{font-size:13px}
 .panel-rating .star-num{font-size:12px;font-weight:700;color:#2a2a2a}
 /* dropdown rating */
@@ -725,30 +725,31 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 /* ─── THEME TOGGLE ─── (removed) ─── */
 
 /* ─── PANEL ACTION ROW ─── */
-.panel-author{font-size:12px;font-weight:600;color:#2a2a2a;margin-bottom:6px;line-height:1.3}
+.panel-author{font-size:12px;font-weight:600;color:#2a2a2a;margin-bottom:6px;line-height:1.3;transition:max-height .25s ease,opacity .2s ease,margin .2s;overflow:hidden}
 .panel-hdr{transition:padding .2s}
 .panel-action-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
-/* ─── DETAIL COLLAPSED HEADER ─── */
-.panel-collapsed .panel-hdr{flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border)}
-.panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{display:none !important}
-.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags,.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{display:none !important}
-.panel-collapsed .panel-info{display:block !important;flex:none;width:100%;padding-top:0;overflow:visible}
-.panel-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:8px;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
-.panel-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:0;gap:8px;display:flex !important;flex-direction:row !important}
-.panel-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
+/* ─── DETAIL PANEL GRADUAL COLLAPSE ─── */
+/* Stage 1 (semi-collapsed): cover collapses left→0, desc fades out */
+.panel-semi-collapsed .panel-hdr,.panel-collapsed .panel-hdr{border-bottom:1px solid var(--border)}
+/* Cover: animate width 100px→0 (collapses sideways in row layout) */
+.panel-semi-collapsed .panel-cover,.panel-semi-collapsed .panel-cover-ph,
+.panel-collapsed .panel-cover,.panel-collapsed .panel-cover-ph{
+  width:0 !important;min-width:0 !important;opacity:0 !important;margin-right:0 !important}
+/* Desc + "more" button: max-height 0 */
+.panel-semi-collapsed .panel-desc,.panel-semi-collapsed .btn-more-desc,
+.panel-collapsed .panel-desc,.panel-collapsed .btn-more-desc{
+  max-height:0 !important;opacity:0 !important;margin-bottom:0 !important;margin-top:0 !important}
+/* Stage 1: title wraps, action row normalises */
+.panel-semi-collapsed .panel-title,.panel-collapsed .panel-title{font-size:16px;font-weight:800;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
+.panel-semi-collapsed .panel-action-row,.panel-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:6px;gap:8px;display:flex !important;flex-direction:row !important}
+.panel-semi-collapsed .panel-action-row button,.panel-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
+/* Stage 2 (collapsed): also hide author, meta, tags, rating */
+.panel-collapsed .panel-author,.panel-collapsed .panel-meta,.panel-collapsed .panel-rating,.panel-collapsed .panel-tags{
+  max-height:0 !important;opacity:0 !important;margin-bottom:0 !important;margin-top:0 !important}
 .panel-action-collapsed{display:none !important}
-.panel-collapsed .panel-action-collapsed{display:none !important}
-/* Stage 1: only cover + desc hidden */
-.panel-semi-collapsed .panel-cover,.panel-semi-collapsed .panel-cover-ph{display:none !important}
-.panel-semi-collapsed .panel-desc,.panel-semi-collapsed .btn-more-desc{display:none !important}
-.panel-semi-collapsed .panel-hdr{flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border)}
-.panel-semi-collapsed .panel-info{display:block !important;flex:none;width:100%;padding-top:0;overflow:visible}
-.panel-semi-collapsed .panel-title{font-size:16px;font-weight:800;margin-bottom:6px;white-space:normal;overflow:visible;display:block !important;-webkit-line-clamp:unset !important;line-height:1.3}
-.panel-semi-collapsed .panel-action-row{flex-wrap:wrap !important;margin-top:0;gap:8px;display:flex !important;flex-direction:row !important}
-.panel-semi-collapsed .panel-action-row button{padding:8px 14px !important;flex-shrink:0}
+/* Padding reduction on detail page for both collapse stages */
 body[data-route="detail"] .panel-semi-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 10px !important}
-/* Push collapsed content below the fixed topbar (~52px) + safe area */
-body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 12px !important}
+body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(safe-area-inset-top,0px) + 54px)) 14px 8px !important}
 /* ─── DETAIL DESC SECTION ─── */
 .panel-desc-section{padding:14px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-desc-section .panel-desc{font-size:13px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
@@ -3788,6 +3789,9 @@ async function startRead(mangaId, chapterId, chapterNum, chapterTitle) {
   if (readerState.isDouble) readerState.isVertical = false;
   document.getElementById('reader-double-btn')?.classList.toggle('active', readerState.isDouble);
 
+  // Reset next-ch-btn state for new chapter (clear any stale inline style from previous session)
+  const _nxBtn = document.getElementById('next-ch-btn');
+  if (_nxBtn) { _nxBtn.classList.remove('visible'); _nxBtn.style.display = ''; }
   // Toggle vertical class on reader-area AND overlay (tap-zones are overlay children)
   document.getElementById('reader-area').classList.toggle('vertical', readerState.isVertical);
   document.getElementById('reader-overlay').classList.toggle('vmode', readerState.isVertical);
@@ -4134,7 +4138,7 @@ async function goNextChapter() {
     return;
   }
   const btn = document.getElementById('next-ch-btn');
-  if (btn) btn.style.display = 'none';
+  if (btn) { btn.classList.remove('visible'); }
   await startRead(mangaId, nextCh.id, nextCh.chapter || '', nextCh.title || '');
 }
 
@@ -4215,7 +4219,7 @@ function closeReader() {
   if (_vertChunkObs) { _vertChunkObs.disconnect(); _vertChunkObs = null; }
   clearTimeout(readerState.topBarTimer);
   const nxBtn = document.getElementById('next-ch-btn');
-  if (nxBtn) nxBtn.style.display = 'none';
+  if (nxBtn) { nxBtn.classList.remove('visible'); nxBtn.style.display = ''; }
   document.getElementById('reader-top').classList.remove('hide');
   document.getElementById('reader-bottom-bar').classList.remove('hide');
   history.replaceState(null, '', readerState.prevHash || '#home');
