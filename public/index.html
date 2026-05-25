@@ -43,9 +43,9 @@
   /* hero detail overlay: white→dark */
   .panel-hdr-bg-overlay{background:rgba(13,13,13,.9) !important}
   /* search inputs hardcoded white */
-  .dsp-input{background:var(--card) !important}
-  .search-input-page{background:rgba(20,20,20,.96) !important;border-color:var(--border) !important}
-  body:has(.hero-desktop) .topbar-search-desktop input{background:var(--card) !important;border-color:var(--border) !important;box-shadow:none !important}
+  .dsp-input{background:#2c2c2c !important;border-color:#404040 !important}
+  .search-input-page{background:#2c2c2c !important;border-color:#404040 !important}
+  .topbar-search-desktop input{background:#2c2c2c !important;border-color:#404040 !important;box-shadow:none !important}
   /* filter pill active (hardcoded #0a0a0a) */
   .sf-pill.active{background:var(--fg) !important;color:var(--bg) !important;border-color:var(--fg) !important}
   /* buttons: org/blk become light in dark → text must be dark */
@@ -65,19 +65,33 @@
   .topbar-desktop-nav button.active{color:var(--fg) !important}
   .topbar-desktop-nav .genres-btn{color:var(--fg) !important}
   /* genre search input */
-  .dso-input{background:var(--card) !important;border-color:var(--border) !important;box-shadow:0 4px 24px -8px rgba(0,0,0,.4) !important}
+  .dso-input{background:#2c2c2c !important;border-color:#404040 !important;box-shadow:0 4px 24px -8px rgba(0,0,0,.4) !important}
+  /* search buttons */
+  .dsp-search-btn{background:#333 !important}
+  .dsp-search-btn:hover{background:#444 !important}
+  .adv-search-btn{background:#2a2a2a !important;border-color:#484848 !important;color:var(--fg) !important}
+  .adv-search-btn:hover,.adv-search-btn.active{background:#383838 !important;border-color:#606060 !important}
+  /* adv search popup */
+  .adv-search-drop{background:var(--surf) !important;border-color:var(--border) !important;box-shadow:0 8px 32px rgba(0,0,0,.5) !important}
+  .adv-drop-pill{border-color:#484848 !important;background:rgba(255,255,255,.05) !important}
+  .adv-drop-pill:hover{background:rgba(255,255,255,.1) !important}
+  .adv-drop-pill.active{background:var(--fg) !important;color:var(--bg) !important;border-color:var(--fg) !important}
+  .adv-drop-apply{background:var(--fg) !important;color:var(--bg) !important}
+  .adv-drop-apply:hover{background:var(--org-h) !important}
   /* bottom nav */
-  .bnav{background:rgba(20,20,20,.97) !important;border-color:var(--border) !important}
+  .bnav{background:#000 !important;border-color:#1a1a1a !important}
   .bnav-tab{color:rgba(232,232,232,.5) !important}
   .bnav-tab.active{background:var(--fg) !important;color:var(--bg) !important}
   .bnav-tab.active svg{stroke:var(--bg) !important}
   /* chapter group header hardcoded white */
   .ch-group-hdr{background:var(--surf) !important}
   .ch-row:active{background:var(--surf) !important}
-  /* filter pills - brighten border */
-  .sf-pill{border-color:#444 !important}
+  /* filter pills */
+  .sf-pill{border-color:#484848 !important;background:rgba(255,255,255,.05) !important}
+  .sf-pill:hover,.sf-pill:active{background:rgba(255,255,255,.1) !important}
+  .sf-reset:hover{border-color:var(--fg) !important;color:var(--fg) !important}
   /* source toggle pill */
-  .btn-src-toggle{border-color:#444 !important;color:var(--fg) !important}
+  .btn-src-toggle{border-color:#484848 !important;color:var(--fg) !important}
   /* view all hover */
   .view-all-btn:hover{color:var(--fg) !important}
   /* panel author/meta hardcoded dark */
@@ -813,7 +827,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 /* ─── SEARCH FILTER BAR ─── */
 .sf-bar{padding:10px 16px 10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);background:var(--card)}
 .sf-section{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.sf-label{font:700 13px 'Inter',sans-serif;color:var(--fg);letter-spacing:-.01em;flex-shrink:0;min-width:48px}
+.sf-label{font:700 15px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--fg);flex:0 0 100%;margin-bottom:2px}
 .sf-pill{padding:5px 11px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
 .sf-pill:hover,.sf-pill:active{background:var(--surf)}
 .sf-pill.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
