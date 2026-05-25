@@ -33,6 +33,33 @@
   --blk-text:#ffffff;         /* white text on ink buttons */
   --r:8px;
 }
+@media (prefers-color-scheme:dark){
+  :root{
+    --org:#e8e8e8;--org-text:#e8e8e8;--org-h:#f5f5f5;--org-s:rgba(232,232,232,.1);
+    --bg:#0d0d0d;--card:#161616;--fg:#e8e8e8;--sub:#888;
+    --border:#2b2b2b;--surf:#1e1e1e;
+    --blk:#e8e8e8;--blk-h:#f5f5f5;--blk-text:#0d0d0d;
+  }
+  /* hero detail overlay: white→dark */
+  .panel-hdr-bg-overlay{background:rgba(13,13,13,.9) !important}
+  /* search inputs hardcoded white */
+  .dsp-input{background:var(--card) !important}
+  .search-input-page{background:rgba(20,20,20,.96) !important;border-color:var(--border) !important}
+  body:has(.hero-desktop) .topbar-search-desktop input{background:var(--card) !important;border-color:var(--border) !important;box-shadow:none !important}
+  /* filter pill active (hardcoded #0a0a0a) */
+  .sf-pill.active{background:var(--fg) !important;color:var(--bg) !important;border-color:var(--fg) !important}
+  /* buttons: org/blk become light in dark → text must be dark */
+  .panel-save-btn{color:var(--blk-text) !important}
+  .panel-save-btn svg{stroke:var(--blk-text) !important}
+  .panel-save-btn.saved svg{fill:var(--blk-text) !important}
+  /* disc arrow (carousel) */
+  .disc-arrow{background:rgba(35,35,35,.95) !important}
+  .disc-arrow svg{stroke:var(--fg) !important}
+  /* bottom nav frosted */
+  .bnav{background:rgba(13,13,13,.95) !important;border-top-color:var(--border) !important}
+  /* hero desktop bottom gradient — hero images already dark, keep */
+  /* hero tags stay white-bg dark-text (fine on dark images) */
+}
 html,body{height:100%;height:-webkit-fill-available;overflow:hidden}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:14px;font-feature-settings:'ss01','cv11';-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;letter-spacing:-.005em}
 /* Subtle film grain over background for depth */
@@ -437,6 +464,7 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 .toc-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .toc-title-label{font-size:13px;font-weight:800;color:var(--fg)}
 .toc-close{background:none;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);-webkit-tap-highlight-color:transparent}
+.toc-group-select{flex:1;margin:0 8px;padding:5px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf);color:var(--fg);font:600 12px 'Inter',sans-serif;cursor:pointer;outline:none;min-width:0}
 .toc-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
 .toc-list{flex:1;overflow-y:auto;padding:6px 0}
 .toc-item{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .1s}
@@ -747,13 +775,13 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 .topbar-desktop-nav{display:none}
 
 /* ─── SEARCH FILTER BAR ─── */
-.sf-bar{padding:10px 16px 8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-bottom:1px solid var(--border);background:var(--card)}
-.sf-section{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.sf-label{font:700 11px 'Inter',sans-serif;color:var(--sub);text-transform:uppercase;letter-spacing:.06em}
+.sf-bar{padding:10px 16px 10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);background:var(--card)}
+.sf-section{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sf-label{font:700 13px 'Inter',sans-serif;color:var(--fg);letter-spacing:-.01em;flex-shrink:0;min-width:48px}
 .sf-pill{padding:5px 11px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
 .sf-pill:hover,.sf-pill:active{background:var(--surf)}
 .sf-pill.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
-.sf-sep{width:100%;height:0}
+.sf-sep{display:none}
 .sf-reset{margin-left:auto;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--sub);transition:all .15s;-webkit-tap-highlight-color:transparent}
 .sf-reset:hover{border-color:#0a0a0a;color:#0a0a0a}
 
@@ -778,7 +806,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .topbar-search-desktop{display:flex;flex:1;max-width:520px;position:relative;align-items:center}
   .topbar-search-desktop svg{position:absolute;left:14px;width:14px;height:14px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
   .topbar-search-desktop input{width:100%;padding:9px 136px 9px 38px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font:600 13px 'Inter',sans-serif;color:var(--fg);outline:none;letter-spacing:-.005em;transition:border-color .15s}
-  .topbar-search-desktop input:focus{border-color:#0a0a0a}
+  .topbar-search-desktop input:focus{border-color:var(--border)}
   .topbar-search-desktop input::placeholder{color:var(--sub);font-weight:500}
   #btn-clear-topbar{position:absolute;right:106px;width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0;z-index:2}
   #btn-clear-topbar:hover{color:#0a0a0a}
@@ -950,7 +978,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .dsp-input-wrap{position:relative;margin-bottom:14px}
   .dsp-input-wrap>svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--sub);fill:none;stroke-width:2;pointer-events:none}
   .dsp-input{width:100%;padding:15px 120px 15px 48px;border:1.5px solid var(--border);border-radius:99px;font:500 16px 'Inter',sans-serif;color:var(--fg);background:#fff;outline:none;letter-spacing:-.01em;transition:border-color .15s}
-  .dsp-input:focus{border-color:#0a0a0a}
+  .dsp-input:focus{border-color:var(--border)}
   .dsp-input::placeholder{color:var(--sub)}
   .dsp-clear{position:absolute;right:112px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:none;cursor:pointer;color:var(--sub);display:none;align-items:center;justify-content:center;border-radius:50%;transition:color .15s}
   .dsp-clear:hover{color:#0a0a0a;background:var(--surf)}
@@ -1193,6 +1221,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   <div class="toc-panel" id="toc-panel">
     <div class="toc-hdr">
       <span class="toc-title-label" id="toc-label">Chapters</span>
+      <select class="toc-group-select" id="toc-group-select" style="display:none" onchange="switchTocGroup(this.value)"></select>
       <button class="toc-close" onclick="closeToc()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="toc-list" id="toc-list"></div>
@@ -4070,8 +4099,26 @@ document.addEventListener('keydown', e => {
 function openToc() {
   const { chapters, chapterId, mangaTitle, _groupChapters } = readerState;
   if (!chapters.length) return;
-  const groupName = _groupChapters?.length && chapters[0]?.group ? chapters[0].group : null;
-  document.getElementById('toc-label').textContent = groupName || mangaTitle || 'Chapters';
+  const curGroup = _groupChapters?.length && chapters[0]?.group ? chapters[0].group : '';
+  document.getElementById('toc-label').textContent = mangaTitle || 'Chapters';
+  // Build group list for dropdown
+  const allChapters = currentMangaData?.chapters || [];
+  const groupMap = {};
+  for (const ch of allChapters) {
+    if (ch.sources?.length) ch.sources.forEach(s => { if (s.group) groupMap[s.group] = (groupMap[s.group]||0)+1; });
+    else if (ch.group) groupMap[ch.group] = (groupMap[ch.group]||0)+1;
+  }
+  const groups = Object.entries(groupMap).sort((a,b) => b[1]-a[1]);
+  const sel = document.getElementById('toc-group-select');
+  if (sel) {
+    if (groups.length > 1) {
+      sel.style.display = '';
+      sel.innerHTML = '<option value="">All groups</option>' +
+        groups.map(([n]) => `<option value="${esc(n)}"${n===curGroup?' selected':''}>${esc(n)}</option>`).join('');
+    } else {
+      sel.style.display = 'none';
+    }
+  }
   const list = document.getElementById('toc-list');
   list.innerHTML = chapters.map((ch, i) => {
     const label = ch.chapter ? `Ch.${ch.chapter}` : `Ch.${i + 1}`;
@@ -4101,6 +4148,35 @@ function closeToc() {
   document.getElementById('toc-panel').classList.remove('open');
 }
 
+function switchTocGroup(groupName) {
+  closeToc();
+  const allChapters = currentMangaData?.chapters || [];
+  if (!groupName) {
+    readerState._groupChapters = null;
+    readerState.chapters = allChapters;
+  } else {
+    const filtered = [];
+    for (const ch of allChapters) {
+      if (ch.sources?.length) {
+        const src = ch.sources.find(s => s.group === groupName);
+        if (src) filtered.push({ id: src.id, chapter: ch.chapter, title: ch.title||'', group: src.group, volume: ch.volume, translatedLanguage: src.translatedLanguage });
+      } else if (ch.group === groupName) {
+        filtered.push(ch);
+      }
+    }
+    readerState._groupChapters = filtered;
+    readerState.chapters = filtered;
+  }
+  // Find current chapter in new list; if not found, start from first
+  const newIdx = readerState.chapters.findIndex(c => c.id === readerState.chapterId);
+  if (newIdx >= 0) {
+    readerState.chapterListIdx = newIdx;
+  } else {
+    const first = readerState.chapters[0];
+    if (first) startRead(readerState.mangaId, first.id, first.chapter||'', first.title||'');
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // Boot
 // ═══════════════════════════════════════════════════════════════════
@@ -4113,6 +4189,11 @@ function updateThemeIcon() {}
 // Hash routing
 window.addEventListener('hashchange', () => {
   const hash = location.hash.replace('#', '') || 'home';
+  // Browser back while reader is open → close reader
+  if (!hash.startsWith('read/') && !document.getElementById('reader-overlay').classList.contains('hidden')) {
+    closeReader();
+    return;
+  }
   if (hash.startsWith('manga/')) { const id = hash.split('/')[1]; if (id) openPanel(id); return; }
   if (hash.startsWith('viewall/')) { const k = hash.split('/')[1]; if (k) viewAllSection(k, VIEWALL_LABELS[k] || k); return; }
   if (hash.startsWith('genre/')) { const id = hash.split('/')[1]; if (id) { navigate('search', { pushState: false }); activeTagId = id; doSearch(); } return; }
