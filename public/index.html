@@ -4506,36 +4506,42 @@ function _applyCollapse(level, topbar, panel) {
   else { topbar?.classList.remove('topbar-scrolled'); }
 }
 
-// Mobile: scroll position → single threshold
+// Hysteresis thresholds — different for collapse vs uncollapse to prevent glitching
+const _COLLAPSE_AT = 90;   // scroll down past this → collapse
+const _UNCOLLAPSE_AT = 30; // scroll up below this → uncollapse
+
+// Mobile: scroll with hysteresis + rAF debounce
+let _mobileColRaf = null;
 document.getElementById('panel-body').addEventListener('scroll', function() {
   if (document.body.dataset.route !== 'detail') return;
-  const panel = document.getElementById('panel');
-  const topbar = document.querySelector('.topbar');
-  _applyCollapse(this.scrollTop > 60 ? 1 : 0, topbar, panel);
+  if (_mobileColRaf) return;
+  const self = this;
+  _mobileColRaf = requestAnimationFrame(() => {
+    _mobileColRaf = null;
+    const panel = document.getElementById('panel');
+    const topbar = document.querySelector('.topbar');
+    const cur = _collapseLevel(panel);
+    const st = self.scrollTop;
+    if (cur === 0 && st > _COLLAPSE_AT) _applyCollapse(1, topbar, panel);
+    else if (cur === 1 && st < _UNCOLLAPSE_AT) _applyCollapse(0, topbar, panel);
+  });
 }, { passive: true });
 
-// Mobile: touch direction — toggle collapse
-let _ptY = 0;
-document.getElementById('panel-body').addEventListener('touchstart', function(e) {
-  if (document.body.dataset.route !== 'detail') return;
-  _ptY = e.touches[0].clientY;
-}, { passive: true });
-document.getElementById('panel-body').addEventListener('touchmove', function(e) {
-  if (document.body.dataset.route !== 'detail') return;
-  const dy = _ptY - e.touches[0].clientY;
-  const panel = document.getElementById('panel');
-  const topbar = document.querySelector('.topbar');
-  const cur = _collapseLevel(panel);
-  if (dy > 8 && cur < 1) _applyCollapse(1, topbar, panel);
-  else if (dy < -8 && this.scrollTop === 0 && cur > 0) _applyCollapse(0, topbar, panel);
-}, { passive: true });
-
-// Desktop: scroll position (capture phase) → single threshold
+// Desktop: scroll with hysteresis + rAF debounce
+let _deskColRaf = null;
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
-  const panel = document.getElementById('panel');
-  const topbar = document.querySelector('.topbar');
-  _applyCollapse(e.target.scrollTop > 40 ? 1 : 0, topbar, panel);
+  if (_deskColRaf) return;
+  const target = e.target;
+  _deskColRaf = requestAnimationFrame(() => {
+    _deskColRaf = null;
+    const panel = document.getElementById('panel');
+    const topbar = document.querySelector('.topbar');
+    const cur = _collapseLevel(panel);
+    const st = target.scrollTop;
+    if (cur === 0 && st > _COLLAPSE_AT) _applyCollapse(1, topbar, panel);
+    else if (cur === 1 && st < _UNCOLLAPSE_AT) _applyCollapse(0, topbar, panel);
+  });
 }, { passive: true, capture: true });
 
 // Desktop: wheel direction — toggle collapse
