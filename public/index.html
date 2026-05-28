@@ -1237,7 +1237,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
       </div>
     </div>
     <!-- Search filter bar: shown when results are active -->
-    <div class="sf-bar" id="sf-bar" style="display:none">
+    <div class="sf-bar" id="sf-bar">
       <div class="sf-section">
         <span class="sf-label">Sort</span>
         <button class="sf-pill active" id="sfp-sort-" onclick="setSFSort('')">Best Match</button>
@@ -2644,6 +2644,9 @@ function navigate(route, { pushState = true } = {}) {
     // Auto-reset when returning to search from another page
     if (_resetSearchOnReturn) { _resetSearchOnReturn = false; clearSearchAndReset(); }
     initDsp();
+    // Show filter bar immediately on mobile
+    const _sfBar = document.getElementById('sf-bar');
+    if (_sfBar && window.innerWidth < 900) _sfBar.style.display = 'flex';
   }
   if (route === 'home') loadDiscoverySections();
 }
