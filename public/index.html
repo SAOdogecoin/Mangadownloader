@@ -903,14 +903,22 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 .topbar-desktop-nav{display:none}
 
 /* ─── SEARCH FILTER BAR ─── */
-.sf-bar{padding:10px 16px 10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);background:var(--card)}
+.sf-bar{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--card)}
+.sf-toggle{display:flex;align-items:center;gap:7px;padding:9px 16px;background:none;border:none;font:600 13px 'Inter',sans-serif;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;width:100%;text-align:left}
+.sf-toggle svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.sf-toggle-label{flex:1}
+.sf-toggle-badge{background:var(--blk);color:var(--blk-text);font-size:10px;font-weight:700;border-radius:99px;padding:1px 6px;display:none}
+.sf-toggle-chevron{margin-left:auto;transition:transform .22s ease;flex-shrink:0}
+.sf-bar.sf-open .sf-toggle-chevron{transform:rotate(180deg)}
+.sf-content{max-height:0;overflow:hidden;transition:max-height .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;gap:8px}
+.sf-bar.sf-open .sf-content{max-height:260px;padding:0 16px 12px}
 .sf-section{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.sf-label{font:700 15px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--fg);flex:0 0 100%;margin-bottom:2px}
+.sf-label{font:700 11px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);flex:0 0 100%;margin-bottom:2px}
 .sf-pill{padding:5px 11px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--fg);transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
 .sf-pill:hover,.sf-pill:active{background:var(--surf)}
 .sf-pill.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
 .sf-sep{display:none}
-.sf-reset{margin-left:auto;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--sub);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.sf-reset{padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:none;font:600 12px 'Inter',sans-serif;cursor:pointer;color:var(--sub);transition:all .15s;-webkit-tap-highlight-color:transparent;align-self:flex-start}
 .sf-reset:hover{border-color:#0a0a0a;color:#0a0a0a}
 
 /* ─── PANEL SUGGESTED MANGA ─── */
@@ -1238,24 +1246,31 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
     </div>
     <!-- Search filter bar: shown when results are active -->
     <div class="sf-bar" id="sf-bar">
-      <div class="sf-section">
-        <span class="sf-label">Sort</span>
-        <button class="sf-pill active" id="sfp-sort-" onclick="setSFSort('')">Best Match</button>
-        <button class="sf-pill" id="sfp-sort-followedCount" onclick="setSFSort('followedCount')">Trending</button>
-        <button class="sf-pill" id="sfp-sort-rating" onclick="setSFSort('rating')">Top Rated</button>
-        <button class="sf-pill" id="sfp-sort-latestUploadedChapter" onclick="setSFSort('latestUploadedChapter')">Latest</button>
-        <button class="sf-pill" id="sfp-sort-createdAt" onclick="setSFSort('createdAt')">New</button>
+      <button class="sf-toggle" onclick="toggleSfBar()">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        <span class="sf-toggle-label">Filters</span>
+        <span class="sf-toggle-badge" id="sf-toggle-badge"></span>
+        <svg class="sf-toggle-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="sf-content" id="sf-content">
+        <div class="sf-section">
+          <span class="sf-label">Sort</span>
+          <button class="sf-pill active" id="sfp-sort-" onclick="setSFSort('')">Best Match</button>
+          <button class="sf-pill" id="sfp-sort-followedCount" onclick="setSFSort('followedCount')">Trending</button>
+          <button class="sf-pill" id="sfp-sort-rating" onclick="setSFSort('rating')">Top Rated</button>
+          <button class="sf-pill" id="sfp-sort-latestUploadedChapter" onclick="setSFSort('latestUploadedChapter')">Latest</button>
+          <button class="sf-pill" id="sfp-sort-createdAt" onclick="setSFSort('createdAt')">New</button>
+        </div>
+        <div class="sf-section">
+          <span class="sf-label">Status</span>
+          <button class="sf-pill active" id="sfp-status-" onclick="setSFStatus('')">Any</button>
+          <button class="sf-pill" id="sfp-status-ongoing" onclick="setSFStatus('ongoing')">Ongoing</button>
+          <button class="sf-pill" id="sfp-status-completed" onclick="setSFStatus('completed')">Completed</button>
+          <button class="sf-pill" id="sfp-status-hiatus" onclick="setSFStatus('hiatus')">Hiatus</button>
+          <button class="sf-pill" id="sfp-status-cancelled" onclick="setSFStatus('cancelled')">Cancelled</button>
+        </div>
+        <button class="sf-reset" onclick="resetSearchFilters()">Reset filters</button>
       </div>
-      <div class="sf-sep"></div>
-      <div class="sf-section">
-        <span class="sf-label">Status</span>
-        <button class="sf-pill active" id="sfp-status-" onclick="setSFStatus('')">Any</button>
-        <button class="sf-pill" id="sfp-status-ongoing" onclick="setSFStatus('ongoing')">Ongoing</button>
-        <button class="sf-pill" id="sfp-status-completed" onclick="setSFStatus('completed')">Completed</button>
-        <button class="sf-pill" id="sfp-status-hiatus" onclick="setSFStatus('hiatus')">Hiatus</button>
-        <button class="sf-pill" id="sfp-status-cancelled" onclick="setSFStatus('cancelled')">Cancelled</button>
-      </div>
-      <button class="sf-reset" onclick="resetSearchFilters()">Reset</button>
     </div>
     <div id="search-body">
       <div class="search-ctx-title" id="search-context-title" style="display:none"></div>
@@ -1882,6 +1897,12 @@ function syncSFBar() {
   ['','ongoing','completed','hiatus','cancelled'].forEach(s => {
     document.getElementById('sfp-status-' + s)?.classList.toggle('active', s === activeStatus);
   });
+  const count = (activeSort ? 1 : 0) + (activeStatus ? 1 : 0);
+  const badge = document.getElementById('sf-toggle-badge');
+  if (badge) { badge.textContent = count; badge.style.display = count ? 'inline' : 'none'; }
+}
+function toggleSfBar() {
+  document.getElementById('sf-bar')?.classList.toggle('sf-open');
 }
 function setSFSort(s) {
   activeSort = s;
@@ -2149,8 +2170,6 @@ function scheduleSearch_DISABLED_legacy() {
 function clearSearchResults() {
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
-  const sfBar = document.getElementById('sf-bar');
-  if (sfBar) sfBar.style.display = 'none';
   lastQuery = '';
   lastTagId = '';
   lastStatus = '';
@@ -2430,8 +2449,7 @@ async function doSearch() {
   document.getElementById('results-grid').innerHTML = '';
   document.getElementById('load-more-wrap').style.display = 'none';
   try {
-    const sfBar = document.getElementById('sf-bar');
-    if (sfBar) sfBar.style.display = 'flex';
+    syncSFBar();
     syncSFBar();
     const url = `/api/search?limit=${SEARCH_LIMIT}&offset=0&q=${encodeURIComponent(q)}${activeTagId ? '&tagId=' + activeTagId : ''}${activeStatus ? '&status=' + activeStatus : ''}${activeSort ? '&sort=' + activeSort : ''}`;
     const data = await fetch(url).then(r => r.json());
@@ -2644,9 +2662,6 @@ function navigate(route, { pushState = true } = {}) {
     // Auto-reset when returning to search from another page
     if (_resetSearchOnReturn) { _resetSearchOnReturn = false; clearSearchAndReset(); }
     initDsp();
-    // Show filter bar immediately on mobile
-    const _sfBar = document.getElementById('sf-bar');
-    if (_sfBar && window.innerWidth < 900) _sfBar.style.display = 'flex';
   }
   if (route === 'home') loadDiscoverySections();
 }
@@ -2663,8 +2678,8 @@ function goHome() {
   lastQuery = '';
   lastTagId = '';
   lastStatus = '';
-  const sfBar = document.getElementById('sf-bar');
-  if (sfBar) sfBar.style.display = 'none';
+  document.getElementById('sf-bar')?.classList.remove('sf-open');
+  syncSFBar();
   navigate('home');
 }
 
