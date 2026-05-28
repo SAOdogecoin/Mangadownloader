@@ -447,11 +447,12 @@ body[data-route="detail"] .panel-drag{display:none !important}
 body[data-route="detail"] .panel-close{display:none}
 body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;height:100% !important;transform:none !important;transition:none !important;border-radius:0 !important;z-index:9998 !important;padding-top:0 !important;display:flex !important}
 /* Pull-to-close drag states — override transform:none !important */
-#panel.panel-dragging{transform:translateY(var(--panel-drag-y,0px)) !important;transition:none !important}
-#panel.panel-closing{transform:translateY(105vh) !important;transition:transform .28s cubic-bezier(.4,0,1,1) !important}
-/* Drag handle */
-.panel-drag-handle{display:flex;justify-content:center;align-items:center;padding:10px 0 2px;flex-shrink:0;touch-action:none;cursor:grab}
-.panel-drag-handle::before{content:'';display:block;width:36px;height:4px;border-radius:99px;background:rgba(128,128,128,.22)}
+/* Higher specificity than body[data-route="detail"] #panel (111) — must beat it */
+body[data-route="detail"] #panel.panel-dragging{transform:translateY(var(--panel-drag-y,0px)) !important;transition:none !important}
+body[data-route="detail"] #panel.panel-closing{transform:translateY(105vh) !important;transition:transform .28s cubic-bezier(.4,0,1,1) !important}
+/* Drag handle: absolute overlay at top of panel, centered, below safe-area */
+.panel-drag-handle{position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:10;width:48px;height:24px;display:flex;align-items:center;justify-content:center;cursor:grab;-webkit-tap-highlight-color:transparent}
+.panel-drag-handle::before{content:'';display:block;width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.45);box-shadow:0 1px 3px rgba(0,0,0,.25)}
 @media(min-width:900px){.panel-drag-handle{display:none}}
 /* Hero bg inside panel-hdr */
 body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-inset-top,0px) + 62px));padding-bottom:0}
