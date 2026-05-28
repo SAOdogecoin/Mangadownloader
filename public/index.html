@@ -912,7 +912,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 .topbar-desktop-nav{display:none}
 
 /* ─── SEARCH FILTER BAR ─── */
-.sf-bar{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--card)}
+.sf-bar{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--bg)}
 .sf-toggle{display:flex;align-items:center;gap:7px;padding:9px 16px;background:none;border:none;font:600 13px 'Inter',sans-serif;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;width:100%;text-align:left}
 .sf-toggle svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .sf-toggle-label{flex:1}
@@ -2725,8 +2725,18 @@ function renderContinueReading() {
   if (!recent.length) { wrap.innerHTML = ''; return; }
   wrap.innerHTML = `<div class="home-section">
     <div class="home-section-head"><div class="home-section-label">Continue Reading</div></div>
-    <div class="disc-strip">${recent.map(crCardHtml).join('')}</div>
+    <div class="disc-strip-wrap">
+      <button class="disc-arrow da-left da-hidden" onclick="discScrollBtn(this,-1)" aria-label="Scroll left"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="disc-strip">${recent.map(crCardHtml).join('')}</div>
+      <button class="disc-arrow da-right" onclick="discScrollBtn(this,1)" aria-label="Scroll right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
   </div>`;
+  // Wire up scroll arrows for CR strip
+  const crStrip = wrap.querySelector('.disc-strip');
+  if (crStrip) {
+    crStrip.addEventListener('scroll', () => _updateDiscArrows(crStrip), { passive: true });
+    setTimeout(() => _updateDiscArrows(crStrip), 50);
+  }
   // CR items resume reader at saved chapter+page
   wrap.querySelectorAll('.disc-card').forEach(el => {
     const m = recent.find(x => x.id === el.dataset.id);
