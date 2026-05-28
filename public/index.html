@@ -713,10 +713,12 @@ body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-ins
 
 /* ─── BOTTOM TAB NAV (floating pill, centered, selected = black circle) ─── */
 .bnav-wrap{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0));z-index:50}
-.bnav-back{position:absolute;right:calc(100% + 8px);top:0;bottom:0;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 32px -8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--fg);opacity:0;pointer-events:none;transition:opacity .2s,transform .15s}
-.bnav-wrap.has-back .bnav-back{opacity:1;pointer-events:auto}
+/* Back nav: standalone fixed, positioned left of centered pill (pill min-width=240px, so half=120px) */
+.bnav-back{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom,0));right:calc(50% + 120px + 10px);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 32px -8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--fg);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s,transform .15s}
+.bnav-back.show{opacity:1;pointer-events:auto}
 .bnav-back:active{transform:scale(.92)}
 .bnav-back svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:900px){.bnav-back{display:none !important}}
 .bnav{display:inline-flex;align-items:stretch;gap:4px;background:rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.08);border-radius:99px;padding:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 32px -8px rgba(0,0,0,.18);min-width:240px}
 @supports not (backdrop-filter:blur(1px)){.bnav{background:rgba(255,255,255,.92)}}
 .bnav-tab{flex:1;min-width:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 12px;background:none;border:none;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#0a0a0a;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:-.005em;transition:background .18s,color .18s,transform .15s}
@@ -1300,11 +1302,12 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   </div>
 </div>
 
+<!-- Back nav button (standalone fixed, never inside pill wrap) -->
+<button class="bnav-back" id="bnav-back" onclick="bnavGoBack()" aria-label="Back">
+  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
 <!-- Bottom nav (mobile-first) -->
 <div class="bnav-wrap" id="bnav-wrap">
-  <button class="bnav-back" id="bnav-back" onclick="bnavGoBack()" aria-label="Back">
-    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-  </button>
   <nav class="bnav">
     <button class="bnav-tab active" data-route="home" onclick="navigate('home')">
       <svg viewBox="0 0 24 24"><path d="M3 12L12 4l9 8"/><path d="M5 10v10h14V10"/></svg>
@@ -2599,9 +2602,8 @@ function setSearchTitle(text) {
 
 let _bnavBack = null;
 function _updateBnavBack() {
-  const wrap = document.getElementById('bnav-wrap');
-  if (!wrap) return;
-  wrap.classList.toggle('has-back', !!_bnavBack);
+  const btn = document.getElementById('bnav-back');
+  if (btn) btn.classList.toggle('show', !!_bnavBack);
 }
 function bnavGoBack() {
   if (_bnavBack === 'genre') {
