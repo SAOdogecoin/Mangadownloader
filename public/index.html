@@ -413,7 +413,7 @@ button.status-pill:hover{opacity:.75}
 .panel-save-btn.saved{background:var(--org);color:#fff}
 .panel-save-btn svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .panel-save-btn.saved svg{fill:#fff}
-.panel-body{flex:1;overflow-y:auto;min-height:0}
+.panel-body{flex:1;overflow-y:auto;min-height:0;overflow-anchor:none}
 .ch-section-hdr{padding:10px 16px 5px;font-size:15px;font-weight:800;color:var(--sub);letter-spacing:.05em;position:sticky;top:44px;background:var(--card);z-index:10;border-bottom:1px solid var(--border)}
 .ch-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent}
 .ch-row:last-child{border-bottom:none}
@@ -840,6 +840,7 @@ body[data-route="detail"] .panel-collapsed .panel-hdr{padding:max(54px,calc(env(
 /* ─── HERO BANNER (responsive) ─── */
 /* Mobile: side margins + rounded card, extends UP behind topbar via negative top margin */
 .hero-desktop{position:relative;margin:0 0 20px;height:280px;overflow:hidden;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:0}
+.hero-desktop::after{content:'';position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;z-index:3}
 .hd-slide{position:absolute;inset:0;visibility:hidden;pointer-events:none}
 .hd-slide.active{visibility:visible;pointer-events:auto}
 .hd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(1.05) saturate(.85);transform:scale(1.02)}
@@ -991,7 +992,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
   .panel-desc-section{display:none !important}
   /* Sidebar layout: chapters left, suggested right */
   .panel-body{display:flex !important;flex-direction:row !important;overflow:hidden !important}
-  .panel-ch-wrap{flex:1;min-width:0;overflow-y:auto;height:100%}
+  .panel-ch-wrap{flex:1;min-width:0;overflow-y:auto;height:100%;overflow-anchor:none}
   .panel-suggested{width:230px;flex-shrink:0;border-top:none;border-left:1px solid var(--border);margin:0;padding-top:16px;overflow-y:auto}
   .panel-suggested-strip{flex-direction:column;overflow-x:hidden;padding:0 14px 20px;gap:14px}
   .panel-sug-card{width:100%;display:block;flex-shrink:0}
@@ -4499,25 +4500,33 @@ window.addEventListener('hashchange', () => {
 function _collapseLevel(panel) {
   return panel.classList.contains('panel-collapsed') ? 1 : 0;
 }
+let _collapseLocked = false;
 function _applyCollapse(level, topbar, panel) {
   if (!panel) return;
+  const cur = _collapseLevel(panel);
+  if (cur === level) return; // no change, skip lock
+  _collapseLocked = true;
+  clearTimeout(_collapseUnlock);
+  _collapseUnlock = setTimeout(() => { _collapseLocked = false; }, 420);
   panel.classList.remove('panel-collapsed');
   if (level >= 1) { panel.classList.add('panel-collapsed'); topbar?.classList.add('topbar-scrolled'); }
   else { topbar?.classList.remove('topbar-scrolled'); }
 }
+let _collapseUnlock;
 
 // Hysteresis thresholds — different for collapse vs uncollapse to prevent glitching
 const _COLLAPSE_AT = 90;   // scroll down past this → collapse
 const _UNCOLLAPSE_AT = 30; // scroll up below this → uncollapse
 
-// Mobile: scroll with hysteresis + rAF debounce
+// Mobile: scroll with hysteresis + rAF debounce + transition lock
 let _mobileColRaf = null;
 document.getElementById('panel-body').addEventListener('scroll', function() {
   if (document.body.dataset.route !== 'detail') return;
-  if (_mobileColRaf) return;
+  if (_collapseLocked || _mobileColRaf) return;
   const self = this;
   _mobileColRaf = requestAnimationFrame(() => {
     _mobileColRaf = null;
+    if (_collapseLocked) return;
     const panel = document.getElementById('panel');
     const topbar = document.querySelector('.topbar');
     const cur = _collapseLevel(panel);
@@ -4527,14 +4536,15 @@ document.getElementById('panel-body').addEventListener('scroll', function() {
   });
 }, { passive: true });
 
-// Desktop: scroll with hysteresis + rAF debounce
+// Desktop: scroll with hysteresis + rAF debounce + transition lock
 let _deskColRaf = null;
 document.addEventListener('scroll', function(e) {
   if (!e.target || e.target.id !== 'panel-ch-wrap') return;
-  if (_deskColRaf) return;
+  if (_collapseLocked || _deskColRaf) return;
   const target = e.target;
   _deskColRaf = requestAnimationFrame(() => {
     _deskColRaf = null;
+    if (_collapseLocked) return;
     const panel = document.getElementById('panel');
     const topbar = document.querySelector('.topbar');
     const cur = _collapseLevel(panel);
@@ -4542,18 +4552,6 @@ document.addEventListener('scroll', function(e) {
     if (cur === 0 && st > _COLLAPSE_AT) _applyCollapse(1, topbar, panel);
     else if (cur === 1 && st < _UNCOLLAPSE_AT) _applyCollapse(0, topbar, panel);
   });
-}, { passive: true, capture: true });
-
-// Desktop: wheel direction — toggle collapse
-document.addEventListener('wheel', function(e) {
-  if (document.body.dataset.route !== 'detail') return;
-  const chWrap = document.getElementById('panel-ch-wrap');
-  if (!chWrap || !chWrap.contains(e.target)) return;
-  const panel = document.getElementById('panel');
-  const topbar = document.querySelector('.topbar');
-  const cur = _collapseLevel(panel);
-  if (e.deltaY > 0 && cur < 1) _applyCollapse(1, topbar, panel);
-  else if (e.deltaY < 0 && chWrap.scrollTop === 0 && cur > 0) _applyCollapse(0, topbar, panel);
 }, { passive: true, capture: true });
 
 // Search + Library topbar: transparent → white/frosted on scroll
