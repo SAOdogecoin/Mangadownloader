@@ -446,6 +446,13 @@ body[data-route="detail"] .panel-bg{display:none !important}
 body[data-route="detail"] .panel-drag{display:none !important}
 body[data-route="detail"] .panel-close{display:none}
 body[data-route="detail"] #panel{position:fixed !important;inset:0 !important;height:100% !important;transform:none !important;transition:none !important;border-radius:0 !important;z-index:9998 !important;padding-top:0 !important;display:flex !important}
+/* Pull-to-close drag states — override transform:none !important */
+#panel.panel-dragging{transform:translateY(var(--panel-drag-y,0px)) !important;transition:none !important}
+#panel.panel-closing{transform:translateY(105vh) !important;transition:transform .28s cubic-bezier(.4,0,1,1) !important}
+/* Drag handle */
+.panel-drag-handle{display:flex;justify-content:center;align-items:center;padding:10px 0 2px;flex-shrink:0;touch-action:none;cursor:grab}
+.panel-drag-handle::before{content:'';display:block;width:36px;height:4px;border-radius:99px;background:rgba(128,128,128,.22)}
+@media(min-width:900px){.panel-drag-handle{display:none}}
 /* Hero bg inside panel-hdr */
 body[data-route="detail"] .panel-hdr{padding-top:max(62px,calc(env(safe-area-inset-top,0px) + 62px));padding-bottom:0}
 .panel-hdr-bg{position:absolute;inset:0;background-size:cover;background-position:center top;z-index:-1;pointer-events:none}
@@ -1321,6 +1328,7 @@ body[data-route="search"] .topbar.topbar-scrolled{background:rgba(255,255,255,.8
 <!-- Manga Detail Panel -->
 <div class="panel-bg" id="panel-bg" onclick="closePanel()"></div>
 <div class="panel" id="panel">
+  <div class="panel-drag-handle" id="panel-drag-handle"></div>
   <div class="panel-hdr" id="panel-hdr">
     <div class="panel-loading">
       <div class="spin"></div> Loading…
@@ -3454,7 +3462,42 @@ function closePanel() {
   requestAnimationFrame(() => requestAnimationFrame(() => { if (panel) panel.style.transition = ''; }));
 }
 
-// Swipe-to-close removed — panel is now a full-page view
+// Pull-to-close for detail panel
+(function(){
+  const panel = document.getElementById('panel');
+  let startY = 0, active = false;
+
+  panel.addEventListener('touchstart', function(e) {
+    if (document.body.dataset.route !== 'detail') return;
+    const panelBody = document.getElementById('panel-body');
+    const onHandle = e.target.closest('#panel-drag-handle');
+    const atTop = !panelBody || panelBody.scrollTop <= 0;
+    if (!onHandle && !atTop) return;
+    startY = e.touches[0].clientY;
+    active = true;
+  }, { passive: true });
+
+  panel.addEventListener('touchmove', function(e) {
+    if (!active) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { active = false; return; }
+    e.preventDefault();
+    panel.style.setProperty('--panel-drag-y', dy + 'px');
+    panel.classList.add('panel-dragging');
+  }, { passive: false });
+
+  panel.addEventListener('touchend', function() {
+    if (!active) return;
+    active = false;
+    const dy = parseFloat(panel.style.getPropertyValue('--panel-drag-y')) || 0;
+    panel.classList.remove('panel-dragging');
+    panel.style.removeProperty('--panel-drag-y');
+    if (dy > 120) {
+      panel.classList.add('panel-closing');
+      setTimeout(() => { panel.classList.remove('panel-closing'); closePanel(); }, 280);
+    }
+  }, { passive: true });
+})();
 
 // Start reading from chapter 1 — shows group picker if multiple scanlation groups exist
 function readFromStart() {
