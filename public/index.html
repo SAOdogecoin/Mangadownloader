@@ -1503,6 +1503,9 @@ function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&
 // escAttr: for values inside single-quoted JS onclick args — also escapes '
 function escAttr(s) { return esc(s).replace(/'/g, '&#39;'); }
 function proxyUrl(url, referer) {
+  if (!url) return '';
+  // MangaDex CDN is publicly accessible; bypass proxy to avoid server-side blocks
+  if (url.startsWith('https://uploads.mangadex.org/')) return url;
   let u = `/api/proxy?url=${encodeURIComponent(url)}`;
   if (referer) u += `&referer=${encodeURIComponent(referer)}`;
   return u;
