@@ -1511,6 +1511,13 @@ function proxyUrl(url, referer) {
   if (referer) u += `&referer=${encodeURIComponent(referer)}`;
   return u;
 }
+// For CSS background-image: always proxy (can't set referrerpolicy on CSS requests)
+function proxyCssUrl(url, referer) {
+  if (!url) return '';
+  let u = `/api/proxy?url=${encodeURIComponent(url)}`;
+  if (referer) u += `&referer=${encodeURIComponent(referer)}`;
+  return u;
+}
 function showToast(msg, dur = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -1660,7 +1667,7 @@ function renderGenrePage() {
     const tagItems = GENRES.filter(g => g.type === 'tag');
     grid.innerHTML = tagItems.map(g => {
       const cached = _genreCoverCache[g.id];
-      const bg = cached ? ` style="background-image:url('${proxyUrl(cached)}')"` : '';
+      const bg = cached ? ` style="background-image:url('${proxyCssUrl(cached)}')"` : '';
       return `<button class="genre-card" data-tid="${esc(g.id)}"${bg} onclick="selectGenreAndSearch('${esc(g.id)}')"><span class="genre-card-name">${esc(g.name)}</span></button>`;
     }).join('');
     _preloadGenreCovers(tagItems);
@@ -1718,7 +1725,7 @@ async function _preloadGenreCovers(tagItems) {
 }
 
 function _applyGenreCover(el, url) {
-  el.style.backgroundImage = `url('${proxyUrl(url)}')`;
+  el.style.backgroundImage = `url('${proxyCssUrl(url)}')`;
 }
 
 function renderDesktopSidebarGenres() {
@@ -2246,7 +2253,7 @@ function chPageNav(page) {
 }
 
 function heroBg(coverUrl) {
-  const bg = coverUrl ? `<div class="panel-hdr-bg" style="background-image:url('${esc(proxyUrl(coverUrl))}')"></div>` : '<div class="panel-hdr-bg"></div>';
+  const bg = coverUrl ? `<div class="panel-hdr-bg" style="background-image:url('${esc(proxyCssUrl(coverUrl))}')"></div>` : '<div class="panel-hdr-bg"></div>';
   return bg + `<div class="panel-hdr-bg-overlay"></div>`;
 }
 
